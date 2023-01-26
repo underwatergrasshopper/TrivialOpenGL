@@ -15,6 +15,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <None Include="CHANGELOG.md" />
+    <None Include="README.md" />
+    <None Include="MinGW_Test.bat" />
+    <None Include="Pack.bat" />
+    <None Include="Test.bat" />
+    <None Include=".github\workflows\build_and_test.yml" />
+    <None Include=".github\workflows\build_and_test_mingw.yml" />
+  </ItemGroup>
+  <ItemGroup>
     <ClInclude Include="include\TrivialOpenGL.h">
       <Filter>Header Files</Filter>
     </ClInclude>

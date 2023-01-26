@@ -1,6 +1,12 @@
 #include <stdio.h>
+#include <TrivialTestKit.h>
+#include <TrivialOpenGL.h>
+
+void TestDummy() {
+    TTK_ASSERT(true);
+}
 
 int main() {
-    puts("Hello!");
-    return 0;
+    TTK_ADD_TEST(TestDummy, 0);
+    return !TTK_Run();
 }
