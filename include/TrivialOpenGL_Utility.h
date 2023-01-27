@@ -113,6 +113,109 @@ namespace TrivialOpenGL {
     }
 
 
+    template <typename Type>
+    struct Size {
+        Type width;
+        Type height;
+
+        Size() : width(Type()), height(Type()) {}
+
+        explicit Size(const Type& s) : width(s), height(s) {}
+
+        Size(const Type& width, const Type& height) : width(width), height(height) {}
+
+        template <typename Type2>
+        explicit Size(const Size<Type2>& s) : width(Type(s.width)), height(Type(s.height)) {}
+
+        virtual ~Size() {}
+    };
+
+    using SizeI    = Size<int32_t>;
+    using SizeI64  = Size<int64_t>;
+
+    using SizeU    = Size<uint32_t>;
+    using SizeU64  = Size<uint64_t>;
+
+    using SizeF    = Size<float>;
+    using SizeD    = Size<float>;
+
+    template <typename Type>
+    inline bool operator==(const Size<Type>& l, const Size<Type>& r) {
+        return l.width == r.width && l.height == r.height;
+    }
+
+    template <typename Type>
+    inline bool operator!=(const Size<Type>& l, const Size<Type>& r) {
+        return l.width != r.width || l.height != r.height;
+    }
+
+    template <typename Type>
+    inline bool operator>(const Size<Type>& l, const Size<Type>& r) {
+        return l.width > r.width && l.height > r.height;
+    }
+
+    template <typename Type>
+    inline bool operator<(const Size<Type>& l, const Size<Type>& r) {
+        return l.width < r.width && l.height < r.height;
+    }
+
+    template <typename Type>
+    inline bool operator>=(const Size<Type>& l, const Size<Type>& r) {
+        return l.width >= r.width && l.height >= r.height;
+    }
+
+    template <typename Type>
+    inline bool operator<=(const Size<Type>& l, const Size<Type>& r) {
+        return l.width <= r.width && l.height <= r.height;
+    }
+
+
+    template <typename Type>
+    inline Size<Type> operator+(const Size<Type>& l, const Size<Type>& r) {
+        return {l.width + r.width, l.height + r.height};
+    }
+
+    template <typename Type>
+    inline Size<Type> operator-(const Size<Type>& l, const Size<Type>& r) {
+        return {l.width - r.width, l.height - r.height};
+    }
+
+    template <typename Type>
+    inline Size<Type> operator*(const Size<Type>& l, const Type& r) {
+        return {l.width * r, l.height * r};
+    }
+
+    template <typename Type>
+    inline Size<Type> operator/(const Size<Type>& l, const Type& r) {
+        return {l.width / r, l.height / r};
+    }
+
+
+    template <typename Type>
+    inline Size<Type>& operator+=(Size<Type>& l, const Size<Type>& r) {
+        l = l + r;
+        return l;
+    }
+
+    template <typename Type>
+    inline Size<Type>& operator-=(Size<Type>& l, const Size<Type>& r) {
+        l = l - r;
+        return l;
+    }
+
+    template <typename Type>
+    inline Size<Type>& operator*=(Size<Type>& l, const Type& r) {
+        l = l * r;
+        return l;
+    }
+
+    template <typename Type>
+    inline Size<Type>& operator/=(Size<Type>& l, const Type& r) {
+        l = l / r;
+        return l;
+    }
+
+
 } // namespace TrivialOpenGL
 
 namespace TOGL = TrivialOpenGL;
