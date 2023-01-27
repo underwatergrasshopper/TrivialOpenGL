@@ -5,12 +5,13 @@ setlocal EnableDelayedExpansion
 ::------------------------------------------------------------------------------
 :: User Section
 
-set VERSION=0.1.0
 set NAME=TrivialOpenGL
 
 ::------------------------------------------------------------------------------
 
-set FILES=README.md CHANGELOG.md LICENSE
+set /p VERSION=<VERSION
+
+set FILES=README.md CHANGELOG.md LICENSE VERSION
 
 where /q 7z.exe || echo Pack Error: Can not find 7z.exe. && exit /b
 

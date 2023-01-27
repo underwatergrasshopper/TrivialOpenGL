@@ -22,9 +22,13 @@
     <None Include="Test.bat" />
     <None Include=".github\workflows\build_and_test.yml" />
     <None Include=".github\workflows\build_and_test_mingw.yml" />
+    <None Include="VERSION" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\TrivialOpenGL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TrivialOpenGL_Utility.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -26,9 +26,11 @@
     <None Include="Pack.bat" />
     <None Include="README.md" />
     <None Include="Test.bat" />
+    <None Include="VERSION" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\TrivialOpenGL.h" />
+    <ClInclude Include="include\TrivialOpenGL_Utility.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
