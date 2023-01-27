@@ -263,6 +263,15 @@ namespace TrivialOpenGL {
         virtual ~Area() {}
     };
 
+    using AreaI    = Area<int32_t>;
+    using AreaI64  = Area<int64_t>;
+
+    using AreaU    = Area<uint32_t>;
+    using AreaU64  = Area<uint64_t>;
+
+    using AreaF    = Area<float>;
+    using AreaD    = Area<float>;
+
     template <typename Type>
     inline bool operator==(const Area<Type>& l, const Area<Type>& r) {
         return l.x == r.x && l.y == r.y && l.width == r.width && l.height == r.height;
@@ -277,6 +286,21 @@ namespace TrivialOpenGL {
     inline RECT MakeRECT(const Area<Type>& area) {
         return {LONG(area.x), LONG(area.y), LONG(area.x + area.width), LONG(area.y + area.height)};
     }
+
+    //--------------------------------------------------------------------------
+    // Static
+    //--------------------------------------------------------------------------
+
+    template <typename Type>
+    class Static {
+    public:
+        static Type& To() { return sm_object; }
+    private:
+        static Type sm_object;
+    };
+
+    template <typename Type>
+    Type Static<Type>::sm_object;
 
 } // namespace TrivialOpenGL
 
