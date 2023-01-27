@@ -152,6 +152,7 @@
   <ItemGroup>
     <ClInclude Include="..\include\TrivialOpenGL.h" />
     <ClInclude Include="..\include\TrivialOpenGL_Utility.h" />
+    <ClInclude Include="..\include\TrivialOpenGL_Window.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="MinGW_Make.bat" />

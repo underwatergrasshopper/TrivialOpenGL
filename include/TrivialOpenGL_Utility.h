@@ -7,6 +7,7 @@
 #define TRIVIALOPENGL_UTILITY_H_
 
 #include <stdint.h>
+#include <stdio.h>
 #include <windows.h>
 
 namespace TrivialOpenGL {
@@ -301,6 +302,38 @@ namespace TrivialOpenGL {
 
     template <typename Type>
     Type Static<Type>::sm_object;
+
+    //--------------------------------------------------------------------------
+    // Log
+    //--------------------------------------------------------------------------
+
+    enum class LogMessageType {
+        UNKNOWN,
+        INFO,
+        FATAL_ERROR
+    };
+
+    using HandleLogFnP_T = void (*)(LogMessageType message_type, const char* message);
+
+    void Log(LogMessageType message_type, const char* message) {
+        auto& handle_log = Static<HandleLogFnP_T>::To();
+
+        if (handle_log) {
+            handle_log(message_type, message);
+        } else {
+            if (fwide(stdout, 0) > 0) {
+
+            } else {
+                printf("%s", message);
+                fflush(stdout);
+                if (message_type == LogMessageType::FATAL_ERROR) exit(EXIT_FAILURE);
+            }
+        }
+    }
+
+    void SetHandleLogFunction(HandleLogFnP_T handle_log) {
+        Static<HandleLogFnP_T>::To() = handle_log;
+    }
 
 } // namespace TrivialOpenGL
 
