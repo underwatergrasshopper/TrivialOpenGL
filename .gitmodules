@@ -1,3 +1,6 @@
 [submodule "TrivialOpenGL_Test/externals/TrivialTestKit"]
 	path = TrivialOpenGL_Test/externals/TrivialTestKit
 	url = https://github.com/underwatergrasshopper/TrivialTestKit.git
+[submodule "TrivialOpenGL_Test/externals/ToStr"]
+	path = TrivialOpenGL_Test/externals/ToStr
+	url = https://github.com/underwatergrasshopper/ToStr.git
