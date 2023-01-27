@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <string>
+#include <set>
+
 #include <TrivialTestKit.h>
 #include <ToStr.h>
 
@@ -384,9 +387,70 @@ void TestTOGL_Area() {
     }
 }
 
-int main() {
-    TTK_ADD_TEST(TestTOGL_Point, 0);
-    TTK_ADD_TEST(TestTOGL_Size, 0);
-    TTK_ADD_TEST(TestTOGL_Area, 0);
-    return !TTK_Run();
+void TestTOGL_Mix() {
+    using TOGL::ASCII_ToUTF16;
+
+    TTK_ASSERT(ASCII_ToUTF16("") == L"");
+    TTK_ASSERT(ASCII_ToUTF16("Some Text.") == L"Some Text.");
+}
+
+void TestTOGL_Log() {
+    TTK_ASSERT(CreateDirectoryA(".\\log", 0) || GetLastError() == ERROR_ALREADY_EXISTS);
+    TTK_ASSERT(CreateDirectoryA(".\\log\\test", 0) || GetLastError() == ERROR_ALREADY_EXISTS);
+
+    system("TrivialOpenGL_Test.exe LOG > log\\test\\log.txt");
+    TTK_ASSERT(LoadTextFromFile("log\\test\\log.txt") == "Some message.\nSome message 2.\n");
+
+    system("TrivialOpenGL_Test.exe LOG_TRY_WIDE > log\\test\\log_try_wide.txt");
+    TTK_ASSERT(LoadTextFromFile("log\\test\\log_try_wide.txt") == "Some message.\nSome message 2.\n");
+
+    system("TrivialOpenGL_Test.exe LOG_CUSTOM > log\\test\\log_custom.txt");
+    TTK_ASSERT(LoadTextFromFile("log\\test\\log_custom.txt") == "Info: Some message.\nFatal Error: Some message 2.\n");
+}
+
+int main(int argc, char *argv[]) {
+    std::set<std::string> flags;
+
+    for (size_t index = 0; index < argc; ++index) {
+        flags.insert(argv[index]);
+    }
+
+    auto IsFlag = [&flags](const std::string& flag) { 
+        return flags.find(flag) != flags.end(); 
+    };
+
+    if (IsFlag("LOG")) {
+        printf(""); // try force narrow stream
+        TOGL::Log(TOGL::LogMessageType::INFO, "Some message.");
+        TOGL::Log(TOGL::LogMessageType::FATAL_ERROR, "Some message 2.");
+        TOGL::Log(TOGL::LogMessageType::INFO, "Some message 3.");
+        return 0;
+    } else if (IsFlag("LOG_TRY_WIDE")) {
+        wprintf(L""); // try force wide stream
+        TOGL::Log(TOGL::LogMessageType::INFO, "Some message.");
+        TOGL::Log(TOGL::LogMessageType::FATAL_ERROR, "Some message 2.");
+        TOGL::Log(TOGL::LogMessageType::INFO, "Some message 3.");
+        return 0;
+    } else if (IsFlag("LOG_CUSTOM")) {
+        TOGL::SetCustomLogFunction([](TOGL::LogMessageType message_type, const char* message) {
+            if (message_type == TOGL::LogMessageType::FATAL_ERROR) {
+                printf("Fatal Error: %s\n", message);
+            } else {
+                printf("Info: %s\n", message);
+            }
+            fflush(stdout);
+        });
+
+        TOGL::Log(TOGL::LogMessageType::INFO, "Some message.");
+        TOGL::Log(TOGL::LogMessageType::FATAL_ERROR, "Some message 2.");
+        TOGL::Log(TOGL::LogMessageType::INFO, "Some message 3.");
+        return 0;
+    } else {
+        TTK_ADD_TEST(TestTOGL_Point, 0);
+        TTK_ADD_TEST(TestTOGL_Size, 0);
+        TTK_ADD_TEST(TestTOGL_Area, 0);
+        TTK_ADD_TEST(TestTOGL_Mix, 0);
+        TTK_ADD_TEST(TestTOGL_Log, 0);
+        return !TTK_Run();
+    }
 }

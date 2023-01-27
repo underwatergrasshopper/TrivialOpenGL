@@ -304,6 +304,16 @@ namespace TrivialOpenGL {
     Type Static<Type>::sm_object;
 
     //--------------------------------------------------------------------------
+    // Mix
+    //--------------------------------------------------------------------------
+
+    inline std::wstring ASCII_ToUTF16(const std::string& text_ascii) {
+        std::wstring text_utf16;
+        for (size_t index = 0; index < text_ascii.length(); ++index) text_utf16 += wchar_t(text_ascii[index]);
+        return text_utf16;
+    }
+
+    //--------------------------------------------------------------------------
     // Log
     //--------------------------------------------------------------------------
 
@@ -315,24 +325,30 @@ namespace TrivialOpenGL {
 
     using HandleLogFnP_T = void (*)(LogMessageType message_type, const char* message);
 
-    void Log(LogMessageType message_type, const char* message) {
-        auto& handle_log = Static<HandleLogFnP_T>::To();
+    // Logs message to standard output (by default) redirect to custom function which was set by calling SetHandleLogFunction.
+    // message          A message in ASCII encoding.
+    inline void Log(LogMessageType message_type, const char* message) {
+        auto& custom_log = Static<HandleLogFnP_T>::To();
 
-        if (handle_log) {
-            handle_log(message_type, message);
+        if (custom_log) {
+            custom_log(message_type, message);
         } else {
             if (fwide(stdout, 0) > 0) {
-
+                wprintf(L"%ls\n", ASCII_ToUTF16(message).c_str());
             } else {
-                printf("%s", message);
-                fflush(stdout);
-                if (message_type == LogMessageType::FATAL_ERROR) exit(EXIT_FAILURE);
+                printf("%s\n", message);
             }
+            fflush(stdout);
         }
+        if (message_type == LogMessageType::FATAL_ERROR) exit(EXIT_FAILURE);
     }
 
-    void SetHandleLogFunction(HandleLogFnP_T handle_log) {
-        Static<HandleLogFnP_T>::To() = handle_log;
+    inline void Log(LogMessageType message_type, const std::string message) {
+        Log(message_type, message.c_str());
+    }
+
+    inline void SetCustomLogFunction(HandleLogFnP_T custom_log) {
+        Static<HandleLogFnP_T>::To() = custom_log;
     }
 
 } // namespace TrivialOpenGL
