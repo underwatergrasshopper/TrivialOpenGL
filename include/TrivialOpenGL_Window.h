@@ -38,17 +38,35 @@ namespace TrivialOpenGL {
         AreaI           area            = {DEF, DEF, DEF, DEF};
 
         StyleBit::Field style           = 0;
+
+        // Is called after creation of OpenGL Rendering Context and before calling display function.
+        void (*create)()                = nullptr;
+
+        // Is called right before destruction of OpenGL Rendering Context.
+        void (*destroy)()               = nullptr;
+
+        // Is called each time when window content needs to be redrawn.
+        void (*display)()               = nullptr;
     };
 
     class Window {
     public:
-        Window() {}
+        Window() {
+            SingletonCheck();
+        }
         virtual ~Window() {}
 
         int Run(const Data& data) {
             return 0;
         }
     private:
+        void SingletonCheck() {
+            static bool is_instance_exists = false;
+            if (is_instance_exists) {
+                LogFatalError("Error TOGL::Window::Window: Can't be more than one instance of Window class.");
+            }
+            is_instance_exists = true;
+        }
     };
 
     inline Window& ToWindow() {

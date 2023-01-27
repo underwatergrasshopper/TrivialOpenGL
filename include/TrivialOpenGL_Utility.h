@@ -347,6 +347,14 @@ namespace TrivialOpenGL {
         Log(message_type, message.c_str());
     }
 
+    inline void LogInfo(const std::string message) {
+        Log(LogMessageType::INFO, message.c_str());
+    }
+
+    inline void LogFatalError(const std::string message) {
+        Log(LogMessageType::FATAL_ERROR, message.c_str());
+    }
+
     inline void SetCustomLogFunction(HandleLogFnP_T custom_log) {
         Static<HandleLogFnP_T>::To() = custom_log;
     }
