@@ -7,6 +7,7 @@
 #define TRIVIALOPENGL_UTILITY_H_
 
 #include <stdint.h>
+#include <windows.h>
 
 namespace TrivialOpenGL {
 
@@ -222,6 +223,60 @@ namespace TrivialOpenGL {
         return l;
     }
 
+    //--------------------------------------------------------------------------
+    // Area
+    //--------------------------------------------------------------------------
+
+    template <typename Type>
+    struct Area {
+        Type x;
+        Type y;
+        Type width;
+        Type height;
+
+        Area() : x(Type()), y(Type()), width(Type()), height(Type()) {}
+
+        Area(const Type& x, const Type& y, const Type& width, const Type& height) : x(x), y(y), width(width), height(height) {}
+
+        template <typename Type2>
+        explicit Area(const Area<Type2>& a) : x(Type(a.x)), y(Type(a.y)), width(Type(a.width)), height(Type(a.height)) {}
+
+        explicit Area(const Point<Type>& p, const Size<Type>& s) : x(p.x), y(p.y), width(s.width), height(s.height) {}
+
+        void SetPoint(const Point<Type>& p) {  
+            x = p.x;
+            y = p.y;
+        }
+
+        void SetSize(const Size<Type>& s) {  
+            width   = s.width;
+            height  = s.height;
+        }
+
+        Point<Type> GetPoint() const { return Point<Type>(x, y); }
+        Size<Type> GetSize() const { return Size<Type>(width, height); }
+
+        bool IsIn(const Point<Type>& p) const {
+            return Point<Type>(x, y) <= p && p < Point<Type>(x + width, y + height);
+        }
+
+        virtual ~Area() {}
+    };
+
+    template <typename Type>
+    inline bool operator==(const Area<Type>& l, const Area<Type>& r) {
+        return l.x == r.x && l.y == r.y && l.width == r.width && l.height == r.height;
+    }
+
+    template <typename Type>
+    inline bool operator!=(const Area<Type>& l, const Area<Type>& r) {
+        return l.x != r.x || l.y != r.y || l.width != r.width || l.height != r.height;
+    }
+
+    template <typename Type>
+    inline RECT MakeRECT(const Area<Type>& area) {
+        return {LONG(area.x), LONG(area.y), LONG(area.x + area.width), LONG(area.y + area.height)};
+    }
 
 } // namespace TrivialOpenGL
 
