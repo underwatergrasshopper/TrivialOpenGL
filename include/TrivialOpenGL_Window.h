@@ -39,6 +39,8 @@ namespace TrivialOpenGL {
 
         StyleBit::Field style           = 0;
 
+        std::string     icon_file_name  = "";
+
         // Is called after creation of OpenGL Rendering Context and before calling display function.
         void (*create)()                = nullptr;
 
@@ -63,7 +65,6 @@ namespace TrivialOpenGL {
         static LRESULT CALLBACK WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param) {
             switch (message) {
             case WM_CREATE: 
-
                 return 0;
             
             case WM_DESTROY:
@@ -78,10 +79,10 @@ namespace TrivialOpenGL {
                 return 0;
 
             case WM_ERASEBKGND:
-                // Tells DefWindowProc to not erase background. It's unnecessery since background is handled by OpenGL.
+                // Tells DefWindowProc to not erase background. It's unnecessary since background is handled by OpenGL.
                 return 1;
             }
-            return DefWindowProc(window_handle, message, w_param, l_param);
+            return DefWindowProcW(window_handle, message, w_param, l_param);
         }
 
         int Run(const Data& data) {
@@ -98,14 +99,7 @@ namespace TrivialOpenGL {
             wc.cbClsExtra       = 0;
             wc.cbWndExtra       = 0;
             wc.hInstance        = m_instance_handle;
-            wc.hIcon            = NULL;
-            // wc.hIcon            = (HICON)LoadImage(
-            //     NULL,
-            //     _T("icon.ico"),
-            //     IMAGE_ICON,
-            //     0, 0,
-            //     LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED
-            // );
+            wc.hIcon            = TryLoadIcon(m_data.icon_file_name);
             wc.hCursor          = LoadCursor(NULL, IDC_ARROW);
             wc.hbrBackground    = NULL;
             wc.lpszMenuName     = NULL;
@@ -149,6 +143,20 @@ namespace TrivialOpenGL {
                 LogFatalError("Error TOGL::Window::SingletonCheck: Can't be more than one instance of Window class.");
             }
             is_instance_exists = true;
+        }
+
+        static HICON TryLoadIcon(const std::string& icon_file_name) {
+            if (icon_file_name.empty()) {
+                return NULL;
+            } else {
+                return (HICON)LoadImageW(
+                    NULL,
+                    ToUTF16(icon_file_name).c_str(),
+                    IMAGE_ICON,
+                    0, 0,
+                    LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED
+                );
+            }
         }
 
         Data        m_data;

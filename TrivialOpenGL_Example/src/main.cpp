@@ -2,5 +2,10 @@
 #include <TrivialOpenGL.h>
 
 int main() {
-    return TOGL::Run();
+    TOGL::Data data = {};
+
+    data.window_name        = "TrivialOpenGL_Example";
+    data.icon_file_name     = "..\\..\\..\\..\\TrivialOpenGL_Example\\assets\\icon.ico";
+
+    return TOGL::Run(data);
 }
