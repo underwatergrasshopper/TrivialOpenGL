@@ -7,6 +7,20 @@
 
 #include "TrivialOpenGL.h"
 
+//--------------------------------------------------------------------------
+
+template <unsigned N>
+std::string CodeToTextUTF8(const uint8_t (&codes)[N]) {
+    return std::string((const char*)codes);
+}
+
+template <unsigned N>
+std::wstring CodeToTextUTF16(const uint16_t (&codes)[N]) {
+    return std::wstring((const wchar_t*)codes);
+}
+
+//--------------------------------------------------------------------------
+
 void TestTOGL_Point() {
     using TOGL::Point;
 
@@ -387,11 +401,100 @@ void TestTOGL_Area() {
     }
 }
 
-void TestTOGL_Mix() {
+void TestTOGL_ASCII_ToUTF16() {
     using TOGL::ASCII_ToUTF16;
 
     TTK_ASSERT(ASCII_ToUTF16("") == L"");
     TTK_ASSERT(ASCII_ToUTF16("Some Text.") == L"Some Text.");
+}
+
+void TestTOGL_ToUTF16() {
+    using TOGL::ToUTF16;
+
+    // empty text
+    TTK_ASSERT(ToUTF16(u8"") == L"");
+
+    // unicode characters
+    TTK_ASSERT(ToUTF16(u8"Some text\u0444\U0002F820.") == L"Some text\u0444\U0002F820.");
+
+    // long text
+    {
+        const std::string sequence_utf8 =  
+            u8"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            u8"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            u8"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            u8"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. ";
+
+        const std::wstring sequence_utf16 =  
+            L"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            L"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            L"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            L"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. ";
+
+        std::string long_text_utf8;
+        std::wstring long_text_utf16;
+
+        const size_t number = TOGL::CONV_STACK_DEF_BUFFER_SIZE * 2 / sequence_utf16.length();
+        for (size_t ix = 0; ix < number; ++ix) {
+            long_text_utf8  += sequence_utf8;
+            long_text_utf16 += sequence_utf16;
+        }
+
+        TTK_ASSERT(ToUTF16(long_text_utf8) == long_text_utf16);
+    }
+
+    // wrong encoding
+    {
+        TTK_ASSERT(ToUTF16(CodeToTextUTF8({'t', 'e', 'x', 't', '\0'})) == CodeToTextUTF16({'t', 'e', 'x', 't', '\0'})); // correct, control one
+        // U+FFFD - Replacement Character
+        TTK_ASSERT(ToUTF16(CodeToTextUTF8({0xC2, 'e', 'x', 't', '\0'})) == CodeToTextUTF16({0xFFFD, 'e', 'x', 't', '\0'}));
+        TTK_ASSERT(ToUTF16(CodeToTextUTF8({0xFF, 'e', 'x', 't', '\0'})) == CodeToTextUTF16({0xFFFD, 'e', 'x', 't', '\0'}));
+    }
+
+}
+
+void TestTOGL_ToUTF8() {
+    using TOGL::ToUTF8;
+
+    // empty text
+    TTK_ASSERT(ToUTF8(L"") == u8"");
+
+    // unicode characters
+    TTK_ASSERT(ToUTF8(L"Some text\u0444\U0002F820.") == u8"Some text\u0444\U0002F820.");
+
+    // long text
+    {
+        const std::string sequence_utf8 =  
+            u8"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            u8"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            u8"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            u8"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. ";
+
+        const std::wstring sequence_utf16 =  
+            L"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            L"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            L"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. " 
+            L"Some text\u0444. Some text\u0444. Some text\u0444. Some text\u0444. ";
+
+        std::string long_text_utf8;
+        std::wstring long_text_utf16;
+
+        const size_t number = TOGL::CONV_STACK_DEF_BUFFER_SIZE * 2 / sequence_utf8.length();
+        for (size_t ix = 0; ix < number; ++ix) {
+            long_text_utf8  += sequence_utf8;
+            long_text_utf16 += sequence_utf16;
+        }
+
+        TTK_ASSERT(ToUTF8(long_text_utf16) == long_text_utf8);
+    }
+
+    // wrong encoding
+    {
+        TTK_ASSERT(ToUTF8(CodeToTextUTF16({'t', 'e', 'x', 't', '\0'})) == CodeToTextUTF8({'t', 'e', 'x', 't', '\0'})); // correct, control one
+        // U+FFFD - Replacement Character (EF BF BD in utf8)
+        TTK_ASSERT(ToUTF8(CodeToTextUTF16({0xDC00, 'e', 'x', 't', '\0'})) == CodeToTextUTF8({0xEF, 0xBF, 0xBD, 'e', 'x', 't', '\0'})); 
+        TTK_ASSERT(ToUTF8(CodeToTextUTF16({0xD800, 'e', 'x', 't', '\0'})) == CodeToTextUTF8({0xEF, 0xBF, 0xBD, 'e', 'x', 't', '\0'}));
+    }
 }
 
 void TestTOGL_Log() {
@@ -449,7 +552,9 @@ int main(int argc, char *argv[]) {
         TTK_ADD_TEST(TestTOGL_Point, 0);
         TTK_ADD_TEST(TestTOGL_Size, 0);
         TTK_ADD_TEST(TestTOGL_Area, 0);
-        TTK_ADD_TEST(TestTOGL_Mix, 0);
+        TTK_ADD_TEST(TestTOGL_ASCII_ToUTF16, 0);
+        TTK_ADD_TEST(TestTOGL_ToUTF16, 0);
+        TTK_ADD_TEST(TestTOGL_ToUTF8, 0);
         TTK_ADD_TEST(TestTOGL_Log, 0);
         return !TTK_Run();
     }

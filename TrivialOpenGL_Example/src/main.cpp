@@ -2,6 +2,5 @@
 #include <TrivialOpenGL.h>
 
 int main() {
-    puts("Hello!");
-    return 0;
+    return TOGL::Run();
 }

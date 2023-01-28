@@ -8,7 +8,16 @@
 
 #include <stdint.h>
 #include <stdio.h>
+
+#define WIN32_LEAN_AND_MEAN 
 #include <windows.h>
+#undef WIN32_LEAN_AND_MEAN 
+
+#include <string>
+
+//==============================================================================
+// Declarations
+//==============================================================================
 
 namespace TrivialOpenGL {
 
@@ -304,14 +313,19 @@ namespace TrivialOpenGL {
     Type Static<Type>::sm_object;
 
     //--------------------------------------------------------------------------
-    // Mix
+    // Conversion
     //--------------------------------------------------------------------------
 
-    inline std::wstring ASCII_ToUTF16(const std::string& text_ascii) {
-        std::wstring text_utf16;
-        for (size_t index = 0; index < text_ascii.length(); ++index) text_utf16 += wchar_t(text_ascii[index]);
-        return text_utf16;
-    }
+    enum { CONV_STACK_DEF_BUFFER_SIZE = 4096 };
+
+    // Converts ascii string to utf-16 string.
+    std::wstring ASCII_ToUTF16(const std::string& text_ascii);
+
+    // Converts utf-8 string to utf-16 string.
+    std::wstring ToUTF16(const std::string& text_utf8);
+
+    // Converts utf-16 string to utf-8 string.
+    std::string ToUTF8(const std::wstring& text_utf16);
 
     //--------------------------------------------------------------------------
     // Log
@@ -323,12 +337,97 @@ namespace TrivialOpenGL {
         FATAL_ERROR
     };
 
-    using HandleLogFnP_T = void (*)(LogMessageType message_type, const char* message);
+    using CustomLogFnP_T = void (*)(LogMessageType message_type, const char* message);
 
     // Logs message to standard output (by default) redirect to custom function which was set by calling SetHandleLogFunction.
     // message          A message in ASCII encoding.
+    void Log(LogMessageType message_type, const char* message);
+
+    // message      Message in ascii encoding.
+    void Log(LogMessageType message_type, const std::string& message);
+    void LogInfo(const std::string& message);
+    void LogFatalError(const std::string& message);
+
+    void SetCustomLogFunction(CustomLogFnP_T custom_log);
+
+} // namespace TrivialOpenGL
+
+namespace TOGL = TrivialOpenGL;
+
+//==============================================================================
+// Definitions
+//==============================================================================
+
+namespace TrivialOpenGL {
+
+    //--------------------------------------------------------------------------
+    // Conversion
+    //--------------------------------------------------------------------------
+
+    inline std::wstring ASCII_ToUTF16(const std::string& text_ascii) {
+        std::wstring text_utf16;
+        for (size_t index = 0; index < text_ascii.length(); ++index) text_utf16 += wchar_t(text_ascii[index]);
+        return text_utf16;
+    }
+
+    inline std::wstring ToUTF16(const std::string& text_utf8) {
+        std::wstring text_utf16;
+
+        wchar_t stack_buffer[CONV_STACK_DEF_BUFFER_SIZE] = {};
+
+        if (!text_utf8.empty()) {
+            int size = MultiByteToWideChar(CP_UTF8, 0, text_utf8.c_str(), -1, NULL, 0);
+            if (size == 0) {
+                LogFatalError("Error TOGLW::Window::ToUTF16: Can not convert a text from utf-16 to utf-8.");
+            }
+
+            wchar_t* buffer = (size > CONV_STACK_DEF_BUFFER_SIZE) ? (new wchar_t[size]) : stack_buffer;
+
+            size = MultiByteToWideChar(CP_UTF8, 0, text_utf8.c_str(), -1, buffer, size);
+            if (size == 0) {
+                LogFatalError("Error TOGLW::Window::ToUTF16: Can not convert a text from utf-16 to utf-8.");
+            }
+
+            if (size > 1) text_utf16 = std::wstring(buffer, size - 1);
+
+            if (buffer != stack_buffer) delete[] buffer;
+        }
+
+        return text_utf16;
+    }
+
+    inline std::string ToUTF8(const std::wstring& text_utf16) {
+        std::string text_utf8;
+
+        char stack_buffer[CONV_STACK_DEF_BUFFER_SIZE] = {};
+
+        if (!text_utf16.empty()) {
+            int size = WideCharToMultiByte(CP_UTF8, 0, text_utf16.c_str(), -1, NULL, 0, NULL, NULL);
+            if (size == 0) {
+                LogFatalError("Error TOGLW::Window::ToUTF8: Can not convert a text from utf-8 to utf-16.");
+            }
+
+            char* buffer = (size > CONV_STACK_DEF_BUFFER_SIZE) ? (new char[size]) : stack_buffer;
+
+            size = WideCharToMultiByte(CP_UTF8, 0, text_utf16.c_str(), -1, buffer, size, NULL, NULL);
+            if (size == 0) {
+                LogFatalError("Error TOGLW::Window::ToUTF8: Can not convert a text from utf-8 to utf-16.");
+            }
+
+            if (size > 1) text_utf8 = std::string(buffer, size - 1);
+
+            if (buffer != stack_buffer) delete[] buffer;
+        }
+
+        return text_utf8;
+    }
+
+    //--------------------------------------------------------------------------
+    // Log
+    //--------------------------------------------------------------------------
+
     inline void Log(LogMessageType message_type, const char* message) {
-        auto& custom_log = Static<HandleLogFnP_T>::To();
+        auto& custom_log = Static<CustomLogFnP_T>::To();
 
         if (custom_log) {
             custom_log(message_type, message);
@@ -343,24 +442,21 @@ namespace TrivialOpenGL {
         if (message_type == LogMessageType::FATAL_ERROR) exit(EXIT_FAILURE);
     }
 
-    inline void Log(LogMessageType message_type, const std::string message) {
+    inline void Log(LogMessageType message_type, const std::string& message) {
         Log(message_type, message.c_str());
     }
 
-    inline void LogInfo(const std::string message) {
+    inline void LogInfo(const std::string& message) {
         Log(LogMessageType::INFO, message.c_str());
     }
 
-    inline void LogFatalError(const std::string message) {
+    inline void LogFatalError(const std::string& message) {
         Log(LogMessageType::FATAL_ERROR, message.c_str());
     }
 
-    inline void SetCustomLogFunction(HandleLogFnP_T custom_log) {
-        Static<HandleLogFnP_T>::To() = custom_log;
+    inline void SetCustomLogFunction(CustomLogFnP_T custom_log) {
+        Static<CustomLogFnP_T>::To() = custom_log;
     }
-
-} // namespace TrivialOpenGL
-
-namespace TOGL = TrivialOpenGL;
+} // namespace TrivialOpenGL 
 
 #endif // TRIVIALOPENGL_UTILITY_H_
