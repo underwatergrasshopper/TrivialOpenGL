@@ -146,7 +146,7 @@ namespace TrivialOpenGL {
         void SingletonCheck() {
             static bool is_instance_exists = false;
             if (is_instance_exists) {
-                LogFatalError("Error TOGL::Window::Window: Can't be more than one instance of Window class.");
+                LogFatalError("Error TOGL::Window::SingletonCheck: Can't be more than one instance of Window class.");
             }
             is_instance_exists = true;
         }
