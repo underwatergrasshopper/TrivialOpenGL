@@ -297,6 +297,15 @@ namespace TrivialOpenGL {
         return {LONG(area.x), LONG(area.y), LONG(area.x + area.width), LONG(area.y + area.height)};
     }
 
+    inline AreaI MakeArea(const RECT& r) {
+        return {
+            r.left,
+            r.top,
+            r.right - r.left,
+            r.bottom - r.top
+        };
+    }
+
     //--------------------------------------------------------------------------
     // Static
     //--------------------------------------------------------------------------
