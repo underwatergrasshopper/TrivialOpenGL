@@ -72,6 +72,7 @@ namespace TrivialOpenGL {
             SingletonCheck();
 
             m_data                      = {};
+
             m_instance_handle           = NULL;
             m_window_handle             = NULL;
             m_device_context_handle     = NULL;
@@ -80,9 +81,47 @@ namespace TrivialOpenGL {
             m_window_style              = 0;
             m_window_extended_style     = 0;
         }
+
         virtual ~Window() {}
 
-        static LRESULT CALLBACK WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
+        // Moves window to point in screen coordinates.
+        void Move(const PointI& point) {
+            SetWindowPos(m_window_handle, HWND_TOP, point.x, point.y, 0, 0, SWP_NOSIZE);
+        }
+
+        // Resizes window and keeps current window position.
+        void Resize(const SizeI& size) {
+            SetWindowPos(m_window_handle, HWND_TOP, 0, 0, size.width, size.height, SWP_NOREPOSITION);
+        }
+
+        // Resizes window draw area and keeps current window position.
+        void ResizeDrawArea(const SizeI& draw_area_size) {
+            const SizeI window_size = GetWindowAreaFromDrawArea(AreaI({}, draw_area_size), m_window_style).GetSize();
+
+            SetWindowPos(m_window_handle, HWND_TOP, 0, 0, window_size.width, window_size.height, SWP_NOREPOSITION);
+        }
+
+        // Moves and resizes window area.
+        void MoveAndResize(const AreaI& area) {
+            SetWindowPos(m_window_handle, HWND_TOP, area.x, area.y, area.width, area.height, 0);
+        }
+
+        // Centers window in desktop area excluding task bar area.
+        void Center() {
+            const AreaI desktop_area = GetMonitorDesktopAreaNoTaskBar();
+
+            AreaI window_area = GetWindowArea(m_window_handle);
+
+            window_area.x = (desktop_area.width - window_area.width) / 2;
+            window_area.y = (desktop_area.height - window_area.height) / 2;
+
+            Move(window_area.GetPoint());
+        }
+
+        // Changes area by applying style from data parameter which was provided to Run function.
+        void ChangeArea(const AreaI& area) {
+            MoveAndResize(GenerateWindowArea(area));
+        }
 
         int Run(const Data& data) {
             m_data = data;
@@ -117,14 +156,14 @@ namespace TrivialOpenGL {
                 m_window_style          = WS_POPUP;
             }
 
-            ChangeAreaByStyle(m_data.area);
+            const AreaI window_area = GenerateWindowArea(m_data.area);
 
             m_window_handle = CreateWindowExW(
                 m_window_extended_style,
                 WINDOW_CLASS_NAME,
                 ToUTF16(m_data.window_name).c_str(),
                 m_window_style,
-                m_data.area.x, m_data.area.y, m_data.area.width, m_data.area.height,
+                window_area.x, window_area.y, window_area.width, window_area.height,
                 NULL,
                 NULL,
                 m_instance_handle,
@@ -144,6 +183,8 @@ namespace TrivialOpenGL {
         uint32_t GetDebugLevel() const { return m_data.info_level; }
 
     private:
+        static LRESULT CALLBACK WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
+
         void SingletonCheck() {
             static bool is_instance_exists = false;
             if (is_instance_exists) {
@@ -199,26 +240,42 @@ namespace TrivialOpenGL {
             return MakeArea(rc);
         }
 
-        void ChangeAreaByStyle(AreaI& area) {
-            AreaI desktop_area = GetMonitorDesktopAreaNoTaskBar();
+        static AreaI GetWindowArea(HWND window_handle) {
+            RECT r;
+            if (GetWindowRect(window_handle, &r)) {
+                return MakeArea(r);
+            }
+            return AreaI(0, 0, 0, 0);
+        }
 
-            if (area.width == DEF) area.width = desktop_area.width / 2;
-            if (area.height == DEF) area.height = desktop_area.height / 2;
-            if (area.x == DEF) area.x = (desktop_area.width - area.width) / 2;
-            if (area.y == DEF) area.y = (desktop_area.height - area.height) / 2;
+        AreaI GenerateWindowArea(const AreaI& area) {
+            AreaI window_area = area;
+
+            const AreaI desktop_area = GetMonitorDesktopAreaNoTaskBar();
+
+            if (area.width == DEF)  window_area.width     = desktop_area.width / 2;
+            if (area.height == DEF) window_area.height    = desktop_area.height / 2;
+            if (area.x == DEF)      window_area.x         = (desktop_area.width - window_area.width) / 2;
+            if (area.y == DEF)      window_area.y         = (desktop_area.height - window_area.height) / 2;
 
             if ((m_data.style & StyleBit::CLIENT_SIZE) && !(m_data.style & StyleBit::CLIENT_ONLY)) {
-                RECT rect = MakeRECT(area);
-                AdjustWindowRect(&rect, m_window_style, FALSE);
-                area = MakeArea(rect);
+                window_area = GetWindowAreaFromDrawArea(window_area, m_window_style);
 
-                if (area.width < 0) area.width = 0;
-                if (area.height < 1) area.height = 1;
+                if (window_area.width < 0)    window_area.width = 0;
+                if (window_area.height < 1)   window_area.height = 1;
             }
             if (m_data.style & StyleBit::CENTERED) {
-                area.x = (desktop_area.width - area.width) / 2;
-                area.y = (desktop_area.height - area.height) / 2;
+                window_area.x = (desktop_area.width - window_area.width) / 2;
+                window_area.y = (desktop_area.height - window_area.height) / 2;
             }
+
+            return window_area;
+        }
+
+        static AreaI GetWindowAreaFromDrawArea(const AreaI& draw_area, DWORD window_style) {
+            RECT rect = MakeRECT(draw_area);
+            AdjustWindowRect(&rect, window_style, FALSE);
+            return MakeArea(rect);
         }
 
         void Create(HWND window_handle) {
