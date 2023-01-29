@@ -57,13 +57,17 @@ namespace TrivialOpenGL {
         uint32_t        info_level          = 0;
 
         // Is called right before window is opened.
-        void (*create)()                    = nullptr;
+        void (*do_on_create)()                                          = nullptr;
 
         // Is called right after window is closed.
-        void (*destroy)()                   = nullptr;
+        void (*do_on_destroy)()                                         = nullptr;
 
         // Is called each time when window content needs to be redrawn.
-        void (*display)()                   = nullptr;
+        void (*display)()                                               = nullptr;
+
+        void (*do_on_key_down_raw)(WPARAM w_param, LPARAM l_param)      = nullptr;
+        void (*do_on_key_up_raw)(WPARAM w_param, LPARAM l_param)        = nullptr;
+
     };
 
     class Window {
@@ -80,30 +84,51 @@ namespace TrivialOpenGL {
 
             m_window_style              = 0;
             m_window_extended_style     = 0;
+
+            m_is_enqueued_to_destroy        = false;
         }
 
         virtual ~Window() {}
 
-        // Moves window to point in screen coordinates.
-        void Move(const PointI& point) {
-            SetWindowPos(m_window_handle, HWND_TOP, point.x, point.y, 0, 0, SWP_NOSIZE);
+        // Moves window to position in screen coordinates.
+        void MoveTo(int x, int y) {
+            SetWindowPos(m_window_handle, 0, x, y, 0, 0, SWP_NOSIZE | SWP_NOOWNERZORDER);
+        }
+        void MoveTo(const PointI& pos) {
+            MoveTo(pos.x, pos.y);
         }
 
         // Resizes window and keeps current window position.
+        void Resize(int width, int height) {
+            SetWindowPos(m_window_handle, 0, 0, 0, width, height, SWP_NOMOVE | SWP_NOOWNERZORDER);
+        }
         void Resize(const SizeI& size) {
-            SetWindowPos(m_window_handle, HWND_TOP, 0, 0, size.width, size.height, SWP_NOREPOSITION);
+            Resize(size.width, size.height);
         }
 
         // Resizes window draw area and keeps current window position.
-        void ResizeDrawArea(const SizeI& draw_area_size) {
-            const SizeI window_size = GetWindowAreaFromDrawArea(AreaI({}, draw_area_size), m_window_style).GetSize();
+        // width        Window draw area width.
+        // height       Window draw area height.
+        void ResizeDrawArea(int width, int height) {
+            const SizeI window_size = GetWindowAreaFromDrawArea(AreaI(0, 0, width, height), m_window_style).GetSize();
 
-            SetWindowPos(m_window_handle, HWND_TOP, 0, 0, window_size.width, window_size.height, SWP_NOREPOSITION);
+            SetWindowPos(m_window_handle, 0, 0, 0, window_size.width, window_size.height, SWP_NOMOVE | SWP_NOOWNERZORDER);
+        }
+        void ResizeDrawArea(const SizeI& draw_area_size) {
+            ResizeDrawArea(draw_area_size.width, draw_area_size.height);
         }
 
         // Moves and resizes window area.
-        void MoveAndResize(const AreaI& area) {
-            SetWindowPos(m_window_handle, HWND_TOP, area.x, area.y, area.width, area.height, 0);
+        void MoveToAndResize(int x, int y, int width, int height) {
+            SetWindowPos(m_window_handle, 0, x, y, width, height, SWP_NOOWNERZORDER);
+        }
+        void MoveToAndResize(const AreaI& area) {
+            MoveToAndResize(area.x, area.y, area.width, area.height);
+        }
+
+        // Puts window in top most position in z-order.
+        void BringToTop() {
+            BringWindowToTop(m_window_handle);
         }
 
         // Centers window in desktop area excluding task bar area.
@@ -115,12 +140,12 @@ namespace TrivialOpenGL {
             window_area.x = (desktop_area.width - window_area.width) / 2;
             window_area.y = (desktop_area.height - window_area.height) / 2;
 
-            Move(window_area.GetPoint());
+            MoveTo(window_area.GetPoint());
         }
 
         // Changes area by applying style from data parameter which was provided to Run function.
         void ChangeArea(const AreaI& area) {
-            MoveAndResize(GenerateWindowArea(area));
+            MoveToAndResize(GenerateWindowArea(area));
         }
 
         int Run(const Data& data) {
@@ -174,10 +199,16 @@ namespace TrivialOpenGL {
                 LogFatalError("Error TOGLW::Window::Run: Cannot create window.");
             }
 
+            if (m_data.do_on_create) m_data.do_on_create();
+
             ShowWindow(m_window_handle, SW_SHOW);
             UpdateWindow(m_window_handle);
 
             return ExecuteMainLoop();
+        }
+
+        void MarkToClose() {
+            m_is_enqueued_to_destroy = true;
         }
 
         uint32_t GetDebugLevel() const { return m_data.info_level; }
@@ -201,21 +232,30 @@ namespace TrivialOpenGL {
                     TranslateMessage(&msg);
                     DispatchMessageW(&msg);
                 }
+                if (msg.message == WM_QUIT) return (int)msg.wParam;
+                DestroyWindowIfEnqueued();
+
             } else {
                 while (true) {
                     while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
-                        if (msg.message == WM_QUIT) {
-                            return (int)msg.wParam;
-                        }
+                        if (msg.message == WM_QUIT) return (int)msg.wParam;
 
                         TranslateMessage(&msg);
                         DispatchMessageW(&msg);
                     }
                     Display();
+                    DestroyWindowIfEnqueued();
                 }
             }
 
-            return (int)msg.wParam;
+            return EXIT_FAILURE;
+        }
+
+        void DestroyWindowIfEnqueued() {
+            if (m_is_enqueued_to_destroy) {
+                DestroyWindow(m_window_handle);
+                m_is_enqueued_to_destroy = false;
+            }
         }
 
         HICON TryLoadIcon() {
@@ -253,21 +293,29 @@ namespace TrivialOpenGL {
 
             const AreaI desktop_area = GetMonitorDesktopAreaNoTaskBar();
 
+            // === Solve Size === //
+
             if (area.width == DEF)  window_area.width     = desktop_area.width / 2;
             if (area.height == DEF) window_area.height    = desktop_area.height / 2;
-            if (area.x == DEF)      window_area.x         = (desktop_area.width - window_area.width) / 2;
-            if (area.y == DEF)      window_area.y         = (desktop_area.height - window_area.height) / 2;
 
             if ((m_data.style & StyleBit::CLIENT_SIZE) && !(m_data.style & StyleBit::CLIENT_ONLY)) {
-                window_area = GetWindowAreaFromDrawArea(window_area, m_window_style);
+                window_area.SetSize(GetWindowAreaFromDrawArea(window_area, m_window_style).GetSize());
 
                 if (window_area.width < 0)    window_area.width = 0;
                 if (window_area.height < 1)   window_area.height = 1;
             }
+
+            // === Solve Position === //
+
             if (m_data.style & StyleBit::CENTERED) {
                 window_area.x = (desktop_area.width - window_area.width) / 2;
                 window_area.y = (desktop_area.height - window_area.height) / 2;
+            } else {
+                if (area.x == DEF) window_area.x = (desktop_area.width - window_area.width) / 2;
+                if (area.y == DEF) window_area.y = (desktop_area.height - window_area.height) / 2;
             }
+
+            // ===
 
             return window_area;
         }
@@ -317,8 +365,6 @@ namespace TrivialOpenGL {
             if (!m_rendering_context_handle) LogFatalError(std::string() + "Error TOGL::Window::Create: Can not create opengl rendering context. (windows error code:" + std::to_string(GetLastError()) + ")");
 
             wglMakeCurrent(m_device_context_handle, m_rendering_context_handle);
-
-            if (m_data.create) m_data.create();
         }
 
         void Destroy() {
@@ -327,7 +373,7 @@ namespace TrivialOpenGL {
                 fflush(stdout);
             }
 
-            if (m_data.destroy) m_data.destroy();
+            if (m_data.do_on_destroy) m_data.do_on_destroy();
 
             wglMakeCurrent(NULL, NULL); 
             wglDeleteContext(m_rendering_context_handle);
@@ -375,6 +421,8 @@ namespace TrivialOpenGL {
 
         DWORD       m_window_style;
         DWORD       m_window_extended_style;
+
+        bool        m_is_enqueued_to_destroy;
     };
 
     inline Window& ToWindow() {
@@ -391,25 +439,33 @@ namespace TrivialOpenGL {
 namespace TrivialOpenGL {
     inline LRESULT CALLBACK Window::WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param) {
         switch (message) {
-        case WM_CREATE: 
-            ToWindow().Create(window_handle);
-            return 0;
+            case WM_CREATE: 
+                ToWindow().Create(window_handle);
+                return 0;
 
-        case WM_DESTROY:
-            ToWindow().Destroy();
-            return 0;
+            case WM_DESTROY:
+                ToWindow().Destroy();
+                return 0;
 
-        case WM_CLOSE:
-            ToWindow().Close();
-            return 0;
+            case WM_CLOSE:
+                ToWindow().Close();
+                return 0;
 
-        case WM_PAINT:
-            ToWindow().Paint();
-            return 0;
+            case WM_PAINT:
+                ToWindow().Paint();
+                return 0;
 
-        case WM_ERASEBKGND:
-            // Tells DefWindowProc to not erase background. It's unnecessary since background is handled by OpenGL.
-            return 1;
+            case WM_KEYDOWN:
+                if (ToWindow().m_data.do_on_key_down_raw) ToWindow().m_data.do_on_key_down_raw(w_param, l_param);
+                return 0;
+
+            case WM_KEYUP:
+                if (ToWindow().m_data.do_on_key_up_raw) ToWindow().m_data.do_on_key_up_raw(w_param, l_param);
+                return 0;
+
+            case WM_ERASEBKGND:
+                // Tells DefWindowProc to not erase background. It's unnecessary since background is handled by OpenGL.
+                return 1;
         }
         return DefWindowProcW(window_handle, message, w_param, l_param);
     }

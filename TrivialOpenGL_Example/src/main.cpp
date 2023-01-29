@@ -130,11 +130,13 @@ int main(int argc, char *argv[]) {
         TOGL::Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example DRAW_TRIANGLE";
+        data.style              = TOGL::StyleBit::CLIENT_ONLY;
+        data.area               = {TOGL::DEF, TOGL::DEF, 600, 300};
         data.icon_resource_id   = ICON_ID;
         data.info_level         = 3;
 
-        data.create = []() {
-            glClearColor(0, 0, 0.2, 1);
+        data.do_on_create = []() {
+            glClearColor(0.0, 0.0, 0.2, 1.0);
         };
 
         data.display = []() {
@@ -153,6 +155,20 @@ int main(int argc, char *argv[]) {
 
             glEnd();
 
+        };
+
+        data.do_on_key_up_raw = [](WPARAM w_param, LPARAM l_param) {
+            switch (w_param) {
+                case 'P': TOGL::ToWindow().MoveTo({0, 0});   break;
+                case 'M': TOGL::ToWindow().MoveTo({10, 100});   break;
+                case 'S': TOGL::ToWindow().Resize({400, 200});  break;
+                case 'B': TOGL::ToWindow().Resize({800, 400});  break;
+                case 'R': TOGL::ToWindow().MoveToAndResize({100, 10, 800, 400});  break;
+                case 'A': TOGL::ToWindow().ChangeArea({100, 10, 800, 400});  break;
+                case 'C': TOGL::ToWindow().Center();            break;
+                case 'T': TOGL::ToWindow().BringToTop();        break;
+                case 'X': TOGL::ToWindow().MarkToClose();       break;
+            };
         };
 
         return TOGL::Run(data);
