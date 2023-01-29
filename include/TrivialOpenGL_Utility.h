@@ -19,6 +19,8 @@
 // Declarations
 //==============================================================================
 
+#define togl_print_i32(variable) { printf(#variable"=%d\n", int(variable)); fflush(stdout); } (void)0
+
 namespace TrivialOpenGL {
 
     //--------------------------------------------------------------------------

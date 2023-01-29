@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
         TOGL::Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example DRAW_TRIANGLE";
-        data.style              = TOGL::StyleBit::CLIENT_ONLY;
+        //data.style              = TOGL::StyleBit::CLIENT_SIZE;
         data.area               = {TOGL::DEF, TOGL::DEF, 600, 300};
         data.icon_resource_id   = ICON_ID;
         data.info_level         = 3;
@@ -168,6 +168,59 @@ int main(int argc, char *argv[]) {
                 case 'C': TOGL::ToWindow().Center();            break;
                 case 'T': TOGL::ToWindow().BringToTop();        break;
                 case 'X': TOGL::ToWindow().MarkToClose();       break;
+                case 'I': {
+                    togl_print_i32(GetSystemMetrics(SM_CXSIZEFRAME));
+                    togl_print_i32(GetSystemMetrics(SM_CYSIZEFRAME));
+                    togl_print_i32(GetSystemMetrics(SM_CXFOCUSBORDER));
+                    togl_print_i32(GetSystemMetrics(SM_CYFOCUSBORDER));
+                    togl_print_i32(GetSystemMetrics(SM_CXPADDEDBORDER));
+                    // togl_print_i32(GetSystemMetrics(SM_CYPADDEDBORDER));
+                    togl_print_i32(GetSystemMetrics(SM_CXBORDER));
+                    togl_print_i32(GetSystemMetrics(SM_CYBORDER));
+                    togl_print_i32(GetSystemMetrics(SM_CXEDGE));
+                    togl_print_i32(GetSystemMetrics(SM_CYEDGE));
+                    togl_print_i32(GetSystemMetrics(SM_CXDLGFRAME));
+                    togl_print_i32(GetSystemMetrics(SM_CYDLGFRAME));
+
+                    togl_print_i32(GetSystemMetrics(SM_CYMENU));
+                    togl_print_i32(GetSystemMetrics(SM_CYCAPTION));
+
+                    NONCLIENTMETRICSW m;
+                    m.cbSize = sizeof(NONCLIENTMETRICSW);
+                    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &m, 0);
+
+                    togl_print_i32(m.iBorderWidth);
+                    togl_print_i32(m.iPaddedBorderWidth);
+                    togl_print_i32(m.iScrollWidth);
+                    togl_print_i32(m.iScrollHeight);
+                    togl_print_i32(m.iCaptionWidth);
+                    togl_print_i32(m.iCaptionHeight);
+                    togl_print_i32(m.iSmCaptionWidth);
+                    togl_print_i32(m.iSmCaptionHeight);
+                    togl_print_i32(m.iMenuWidth);
+                    togl_print_i32(m.iMenuHeight);
+
+                    // window borders
+                    {
+                        RECT client, window, border;
+                        GetWindowRect(TOGL::ToWindow().GetHWND(), &window);
+                        GetClientRect(TOGL::ToWindow().GetHWND(), &client);
+                        MapWindowPoints(TOGL::ToWindow().GetHWND(), NULL, (LPPOINT)&client, 2);
+
+                        border.left     = client.left - window.left;
+                        border.top      = client.top - window.top;
+                        border.right    = window.right - client.right;
+                        border.bottom   = window.bottom - client.bottom;
+
+                        togl_print_i32(border.left);
+                        togl_print_i32(border.top);
+                        togl_print_i32(border.right);
+                        togl_print_i32(border.bottom);
+
+                        // RECT win10_invisible_border = {7, 0, 7, 7};
+                    }
+                    break;
+                }
             };
         };
 

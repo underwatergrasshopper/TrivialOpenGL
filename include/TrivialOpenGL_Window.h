@@ -90,6 +90,19 @@ namespace TrivialOpenGL {
 
         virtual ~Window() {}
 
+        // NOTE: Apparently, Windows 10 have invisible border for each window side:
+        //     left     = 7px,
+        //     top      = 0px,
+        //     right    = 7px,
+        //     bottom   = 7px.
+        // Visible size of window will be smaller than actual size of window by: 
+        //     width    = -14pc, 
+        //     height   = -7px. 
+        // And position of window will be offsetted from visible left-top corner by:
+        //     x = -7px.
+        // Member functions of Window class don't do those corrections.
+        // This problem doesn't occur if window is runned with CLIENT_ONLY flag by Run member function.
+
         // Moves window to position in screen coordinates.
         void MoveTo(int x, int y) {
             SetWindowPos(m_window_handle, 0, x, y, 0, 0, SWP_NOSIZE | SWP_NOOWNERZORDER);
@@ -173,6 +186,7 @@ namespace TrivialOpenGL {
                 LogFatalError("Error TOGLW::Window::Run: Cannot create window class.");
             }
 
+            m_window_extended_style = WS_EX_WINDOWEDGE;
             m_window_style = WS_OVERLAPPEDWINDOW;
             if (m_data.style & StyleBit::NO_RESIZE)     m_window_style &= ~WS_THICKFRAME;
             if (m_data.style & StyleBit::NO_MAXIMIZE)   m_window_style &= ~WS_MAXIMIZEBOX;
@@ -212,6 +226,10 @@ namespace TrivialOpenGL {
         }
 
         uint32_t GetDebugLevel() const { return m_data.info_level; }
+
+        HWND GetHWND() {
+            return m_window_handle;
+        }
 
     private:
         static LRESULT CALLBACK WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
