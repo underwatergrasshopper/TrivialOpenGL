@@ -251,25 +251,25 @@ namespace TrivialOpenGL {
         Area(const Type& x, const Type& y, const Type& width, const Type& height) : x(x), y(y), width(width), height(height) {}
 
         template <typename Type2>
-        explicit Area(const Area<Type2>& a) : x(Type(a.x)), y(Type(a.y)), width(Type(a.width)), height(Type(a.height)) {}
+        explicit Area(const Area<Type2>& area) : x(Type(area.x)), y(Type(area.y)), width(Type(area.width)), height(Type(area.height)) {}
 
-        explicit Area(const Point<Type>& p, const Size<Type>& s) : x(p.x), y(p.y), width(s.width), height(s.height) {}
+        explicit Area(const Point<Type>& pos, const Size<Type>& size) : x(pos.x), y(pos.y), width(size.width), height(size.height) {}
 
-        void SetPoint(const Point<Type>& p) {  
-            x = p.x;
-            y = p.y;
+        void SetPos(const Point<Type>& pos) {  
+            x = pos.x;
+            y = pos.y;
         }
 
-        void SetSize(const Size<Type>& s) {  
-            width   = s.width;
-            height  = s.height;
+        void SetSize(const Size<Type>& size) {  
+            width   = size.width;
+            height  = size.height;
         }
 
-        Point<Type> GetPoint() const { return Point<Type>(x, y); }
+        Point<Type> GetPos() const { return Point<Type>(x, y); }
         Size<Type> GetSize() const { return Size<Type>(width, height); }
 
-        bool IsIn(const Point<Type>& p) const {
-            return Point<Type>(x, y) <= p && p < Point<Type>(x + width, y + height);
+        bool IsIn(const Point<Type>& pos) const {
+            return Point<Type>(x, y) <= pos && pos < Point<Type>(x + width, y + height);
         }
 
         virtual ~Area() {}

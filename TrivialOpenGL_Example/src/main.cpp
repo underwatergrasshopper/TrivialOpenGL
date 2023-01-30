@@ -166,7 +166,7 @@ int main(int argc, char *argv[]) {
                 case 'R': TOGL::ToWindow().MoveToAndResize({100, 10, 800, 400});  break;
                 case 'A': TOGL::ToWindow().ChangeArea({100, 10, 800, 400});  break;
                 case 'C': TOGL::ToWindow().Center();            break;
-                case 'T': TOGL::ToWindow().BringToTop();        break;
+                case 'T': TOGL::ToWindow().Top();        break;
                 case 'X': TOGL::ToWindow().MarkToClose();       break;
                 case 'I': {
                     togl_print_i32(GetSystemMetrics(SM_CXSIZEFRAME));

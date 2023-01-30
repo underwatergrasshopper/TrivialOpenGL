@@ -140,7 +140,7 @@ namespace TrivialOpenGL {
         }
 
         // Puts window in top most position in z-order.
-        void BringToTop() {
+        void Top() {
             BringWindowToTop(m_window_handle);
         }
 
@@ -153,7 +153,7 @@ namespace TrivialOpenGL {
             window_area.x = (desktop_area.width - window_area.width) / 2;
             window_area.y = (desktop_area.height - window_area.height) / 2;
 
-            MoveTo(window_area.GetPoint());
+            MoveTo(window_area.GetPos());
         }
 
         // Changes area by applying style from data parameter which was provided to Run function.

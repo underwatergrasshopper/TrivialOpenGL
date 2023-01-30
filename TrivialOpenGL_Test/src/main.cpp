@@ -364,9 +364,9 @@ void TestTOGL_Area() {
     {
         Area<int> a(1, 2, 3, 4);
 
-        a.SetPoint({10, 20});
+        a.SetPos({10, 20});
         TTK_ASSERT(a == Area<int>(10, 20, 3, 4));
-        TTK_ASSERT(a.GetPoint() == Point<int>(10, 20));
+        TTK_ASSERT(a.GetPos() == Point<int>(10, 20));
 
 
         a.SetSize({30, 40});
