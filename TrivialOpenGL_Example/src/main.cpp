@@ -201,24 +201,58 @@ int main(int argc, char *argv[]) {
                     togl_print_i32(m.iMenuHeight);
 
                     // window borders
+                    
+                    RECT client, window, border;
+                    GetWindowRect(TOGL::ToWindow().GetHWND(), &window);
+                    GetClientRect(TOGL::ToWindow().GetHWND(), &client);
+                    MapWindowPoints(TOGL::ToWindow().GetHWND(), NULL, (LPPOINT)&client, 2);
+
+                    border.left     = client.left - window.left;
+                    border.top      = client.top - window.top;
+                    border.right    = window.right - client.right;
+                    border.bottom   = window.bottom - client.bottom;
+
+                    togl_print_i32(window.left);
+                    togl_print_i32(window.top);
+                    togl_print_i32(window.right);
+                    togl_print_i32(window.bottom);
+
+                    togl_print_i32(border.left);
+                    togl_print_i32(border.top);
+                    togl_print_i32(border.right);
+                    togl_print_i32(border.bottom);
+
+                    // RECT win10_invisible_border = {7, 0, 7, 7};
+                    
+
                     {
-                        RECT client, window, border;
-                        GetWindowRect(TOGL::ToWindow().GetHWND(), &window);
-                        GetClientRect(TOGL::ToWindow().GetHWND(), &client);
-                        MapWindowPoints(TOGL::ToWindow().GetHWND(), NULL, (LPPOINT)&client, 2);
+                        HMODULE lib_handle = LoadLibraryA("Dwmapi.dll");
+                        if (lib_handle) {
+                            HRESULT (*DwmGetWindowAttribute)(HWND hwnd, DWORD dwAttribute, PVOID pvAttribute, DWORD cbAttribute) = nullptr;
 
-                        border.left     = client.left - window.left;
-                        border.top      = client.top - window.top;
-                        border.right    = window.right - client.right;
-                        border.bottom   = window.bottom - client.bottom;
+                            DwmGetWindowAttribute = (decltype(DwmGetWindowAttribute)) GetProcAddress(lib_handle, "DwmGetWindowAttribute");
+                            if (DwmGetWindowAttribute) {
+                                
+                                enum { DWMWA_EXTENDED_FRAME_BOUNDS = 9 };
+                                RECT actual_window;
 
-                        togl_print_i32(border.left);
-                        togl_print_i32(border.top);
-                        togl_print_i32(border.right);
-                        togl_print_i32(border.bottom);
+                                // Note: To return correct values, must be called after ShowWindow(window_handle, SW_SHOW).
+                                DwmGetWindowAttribute(TOGL::ToWindow().GetHWND(), DWMWA_EXTENDED_FRAME_BOUNDS, &actual_window, sizeof(RECT));
+                                
+                                togl_print_i32(actual_window.left);
+                                togl_print_i32(actual_window.top);
+                                togl_print_i32(actual_window.right);
+                                togl_print_i32(actual_window.bottom);
 
-                        // RECT win10_invisible_border = {7, 0, 7, 7};
+                                togl_print_i32(actual_window.left - window.left);
+                                togl_print_i32(actual_window.top - window.top);
+                                togl_print_i32(actual_window.right - window.right);
+                                togl_print_i32(actual_window.bottom - window.bottom);
+                            }
+                            FreeLibrary(lib_handle);
+                        }
                     }
+
                     break;
                 }
             };

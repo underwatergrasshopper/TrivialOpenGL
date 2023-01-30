@@ -186,8 +186,12 @@ namespace TrivialOpenGL {
                 LogFatalError("Error TOGLW::Window::Run: Cannot create window class.");
             }
 
-            m_window_extended_style = WS_EX_WINDOWEDGE;
             m_window_style = WS_OVERLAPPEDWINDOW;
+
+            //m_window_style = WS_POPUP | WS_CAPTION;
+            //m_window_extended_style = WS_EX_OVERLAPPEDWINDOW;
+
+
             if (m_data.style & StyleBit::NO_RESIZE)     m_window_style &= ~WS_THICKFRAME;
             if (m_data.style & StyleBit::NO_MAXIMIZE)   m_window_style &= ~WS_MAXIMIZEBOX;
             if (m_data.style & StyleBit::CLIENT_ONLY) {
