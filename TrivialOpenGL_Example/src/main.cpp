@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
         flags.insert(flag);
     };
 
-    ForceFlag("DRAW_TRIANGLE");
+    ForceFlag("WINDOW_FUNCTIONS");
 
     if (IsFlag("ICON")) {
         TOGL::Data data = {};
@@ -130,13 +130,12 @@ int main(int argc, char *argv[]) {
         TOGL::Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example DRAW_TRIANGLE";
-        //data.style              = TOGL::StyleBit::CLIENT_SIZE;
-        data.area               = {TOGL::DEF, TOGL::DEF, 600, 300};
+        data.style              = TOGL::StyleBit::CLIENT_SIZE;
         data.icon_resource_id   = ICON_ID;
         data.info_level         = 3;
 
         data.do_on_create = []() {
-            glClearColor(0.0, 0.0, 0.2, 1.0);
+            glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
         };
 
         data.display = []() {
@@ -157,104 +156,190 @@ int main(int argc, char *argv[]) {
 
         };
 
+        return TOGL::Run(data);
+
+    } else if (IsFlag("WINDOW_FUNCTIONS")) {
+        TOGL::Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example DRAW_TRIANGLE";
+        // data.style              = TOGL::StyleBit::CLIENT_SIZE;
+        // data.style              = TOGL::StyleBit::CLIENT_ONLY;
+        data.area               = {TOGL::DEF, TOGL::DEF, 600, 300};
+        data.icon_resource_id   = ICON_ID;
+        data.info_level         = 3;
+
+        data.do_on_create = []() {
+            glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
+        };
+
+
+
+        data.display = []() {
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            glBegin(GL_TRIANGLES);
+
+            glColor3f(1, 0, 0);
+            glVertex2f(-0.5, -0.5);
+
+            glColor3f(0, 1, 0);
+            glVertex2f(0.5, -0.5);
+
+            glColor3f(0, 0, 1);
+            glVertex2f(0, 0.5);
+
+            glEnd();
+
+
+
+        };
+
         data.do_on_key_up_raw = [](WPARAM w_param, LPARAM l_param) {
             switch (w_param) {
-                case 'P': TOGL::ToWindow().MoveTo({0, 0});   break;
-                case 'M': TOGL::ToWindow().MoveTo({10, 100});   break;
-                case 'S': TOGL::ToWindow().Resize({400, 200});  break;
-                case 'B': TOGL::ToWindow().Resize({800, 400});  break;
-                case 'R': TOGL::ToWindow().MoveToAndResize({100, 10, 800, 400});  break;
-                case 'A': TOGL::ToWindow().ChangeArea({100, 10, 800, 400});  break;
-                case 'C': TOGL::ToWindow().Center();            break;
-                case 'T': TOGL::ToWindow().Top();        break;
-                case 'X': TOGL::ToWindow().MarkToClose();       break;
-                case 'I': {
-                    togl_print_i32(GetSystemMetrics(SM_CXSIZEFRAME));
-                    togl_print_i32(GetSystemMetrics(SM_CYSIZEFRAME));
-                    togl_print_i32(GetSystemMetrics(SM_CXFOCUSBORDER));
-                    togl_print_i32(GetSystemMetrics(SM_CYFOCUSBORDER));
-                    togl_print_i32(GetSystemMetrics(SM_CXPADDEDBORDER));
-                    // togl_print_i32(GetSystemMetrics(SM_CYPADDEDBORDER));
-                    togl_print_i32(GetSystemMetrics(SM_CXBORDER));
-                    togl_print_i32(GetSystemMetrics(SM_CYBORDER));
-                    togl_print_i32(GetSystemMetrics(SM_CXEDGE));
-                    togl_print_i32(GetSystemMetrics(SM_CYEDGE));
-                    togl_print_i32(GetSystemMetrics(SM_CXDLGFRAME));
-                    togl_print_i32(GetSystemMetrics(SM_CYDLGFRAME));
+            case 'Z': TOGL::ToWindow().MoveTo({0, 0}); break;
+            case 'M': TOGL::ToWindow().MoveTo({10, 100}); break;
+            case 'S': TOGL::ToWindow().Resize({400, 200}); break;
+            case 'B': TOGL::ToWindow().Resize({800, 400}); break;
+            case 'R': TOGL::ToWindow().MoveToAndResize({100, 10, 800, 400}); break;
+            case 'A': TOGL::ToWindow().ChangeArea({100, 10, 800, 400}); break;
+            case 'C': TOGL::ToWindow().Center(); break;
+            case 'T': 
+                Sleep(3000);
+                TOGL::ToWindow().Top(); 
+                break;
+            case 'X': TOGL::ToWindow().MarkToClose(); break;
+            case 'P': TOGL::ToWindow().MarkToRedraw(); break;
+            case VK_LEFT: TOGL::ToWindow().MoveBy({-30, 0}); break;
+            case VK_RIGHT: TOGL::ToWindow().MoveBy({30, 0}); break;
 
-                    togl_print_i32(GetSystemMetrics(SM_CYMENU));
-                    togl_print_i32(GetSystemMetrics(SM_CYCAPTION));
+            case '1': 
+                TOGL::ToWindow().Hide();
+                Sleep(1000);
+                TOGL::ToWindow().Restore(); 
+                break;
 
-                    NONCLIENTMETRICSW m;
-                    m.cbSize = sizeof(NONCLIENTMETRICSW);
-                    SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &m, 0);
+            case '2': 
+                TOGL::ToWindow().Minimize();
+                Sleep(1000);
+                TOGL::ToWindow().Restore(); 
+                break;
 
-                    togl_print_i32(m.iBorderWidth);
-                    togl_print_i32(m.iPaddedBorderWidth);
-                    togl_print_i32(m.iScrollWidth);
-                    togl_print_i32(m.iScrollHeight);
-                    togl_print_i32(m.iCaptionWidth);
-                    togl_print_i32(m.iCaptionHeight);
-                    togl_print_i32(m.iSmCaptionWidth);
-                    togl_print_i32(m.iSmCaptionHeight);
-                    togl_print_i32(m.iMenuWidth);
-                    togl_print_i32(m.iMenuHeight);
+            case '3':
+                TOGL::ToWindow().Restore(); 
+                break;
 
-                    // window borders
-                    
-                    RECT client, window, border;
-                    GetWindowRect(TOGL::ToWindow().GetHWND(), &window);
-                    GetClientRect(TOGL::ToWindow().GetHWND(), &client);
-                    MapWindowPoints(TOGL::ToWindow().GetHWND(), NULL, (LPPOINT)&client, 2);
+            case '4':
+                TOGL::ToWindow().Maximize(); 
+                break;
 
-                    border.left     = client.left - window.left;
-                    border.top      = client.top - window.top;
-                    border.right    = window.right - client.right;
-                    border.bottom   = window.bottom - client.bottom;
+            case '5':
+                TOGL::ToWindow().MakeFullScreen(); 
+                break;
 
-                    togl_print_i32(window.left);
-                    togl_print_i32(window.top);
-                    togl_print_i32(window.right);
-                    togl_print_i32(window.bottom);
+            case '6':
+                TOGL::ToWindow().Hide();
+                Sleep(1000);
+                TOGL::ToWindow().MakeFullScreen(); 
+                break;
 
-                    togl_print_i32(border.left);
-                    togl_print_i32(border.top);
-                    togl_print_i32(border.right);
-                    togl_print_i32(border.bottom);
+            case 'I': {
+                togl_print_i32(GetSystemMetrics(SM_CXSIZEFRAME));
+                togl_print_i32(GetSystemMetrics(SM_CYSIZEFRAME));
+                togl_print_i32(GetSystemMetrics(SM_CXFOCUSBORDER));
+                togl_print_i32(GetSystemMetrics(SM_CYFOCUSBORDER));
+                togl_print_i32(GetSystemMetrics(SM_CXPADDEDBORDER));
+                // togl_print_i32(GetSystemMetrics(SM_CYPADDEDBORDER));
+                togl_print_i32(GetSystemMetrics(SM_CXBORDER));
+                togl_print_i32(GetSystemMetrics(SM_CYBORDER));
+                togl_print_i32(GetSystemMetrics(SM_CXEDGE));
+                togl_print_i32(GetSystemMetrics(SM_CYEDGE));
+                togl_print_i32(GetSystemMetrics(SM_CXDLGFRAME));
+                togl_print_i32(GetSystemMetrics(SM_CYDLGFRAME));
 
-                    // RECT win10_invisible_border = {7, 0, 7, 7};
-                    
+                togl_print_i32(GetSystemMetrics(SM_CYMENU));
+                togl_print_i32(GetSystemMetrics(SM_CYCAPTION));
 
-                    {
-                        HMODULE lib_handle = LoadLibraryA("Dwmapi.dll");
-                        if (lib_handle) {
-                            HRESULT (*DwmGetWindowAttribute)(HWND hwnd, DWORD dwAttribute, PVOID pvAttribute, DWORD cbAttribute) = nullptr;
+                NONCLIENTMETRICSW m;
+                m.cbSize = sizeof(NONCLIENTMETRICSW);
+                SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &m, 0);
 
-                            DwmGetWindowAttribute = (decltype(DwmGetWindowAttribute)) GetProcAddress(lib_handle, "DwmGetWindowAttribute");
-                            if (DwmGetWindowAttribute) {
-                                
-                                enum { DWMWA_EXTENDED_FRAME_BOUNDS = 9 };
-                                RECT actual_window;
+                togl_print_i32(m.iBorderWidth);
+                togl_print_i32(m.iPaddedBorderWidth);
+                togl_print_i32(m.iScrollWidth);
+                togl_print_i32(m.iScrollHeight);
+                togl_print_i32(m.iCaptionWidth);
+                togl_print_i32(m.iCaptionHeight);
+                togl_print_i32(m.iSmCaptionWidth);
+                togl_print_i32(m.iSmCaptionHeight);
+                togl_print_i32(m.iMenuWidth);
+                togl_print_i32(m.iMenuHeight);
 
-                                // Note: To return correct values, must be called after ShowWindow(window_handle, SW_SHOW).
-                                DwmGetWindowAttribute(TOGL::ToWindow().GetHWND(), DWMWA_EXTENDED_FRAME_BOUNDS, &actual_window, sizeof(RECT));
-                                
-                                togl_print_i32(actual_window.left);
-                                togl_print_i32(actual_window.top);
-                                togl_print_i32(actual_window.right);
-                                togl_print_i32(actual_window.bottom);
+                // window borders
 
-                                togl_print_i32(actual_window.left - window.left);
-                                togl_print_i32(actual_window.top - window.top);
-                                togl_print_i32(actual_window.right - window.right);
-                                togl_print_i32(actual_window.bottom - window.bottom);
-                            }
-                            FreeLibrary(lib_handle);
+                RECT client, window, border;
+                GetWindowRect(TOGL::ToWindow().GetHWND(), &window);
+                GetClientRect(TOGL::ToWindow().GetHWND(), &client);
+                MapWindowPoints(TOGL::ToWindow().GetHWND(), NULL, (LPPOINT)&client, 2);
+
+                border.left     = client.left - window.left;
+                border.top      = client.top - window.top;
+                border.right    = window.right - client.right;
+                border.bottom   = window.bottom - client.bottom;
+
+                togl_print_i32(window.left);
+                togl_print_i32(window.top);
+                togl_print_i32(window.right);
+                togl_print_i32(window.bottom);
+
+                togl_print_i32(border.left);
+                togl_print_i32(border.top);
+                togl_print_i32(border.right);
+                togl_print_i32(border.bottom);
+
+                // RECT win10_invisible_border = {7, 0, 7, 7};
+
+
+                {
+                    HMODULE lib_handle = LoadLibraryA("Dwmapi.dll");
+                    if (lib_handle) {
+                        HRESULT (*DwmGetWindowAttribute)(HWND hwnd, DWORD dwAttribute, PVOID pvAttribute, DWORD cbAttribute) = nullptr;
+
+                        DwmGetWindowAttribute = (decltype(DwmGetWindowAttribute)) GetProcAddress(lib_handle, "DwmGetWindowAttribute");
+                        if (DwmGetWindowAttribute) {
+
+                            enum { DWMWA_EXTENDED_FRAME_BOUNDS = 9 };
+                            RECT actual_window;
+
+                            // Note: To return correct values, must be called after ShowWindow(window_handle, SW_SHOW).
+                            DwmGetWindowAttribute(TOGL::ToWindow().GetHWND(), DWMWA_EXTENDED_FRAME_BOUNDS, &actual_window, sizeof(RECT));
+
+                            togl_print_i32(actual_window.left);
+                            togl_print_i32(actual_window.top);
+                            togl_print_i32(actual_window.right);
+                            togl_print_i32(actual_window.bottom);
+
+                            togl_print_i32(actual_window.left - window.left);
+                            togl_print_i32(actual_window.top - window.top);
+                            togl_print_i32(actual_window.right - window.right);
+                            togl_print_i32(actual_window.bottom - window.bottom);
                         }
+                        FreeLibrary(lib_handle);
                     }
-
-                    break;
                 }
+                togl_print_i32(TOGL::GetScreenSize().width);
+                togl_print_i32(TOGL::GetScreenSize().height);
+                togl_print_i32(TOGL::ToWindow().GetArea().x);
+                togl_print_i32(TOGL::ToWindow().GetArea().y);
+                togl_print_i32(TOGL::ToWindow().GetArea().width);
+                togl_print_i32(TOGL::ToWindow().GetArea().height);
+                togl_print_i32(TOGL::ToWindow().GetDrawArea().x);
+                togl_print_i32(TOGL::ToWindow().GetDrawArea().y);
+                togl_print_i32(TOGL::ToWindow().GetDrawArea().width);
+                togl_print_i32(TOGL::ToWindow().GetDrawArea().height);
+                togl_print_i32(TOGL::ToWindow().GetDrawAreaSize().width);
+                togl_print_i32(TOGL::ToWindow().GetDrawAreaSize().height);
+                break;
+            }
             };
         };
 

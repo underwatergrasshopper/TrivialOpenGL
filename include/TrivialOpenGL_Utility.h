@@ -361,6 +361,22 @@ namespace TrivialOpenGL {
 
     void SetCustomLogFunction(CustomLogFnP_T custom_log);
 
+    //--------------------------------------------------------------------------
+
+    inline AreaI GetDesktopAreaNoTaskBar() {
+        RECT rc;
+        SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, 0);
+        return MakeArea(rc);
+    }
+
+    inline SizeI GetDesktopAreaSizeNoTaskBar() {
+        return GetDesktopAreaNoTaskBar().GetSize();
+    }
+
+    inline SizeI GetScreenSize() {
+        return { GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN) };
+    }
+
 } // namespace TrivialOpenGL
 
 namespace TOGL = TrivialOpenGL;

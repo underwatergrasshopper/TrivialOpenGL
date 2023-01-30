@@ -29,6 +29,14 @@ namespace TrivialOpenGL {
         };
     };
 
+    enum class WindowState {
+        NORMAL,
+        HIDDEN,
+        MAXIMIZED,
+        MINIMIZED,
+        FULL_SCREEN
+    };
+
     struct Data {
         // Encoding: ASCII or UTF8.
         std::string     window_name         = "Window";
@@ -85,7 +93,8 @@ namespace TrivialOpenGL {
             m_window_style              = 0;
             m_window_extended_style     = 0;
 
-            m_is_enqueued_to_destroy        = false;
+            m_is_enqueued_to_destroy    = false;
+            m_is_enqueued_to_redraw     = false;
         }
 
         virtual ~Window() {}
@@ -109,6 +118,16 @@ namespace TrivialOpenGL {
         }
         void MoveTo(const PointI& pos) {
             MoveTo(pos.x, pos.y);
+        }
+
+        // Moves from current position by offset (x, y).
+        void MoveBy(int x, int y) {
+            const PointI curr_pos = GetArea().GetPos();
+
+            MoveTo(curr_pos.x + x, curr_pos.y + y);
+        }
+        void MoveBy(const PointI& pos) {
+            MoveBy(pos.x, pos.y);
         }
 
         // Resizes window and keeps current window position.
@@ -146,7 +165,7 @@ namespace TrivialOpenGL {
 
         // Centers window in desktop area excluding task bar area.
         void Center() {
-            const AreaI desktop_area = GetMonitorDesktopAreaNoTaskBar();
+            const AreaI desktop_area = GetDesktopAreaNoTaskBar();
 
             AreaI window_area = GetWindowArea(m_window_handle);
 
@@ -161,8 +180,114 @@ namespace TrivialOpenGL {
             MoveToAndResize(GenerateWindowArea(area));
         }
 
+        void ChangeState(WindowState state) {
+            if (m_state != WindowState::NORMAL) {
+                ShowWindow(m_window_handle, SW_NORMAL);
+
+                if (m_state == WindowState::FULL_SCREEN) {
+                    SetWindowLongPtrA(m_window_handle, GWL_STYLE, m_window_style);
+                    SetWindowLongPtrA(m_window_handle, GWL_EXSTYLE, m_window_extended_style);
+
+                    if (state == WindowState::HIDDEN) {
+                        // Just for testing.
+                        //SetWindowPos(m_window_handle, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOOWNERZORDER);
+                        ShowWindow(m_window_handle, SW_NORMAL);
+                    }
+                }
+            }
+  
+            switch (state) {
+                case WindowState::NORMAL:
+                    ShowWindow(m_window_handle, SW_NORMAL);
+                    break;
+                case WindowState::HIDDEN:
+                    ShowWindow(m_window_handle, SW_HIDE);
+                    break;
+                case WindowState::MINIMIZED:
+                    ShowWindow(m_window_handle, SW_MINIMIZE);
+                    break;
+                case WindowState::MAXIMIZED:
+                    ShowWindow(m_window_handle, SW_MAXIMIZE);
+                    break;
+                case WindowState::FULL_SCREEN:
+                    SetWindowLongPtrA(m_window_handle, GWL_STYLE, WS_POPUP);
+                    SetWindowLongPtrA(m_window_handle, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_APPWINDOW);
+                    ShowWindow(m_window_handle, SW_MAXIMIZE);
+                    break;
+            }
+
+            m_state = state;
+        }
+
+        void Hide() {
+            ChangeState(WindowState::HIDDEN);
+        }
+
+        void Restore() {
+            ChangeState(WindowState::NORMAL);
+        }
+
+        void Minimize() {
+            ChangeState(WindowState::MINIMIZED);
+        }
+
+        void Maximize() {
+            ChangeState(WindowState::MAXIMIZED);
+        }
+
+        void MakeFullScreen() {
+            ChangeState(WindowState::FULL_SCREEN);
+        }
+
+        WindowState GetState() const {
+            return m_state;
+        }
+
+        bool IsNormal() const {
+            return GetState() == WindowState::NORMAL;
+        }
+
+        bool IsHidden() const {
+            return GetState() == WindowState::HIDDEN;
+        }
+
+        bool IsMinimized() const {
+            return GetState() == WindowState::MINIMIZED;
+        }
+
+        bool IsMaximized() const {
+            return GetState() == WindowState::MAXIMIZED;
+        }
+
+        bool IsFullScreen() const {
+            return GetState() == WindowState::FULL_SCREEN;
+        }
+
+        AreaI GetArea() const {
+            return GetWindowArea(m_window_handle);
+        }
+
+        AreaI GetDrawArea() const {
+            RECT r;
+            if (GetClientRect(m_window_handle, &r)) {
+                return MakeArea(r);
+            }
+            return AreaI(0, 0, 0, 0);
+        }
+
+        SizeI GetDrawAreaSize() const {
+            return GetDrawArea().GetSize();
+        }
+
         int Run(const Data& data) {
             m_data = data;
+
+            if (!m_data.do_on_create)   m_data.do_on_create     = []() {};
+            if (!m_data.do_on_destroy)  m_data.do_on_destroy    = []() {};
+            if (!m_data.display)        m_data.display          = []() {};
+
+            if (!m_data.do_on_key_down_raw) m_data.do_on_key_down_raw   = [](WPARAM w_param, LPARAM l_param) {};
+            if (!m_data.do_on_key_up_raw)   m_data.do_on_key_up_raw     = [](WPARAM w_param, LPARAM l_param) {};
 
             m_instance_handle = GetModuleHandleW(NULL);
 
@@ -187,11 +312,6 @@ namespace TrivialOpenGL {
             }
 
             m_window_style = WS_OVERLAPPEDWINDOW;
-
-            //m_window_style = WS_POPUP | WS_CAPTION;
-            //m_window_extended_style = WS_EX_OVERLAPPEDWINDOW;
-
-
             if (m_data.style & StyleBit::NO_RESIZE)     m_window_style &= ~WS_THICKFRAME;
             if (m_data.style & StyleBit::NO_MAXIMIZE)   m_window_style &= ~WS_MAXIMIZEBOX;
             if (m_data.style & StyleBit::CLIENT_ONLY) {
@@ -217,7 +337,7 @@ namespace TrivialOpenGL {
                 LogFatalError("Error TOGLW::Window::Run: Cannot create window.");
             }
 
-            if (m_data.do_on_create) m_data.do_on_create();
+            m_data.do_on_create();
 
             ShowWindow(m_window_handle, SW_SHOW);
             UpdateWindow(m_window_handle);
@@ -229,10 +349,18 @@ namespace TrivialOpenGL {
             m_is_enqueued_to_destroy = true;
         }
 
+        void MarkToRedraw() {
+            InvalidateRect(m_window_handle, NULL, FALSE);
+        }
+
         uint32_t GetDebugLevel() const { return m_data.info_level; }
 
         HWND GetHWND() {
             return m_window_handle;
+        }
+
+        HDC GetWindowDC() {
+            return m_device_context_handle;
         }
 
     private:
@@ -296,12 +424,6 @@ namespace TrivialOpenGL {
             }
         }
 
-        static AreaI GetMonitorDesktopAreaNoTaskBar() {
-            RECT rc;
-            SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, 0);
-            return MakeArea(rc);
-        }
-
         static AreaI GetWindowArea(HWND window_handle) {
             RECT r;
             if (GetWindowRect(window_handle, &r)) {
@@ -313,7 +435,7 @@ namespace TrivialOpenGL {
         AreaI GenerateWindowArea(const AreaI& area) {
             AreaI window_area = area;
 
-            const AreaI desktop_area = GetMonitorDesktopAreaNoTaskBar();
+            const AreaI desktop_area = GetDesktopAreaNoTaskBar();
 
             // === Solve Size === //
 
@@ -395,7 +517,7 @@ namespace TrivialOpenGL {
                 fflush(stdout);
             }
 
-            if (m_data.do_on_destroy) m_data.do_on_destroy();
+            m_data.do_on_destroy();
 
             wglMakeCurrent(NULL, NULL); 
             wglDeleteContext(m_rendering_context_handle);
@@ -420,7 +542,7 @@ namespace TrivialOpenGL {
                 fflush(stdout);
             }
 
-            if (m_data.display) m_data.display();
+            m_data.display();
 
             SwapBuffers(m_device_context_handle);
         }
@@ -444,7 +566,9 @@ namespace TrivialOpenGL {
         DWORD       m_window_style;
         DWORD       m_window_extended_style;
 
+        WindowState m_state;
         bool        m_is_enqueued_to_destroy;
+        bool        m_is_enqueued_to_redraw;
     };
 
     inline Window& ToWindow() {
@@ -478,11 +602,11 @@ namespace TrivialOpenGL {
                 return 0;
 
             case WM_KEYDOWN:
-                if (ToWindow().m_data.do_on_key_down_raw) ToWindow().m_data.do_on_key_down_raw(w_param, l_param);
+                ToWindow().m_data.do_on_key_down_raw(w_param, l_param);
                 return 0;
 
             case WM_KEYUP:
-                if (ToWindow().m_data.do_on_key_up_raw) ToWindow().m_data.do_on_key_up_raw(w_param, l_param);
+                ToWindow().m_data.do_on_key_up_raw(w_param, l_param);
                 return 0;
 
             case WM_ERASEBKGND:
