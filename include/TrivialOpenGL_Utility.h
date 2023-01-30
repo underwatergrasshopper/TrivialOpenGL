@@ -253,7 +253,7 @@ namespace TrivialOpenGL {
         template <typename Type2>
         explicit Area(const Area<Type2>& area) : x(Type(area.x)), y(Type(area.y)), width(Type(area.width)), height(Type(area.height)) {}
 
-        explicit Area(const Point<Type>& pos, const Size<Type>& size) : x(pos.x), y(pos.y), width(size.width), height(size.height) {}
+        Area(const Point<Type>& pos, const Size<Type>& size) : x(pos.x), y(pos.y), width(size.width), height(size.height) {}
 
         void SetPos(const Point<Type>& pos) {  
             x = pos.x;
