@@ -49,6 +49,10 @@ namespace TrivialOpenGL {
 
         StyleBit::Field style               = 0;
 
+        // Tries create OpenGL Rendering Context which support to at least this version, with compatibility to all previous versions.
+        // If opengl_version.major and opengl_version.minor is DEF then creates for any available OpenGL version. Can be checked by GetOpenGL_Version().
+        Version         opengl_verion       = {DEF, DEF};
+
         // (Optional) File name of icon image file (.ico). 
         // Loaded icon will be presented on window title bar and on task bar.
         std::string     icon_file_name      = "";
@@ -75,6 +79,8 @@ namespace TrivialOpenGL {
 
         void (*do_on_key_down_raw)(WPARAM w_param, LPARAM l_param)      = nullptr;
         void (*do_on_key_up_raw)(WPARAM w_param, LPARAM l_param)        = nullptr;
+ 
+        void (*do_on_size)(uint32_t width, uint32_t height)             = nullptr;
 
     };
 
@@ -92,9 +98,6 @@ namespace TrivialOpenGL {
 
             m_window_style              = 0;
             m_window_extended_style     = 0;
-
-            m_is_enqueued_to_destroy    = false;
-            m_is_enqueued_to_redraw     = false;
         }
 
         virtual ~Window() {}
@@ -195,7 +198,7 @@ namespace TrivialOpenGL {
                     }
                 }
             }
-  
+
             switch (state) {
                 case WindowState::NORMAL:
                     ShowWindow(m_window_handle, SW_NORMAL);
@@ -206,9 +209,12 @@ namespace TrivialOpenGL {
                 case WindowState::MINIMIZED:
                     ShowWindow(m_window_handle, SW_MINIMIZE);
                     break;
-                case WindowState::MAXIMIZED:
+                case WindowState::MAXIMIZED: {
                     ShowWindow(m_window_handle, SW_MAXIMIZE);
+                    //const SizeI size = GetDesktopAreaSizeNoTaskBar();
+                    //SetWindowPos(m_window_handle, 0, 0, 0, size.width, size.height, SWP_NOOWNERZORDER);
                     break;
+                }
                 case WindowState::FULL_SCREEN:
                     SetWindowLongPtrA(m_window_handle, GWL_STYLE, WS_POPUP);
                     SetWindowLongPtrA(m_window_handle, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_APPWINDOW);
@@ -289,6 +295,8 @@ namespace TrivialOpenGL {
             if (!m_data.do_on_key_down_raw) m_data.do_on_key_down_raw   = [](WPARAM w_param, LPARAM l_param) {};
             if (!m_data.do_on_key_up_raw)   m_data.do_on_key_up_raw     = [](WPARAM w_param, LPARAM l_param) {};
 
+            if (!m_data.do_on_size)         m_data.do_on_size           = [](uint32_t width, uint32_t height) {};
+
             m_instance_handle = GetModuleHandleW(NULL);
 
             constexpr wchar_t WINDOW_CLASS_NAME[] = L"TrivialOpenGL_WindowClass";
@@ -346,7 +354,7 @@ namespace TrivialOpenGL {
         }
 
         void MarkToClose() {
-            m_is_enqueued_to_destroy = true;
+            DestroyWindow(m_window_handle);
         }
 
         void MarkToRedraw() {
@@ -361,6 +369,10 @@ namespace TrivialOpenGL {
 
         HDC GetWindowDC() {
             return m_device_context_handle;
+        }
+
+        Version GetOpenGL_Version() const {
+            return m_data.opengl_verion;
         }
 
     private:
@@ -383,7 +395,6 @@ namespace TrivialOpenGL {
                     DispatchMessageW(&msg);
                 }
                 if (msg.message == WM_QUIT) return (int)msg.wParam;
-                DestroyWindowIfEnqueued();
 
             } else {
                 while (true) {
@@ -394,18 +405,10 @@ namespace TrivialOpenGL {
                         DispatchMessageW(&msg);
                     }
                     Display();
-                    DestroyWindowIfEnqueued();
                 }
             }
 
             return EXIT_FAILURE;
-        }
-
-        void DestroyWindowIfEnqueued() {
-            if (m_is_enqueued_to_destroy) {
-                DestroyWindow(m_window_handle);
-                m_is_enqueued_to_destroy = false;
-            }
         }
 
         HICON TryLoadIcon() {
@@ -492,23 +495,95 @@ namespace TrivialOpenGL {
             if (!result) LogFatalError(std::string() + "Error TOGL::Window::Create: Can not set pixel format. (windows error code:" + std::to_string(GetLastError()) + ")");
 
             // --- Displaying Format Info --- //
+
             memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
             int max_pfi = DescribePixelFormat(m_device_context_handle, pfi, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
             if (!max_pfi) LogFatalError(std::string() + "Error TOGL::Window::Create: Can not get pixel format. (windows error code:" + std::to_string(GetLastError()) + ")");
 
-            LogInfo(std::string() + "Info TOGLW Pixel Format:"
+            LogInfo(std::string() + "(TOGL) OpenGL Pixel Format:"
                 " Red:"     + std::to_string(pfd.cRedBits) + 
                 " Green:"   + std::to_string(pfd.cGreenBits) + 
                 " Blue:"    + std::to_string(pfd.cBlueBits) + 
                 " Alpha:"   + std::to_string(pfd.cAlphaBits) + 
                 " Depth:"   + std::to_string(pfd.cDepthBits) + 
                 " Stencil:" + std::to_string(pfd.cStencilBits));
-            // ---
+
+            // --- Creates OpenGL Rendering Context --- //
 
             m_rendering_context_handle = wglCreateContext(m_device_context_handle);
-            if (!m_rendering_context_handle) LogFatalError(std::string() + "Error TOGL::Window::Create: Can not create opengl rendering context. (windows error code:" + std::to_string(GetLastError()) + ")");
+            if (!m_rendering_context_handle) LogFatalError(std::string() + "Error TOGL::Window::Create: Can not create OpenGl Rendering Context. (windows error code:" + std::to_string(GetLastError()) + ")");
 
-            wglMakeCurrent(m_device_context_handle, m_rendering_context_handle);
+            if (!wglMakeCurrent(m_device_context_handle, m_rendering_context_handle)) {
+                LogFatalError(std::string() + "Error TOGL::Window::Create: Can not set created OpenGl Rendering Context to be current.");
+            }
+
+            if ((m_data.opengl_verion.major == DEF || m_data.opengl_verion.minor == DEF) && m_data.opengl_verion.major != m_data.opengl_verion.minor) {
+                LogFatalError(std::string() + "Error TOGL::Window::Create: Incorrect OpenGL version is provided.");
+            }
+
+            // --- Creates OpenGL Rendering Context with required minimum version --- //
+
+            if (m_data.opengl_verion.major != DEF && m_data.opengl_verion.minor != DEF) {
+                HGLRC (*wglCreateContextAttribsARB)(HDC hDC, HGLRC hShareContext, const int* attribList) = (decltype(wglCreateContextAttribsARB)) wglGetProcAddress("wglCreateContextAttribsARB");
+                if (wglCreateContextAttribsARB) {
+                    enum {
+                        // Added prefix TOGL_ to standard OpenGL constants.
+                        TOGL_WGL_CONTEXT_MAJOR_VERSION_ARB               = 0x2091,
+                        TOGL_WGL_CONTEXT_MINOR_VERSION_ARB               = 0x2092,
+                        TOGL_WGL_CONTEXT_LAYER_PLANE_ARB                 = 0x2093,
+                        TOGL_WGL_CONTEXT_FLAGS_ARB                       = 0x2094,
+                        TOGL_WGL_CONTEXT_PROFILE_MASK_ARB                = 0x9126,
+                                                                  
+                        TOGL_WGL_CONTEXT_DEBUG_BIT_ARB                   = 0x0001,
+                        TOGL_WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB      = 0x0002,
+                                                                
+                        TOGL_WGL_CONTEXT_CORE_PROFILE_BIT_ARB            = 0x00000001,
+                        TOGL_WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB   = 0x00000002,
+                                                                    
+                        TOGL_ERROR_INVALID_VERSION_ARB                   = 0x2095,
+                        TOGL_ERROR_INVALID_PROFILE_ARB                   = 0x2096,
+                    };
+                    GLint attribute_list[] =
+                    {
+                        TOGL_WGL_CONTEXT_MAJOR_VERSION_ARB, m_data.opengl_verion.major,
+                        TOGL_WGL_CONTEXT_MINOR_VERSION_ARB, m_data.opengl_verion.minor,
+                        TOGL_WGL_CONTEXT_FLAGS_ARB, TOGL_WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+                        0
+                    };
+            
+                    HGLRC rendering_context_handle = wglCreateContextAttribsARB(m_device_context_handle, 0, attribute_list);
+                    if (!rendering_context_handle) {
+                        LogFatalError(std::string() + "Error TOGL::Window::Create: Can not create OpenGl Rendering Context for version " + std::to_string(m_data.opengl_verion.major) + "." + std::to_string(m_data.opengl_verion.minor) + ".");
+                    }
+                    
+                    if (!wglMakeCurrent(m_device_context_handle, rendering_context_handle)) {
+                        LogFatalError(std::string() + "Error TOGL::Window::Create: Can not set created OpenGl Rendering Context for version " + std::to_string(m_data.opengl_verion.major) + "." + std::to_string(m_data.opengl_verion.minor) + " to be current.");
+                    }
+            
+                    m_rendering_context_handle = rendering_context_handle ;
+            
+                } else {
+                    LogFatalError("Error TOGL::Window::Create: Can not load wglCreateContextAttribsARB function.");
+                }
+            }
+
+            // --- Fetch OpenGL Versions --- //
+
+            m_data.opengl_verion = {0, 0};
+            void (*glGetIntegerv)(GLenum pname, GLint* data) = (decltype(glGetIntegerv)) wglGetProcAddress("glGetIntegerv");
+            if (glGetIntegerv) {
+                enum {
+                    // Added prefix TOGL_ to standard OpenGL constants.
+                    TOGL_GL_MAJOR_VERSION = 0x821B,
+                    TOGL_GL_MINOR_VERSION = 0x821C,
+                };
+                glGetIntegerv(TOGL_GL_MAJOR_VERSION, &m_data.opengl_verion.major);
+                glGetIntegerv(TOGL_GL_MINOR_VERSION, &m_data.opengl_verion.minor);
+            } else {
+                sscanf_s((const char*)glGetString(GL_VERSION), "%d.%d", &m_data.opengl_verion.major, &m_data.opengl_verion.minor);
+            }
+
+            LogInfo(std::string("(TOGL) OpenGl Version: ") + (const char*)glGetString(GL_VERSION));
         }
 
         void Destroy() {
@@ -567,8 +642,6 @@ namespace TrivialOpenGL {
         DWORD       m_window_extended_style;
 
         WindowState m_state;
-        bool        m_is_enqueued_to_destroy;
-        bool        m_is_enqueued_to_redraw;
     };
 
     inline Window& ToWindow() {
@@ -607,6 +680,10 @@ namespace TrivialOpenGL {
 
             case WM_KEYUP:
                 ToWindow().m_data.do_on_key_up_raw(w_param, l_param);
+                return 0;
+
+            case WM_SIZE:
+                ToWindow().m_data.do_on_size(LOWORD(l_param), HIWORD(l_param));
                 return 0;
 
             case WM_ERASEBKGND:

@@ -33,3 +33,5 @@ message("${SRC_FILES}")
 add_executable(${CMAKE_PROJECT_NAME} ${SRC_FILES})
 target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+target_link_libraries(${CMAKE_PROJECT_NAME} OpenGL32.lib)

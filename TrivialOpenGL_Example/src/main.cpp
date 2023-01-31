@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
         flags.insert(flag);
     };
 
-    ForceFlag("WINDOW_FUNCTIONS");
+    ForceFlag("FULL_SCREEN");
 
     if (IsFlag("ICON")) {
         TOGL::Data data = {};
@@ -161,7 +161,7 @@ int main(int argc, char *argv[]) {
     } else if (IsFlag("WINDOW_FUNCTIONS")) {
         TOGL::Data data = {};
 
-        data.window_name        = "TrivialOpenGL_Example DRAW_TRIANGLE";
+        data.window_name        = "TrivialOpenGL_Example WINDOW_FUNCTIONS";
         // data.style              = TOGL::StyleBit::CLIENT_SIZE;
         // data.style              = TOGL::StyleBit::CLIENT_ONLY;
         data.area               = {TOGL::DEF, TOGL::DEF, 600, 300};
@@ -170,9 +170,11 @@ int main(int argc, char *argv[]) {
 
         data.do_on_create = []() {
             glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
+
+
+            //TOGL::ToWindow().MakeFullScreen(); 
+            //TOGL::ToWindow().MarkToRedraw();
         };
-
-
 
         data.display = []() {
             glClear(GL_COLOR_BUFFER_BIT);
@@ -190,7 +192,16 @@ int main(int argc, char *argv[]) {
 
             glEnd();
 
+            glBegin(GL_LINE_LOOP);
 
+            glColor3f(1, 0, 0);
+
+            glVertex2f(-1, -1);
+            glVertex2f(1, -1);
+            glVertex2f(1, 1);
+            glVertex2f(-1, 1);
+
+            glEnd();
 
         };
 
@@ -345,6 +356,165 @@ int main(int argc, char *argv[]) {
 
         return TOGL::Run(data);
 
+    } else if (IsFlag("OPENGL_VERSION")) {
+        TOGL::Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example OPENGL_VERSION";
+        data.opengl_verion      = {3, 3};
+        data.info_level         = 3;
+
+        data.do_on_create = []() {
+            auto version = TOGL::ToWindow().GetOpenGL_Version();
+            printf("%d.%d\n", version.major, version.minor);
+
+            glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
+        };
+
+        data.display = []() {
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            glBegin(GL_TRIANGLES);
+
+            glColor3f(1, 0, 0);
+            glVertex2f(-0.5, -0.5);
+
+            glColor3f(0, 1, 0);
+            glVertex2f(0.5, -0.5);
+
+            glColor3f(0, 0, 1);
+            glVertex2f(0, 0.5);
+
+            glEnd();
+        };
+
+        return TOGL::Run(data);
+
+    } else if (IsFlag("FULL_SCREEN")) {
+        TOGL::Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example FULL_SCREEN";
+        data.style              = TOGL::StyleBit::CLIENT_ONLY | TOGL::StyleBit::CLIENT_SIZE | TOGL::StyleBit::REDRAW_ON_REQUEST_ONLY;
+        //data.style              = TOGL::StyleBit::REDRAW_ON_REQUEST_ONLY;
+        data.area               = {TOGL::DEF, TOGL::DEF, 600, 300};
+        data.info_level         = 3;
+
+        struct TestResolution {
+            int width, height;
+        };
+        TOGL::Static<TestResolution>::To() = {600, 300};
+
+        data.do_on_create = []() {
+            glLoadIdentity();
+            glOrtho(0, 600, 0, 300, 1, -1);
+            glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
+
+            //TOGL::ToWindow().MakeFullScreen(); 
+            //TOGL::ToWindow().MarkToRedraw();
+        };
+
+        data.display = []() {
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            auto DrawRectangle = [](int x, int y, int width, int height) {
+                glBegin(GL_TRIANGLE_FAN);
+                glVertex2i(x, y);
+                glVertex2i(x + width, y);
+                glVertex2i(x + width, y + height);
+                glVertex2i(y, y + height);
+                glEnd();
+            };
+
+            auto& size = TOGL::Static<TestResolution>::To();
+
+            glColor3f(1, 0, 0);
+            DrawRectangle(0, 0, size.width, size.height);
+            glColor3f(0, 0, 0.5);
+            DrawRectangle(1, 1, size.width - 2, size.height - 2);
+
+
+            glPushMatrix();
+            glTranslatef(size.width / 2, size.height / 2, 0);
+            glScalef(100, 100, 1);
+
+            glBegin(GL_TRIANGLES);
+
+            glColor3f(1, 0, 0);
+            glVertex2f(-0.5, -0.5);
+
+            glColor3f(0, 1, 0);
+            glVertex2f(0.5, -0.5);
+
+            glColor3f(0, 0, 1);
+            glVertex2f(0, 0.5);
+
+            glEnd();
+
+            glPopMatrix();
+        };
+
+        data.do_on_key_up_raw = [](WPARAM w_param, LPARAM l_param) {
+            switch (w_param) {
+            case 'Z': TOGL::ToWindow().MoveTo({0, 0}); break;
+            case 'M': TOGL::ToWindow().MoveTo({10, 100}); break;
+            case 'S': TOGL::ToWindow().Resize({400, 200}); break;
+            case 'B': TOGL::ToWindow().Resize({800, 400}); break;
+            case 'R': TOGL::ToWindow().MoveToAndResize({100, 10, 800, 400}); break;
+            case 'A': TOGL::ToWindow().ChangeArea({100, 10, 800, 400}); break;
+            case 'C': TOGL::ToWindow().Center(); break;
+            case 'T': 
+                Sleep(3000);
+                TOGL::ToWindow().Top(); 
+                break;
+            case 'X': TOGL::ToWindow().MarkToClose(); break;
+            case 'P': TOGL::ToWindow().MarkToRedraw(); break;
+            case VK_LEFT: TOGL::ToWindow().MoveBy({-30, 0}); break;
+            case VK_RIGHT: TOGL::ToWindow().MoveBy({30, 0}); break;
+            case 'V': TOGL::ToWindow().MarkToRedraw(); break;
+
+            case '1': 
+                TOGL::ToWindow().Hide();
+                Sleep(1000);
+                TOGL::ToWindow().Restore(); 
+                break;
+
+            case '2': 
+                TOGL::ToWindow().Minimize();
+                Sleep(1000);
+                TOGL::ToWindow().Restore(); 
+                break;
+
+            case '3':
+                TOGL::ToWindow().Restore(); 
+                break;
+
+            case '4':
+                TOGL::ToWindow().Maximize(); 
+                break;
+
+            case '5':
+                TOGL::ToWindow().MakeFullScreen(); 
+                break;
+
+            case '6':
+                TOGL::ToWindow().Hide();
+                Sleep(1000);
+                TOGL::ToWindow().MakeFullScreen(); 
+                break;
+            };
+        };
+
+        data.do_on_size = [](uint32_t width, uint32_t height) {
+            glViewport(0, 0, width,  height ? height : 1);
+
+            glLoadIdentity();
+            glOrtho(0, width, 0, height, 1, -1);
+
+            TOGL::Static<TestResolution>::To() = {(int)width, (int)height};
+            TOGL::ToWindow().MarkToRedraw();
+        
+        };
+
+        return TOGL::Run(data);
     } else {
         TOGL::Data data = {};
 
