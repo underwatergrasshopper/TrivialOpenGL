@@ -209,12 +209,9 @@ namespace TrivialOpenGL {
                 case WindowState::MINIMIZED:
                     ShowWindow(m_window_handle, SW_MINIMIZE);
                     break;
-                case WindowState::MAXIMIZED: {
+                case WindowState::MAXIMIZED: 
                     ShowWindow(m_window_handle, SW_MAXIMIZE);
-                    //const SizeI size = GetDesktopAreaSizeNoTaskBar();
-                    //SetWindowPos(m_window_handle, 0, 0, 0, size.width, size.height, SWP_NOOWNERZORDER);
                     break;
-                }
                 case WindowState::FULL_SCREEN:
                     SetWindowLongPtrA(m_window_handle, GWL_STYLE, WS_POPUP);
                     SetWindowLongPtrA(m_window_handle, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_APPWINDOW);
@@ -672,7 +669,7 @@ namespace TrivialOpenGL {
 
             case WM_PAINT:
                 ToWindow().Paint();
-                return 0;
+                return 1;
 
             case WM_KEYDOWN:
                 ToWindow().m_data.do_on_key_down_raw(w_param, l_param);
