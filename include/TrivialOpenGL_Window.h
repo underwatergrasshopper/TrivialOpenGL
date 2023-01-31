@@ -117,7 +117,7 @@ namespace TrivialOpenGL {
 
         // Moves window to position in screen coordinates.
         void MoveTo(int x, int y) {
-            SetWindowPos(m_window_handle, 0, x, y, 0, 0, SWP_NOSIZE | SWP_NOOWNERZORDER);
+            SetWindowPos(m_window_handle, HWND_TOP, x, y, 0, 0, SWP_NOSIZE);
         }
         void MoveTo(const PointI& pos) {
             MoveTo(pos.x, pos.y);
@@ -135,7 +135,7 @@ namespace TrivialOpenGL {
 
         // Resizes window and keeps current window position.
         void Resize(int width, int height) {
-            SetWindowPos(m_window_handle, 0, 0, 0, width, height, SWP_NOMOVE | SWP_NOOWNERZORDER);
+            SetWindowPos(m_window_handle, HWND_TOP, 0, 0, width, height, SWP_NOMOVE);
         }
         void Resize(const SizeI& size) {
             Resize(size.width, size.height);
@@ -147,7 +147,7 @@ namespace TrivialOpenGL {
         void ResizeDrawArea(int width, int height) {
             const SizeI window_size = GetWindowAreaFromDrawArea(AreaI(0, 0, width, height), m_window_style).GetSize();
 
-            SetWindowPos(m_window_handle, 0, 0, 0, window_size.width, window_size.height, SWP_NOMOVE | SWP_NOOWNERZORDER);
+            SetWindowPos(m_window_handle, HWND_TOP, 0, 0, window_size.width, window_size.height, SWP_NOMOVE);
         }
         void ResizeDrawArea(const SizeI& draw_area_size) {
             ResizeDrawArea(draw_area_size.width, draw_area_size.height);
@@ -155,7 +155,7 @@ namespace TrivialOpenGL {
 
         // Moves and resizes window area.
         void MoveToAndResize(int x, int y, int width, int height) {
-            SetWindowPos(m_window_handle, 0, x, y, width, height, SWP_NOOWNERZORDER);
+            SetWindowPos(m_window_handle, HWND_TOP, x, y, width, height, 0);
         }
         void MoveToAndResize(const AreaI& area) {
             MoveToAndResize(area.x, area.y, area.width, area.height);
@@ -183,7 +183,15 @@ namespace TrivialOpenGL {
             MoveToAndResize(GenerateWindowArea(area));
         }
 
+        // Ignores MAXIMIZED when REDRAW_ON_REQUEST_ONLY and CLIENT_ONLY.
+        // Ignores FULL_SCREEN when REDRAW_ON_REQUEST_ONLY.
         void ChangeState(WindowState state) {
+            // Forbidden combination of states and styles. 
+            // Window do not redraw its content in some cases. 
+            // Window loses focus and locks at top most z-position.
+            if (state == WindowState::MAXIMIZED && (m_data.style & StyleBit::REDRAW_ON_REQUEST_ONLY) && (m_data.style & StyleBit::CLIENT_ONLY)) return; 
+            if (state == WindowState::FULL_SCREEN && (m_data.style & StyleBit::REDRAW_ON_REQUEST_ONLY)) return; 
+
             if (m_state != WindowState::NORMAL) {
                 ShowWindow(m_window_handle, SW_NORMAL);
 
@@ -669,7 +677,7 @@ namespace TrivialOpenGL {
 
             case WM_PAINT:
                 ToWindow().Paint();
-                return 1;
+                return 0;
 
             case WM_KEYDOWN:
                 ToWindow().m_data.do_on_key_down_raw(w_param, l_param);

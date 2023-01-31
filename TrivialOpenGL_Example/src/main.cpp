@@ -393,8 +393,8 @@ int main(int argc, char *argv[]) {
         TOGL::Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example FULL_SCREEN";
-        //data.style              = TOGL::StyleBit::CLIENT_ONLY | TOGL::StyleBit::CLIENT_SIZE | TOGL::StyleBit::REDRAW_ON_REQUEST_ONLY;
-        data.style              = TOGL::StyleBit::REDRAW_ON_REQUEST_ONLY;
+        data.style              = TOGL::StyleBit::CLIENT_ONLY | TOGL::StyleBit::CLIENT_SIZE;// | TOGL::StyleBit::REDRAW_ON_REQUEST_ONLY;
+        //data.style              = TOGL::StyleBit::REDRAW_ON_REQUEST_ONLY;
         data.area               = {TOGL::DEF, TOGL::DEF, 600, 300};
         data.info_level         = 3;
 
@@ -433,7 +433,7 @@ int main(int argc, char *argv[]) {
 
 
             glPushMatrix();
-            glTranslatef(size.width / 2, size.height / 2, 0);
+            glTranslatef(size.width / 2.0f, size.height / 2.0f, 0);
             glScalef(100, 100, 1);
 
             glBegin(GL_TRIANGLES);
