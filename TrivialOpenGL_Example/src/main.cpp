@@ -8,7 +8,8 @@
 
 //------------------------------------------------------------------------------
 
-static TOGL::SizeI s_resolution;
+static TOGL::SizeI  s_resolution;
+static bool         s_is_client;
 
 void DrawRectangle(int x, int y, int width, int height) {
     glBegin(GL_TRIANGLE_FAN);
@@ -20,6 +21,48 @@ void DrawRectangle(int x, int y, int width, int height) {
 
     glEnd();
 };
+
+void DisplayWindowInfo() {
+    RECT client, window, border;
+    GetWindowRect(TOGL::ToWindow().GetHWND(), &window);
+    GetClientRect(TOGL::ToWindow().GetHWND(), &client);
+    MapWindowPoints(TOGL::ToWindow().GetHWND(), NULL, (LPPOINT)&client, 2);
+
+    border.left     = client.left - window.left;
+    border.top      = client.top - window.top;
+    border.right    = window.right - client.right;
+    border.bottom   = window.bottom - client.bottom;
+
+    togl_print_i32(client.left);
+    togl_print_i32(client.top);
+    togl_print_i32(client.right);
+    togl_print_i32(client.bottom);
+
+    togl_print_i32(window.left);
+    togl_print_i32(window.top);
+    togl_print_i32(window.right);
+    togl_print_i32(window.bottom);
+
+    togl_print_i32(border.left);
+    togl_print_i32(border.top);
+    togl_print_i32(border.right);
+    togl_print_i32(border.bottom);
+
+    togl_print_i32(TOGL::GetScreenSize().width);
+    togl_print_i32(TOGL::GetScreenSize().height);
+    togl_print_i32(TOGL::GetDesktopAreaSizeNoTaskBar().width);
+    togl_print_i32(TOGL::GetDesktopAreaSizeNoTaskBar().height);
+    togl_print_i32(TOGL::ToWindow().GetArea().x);
+    togl_print_i32(TOGL::ToWindow().GetArea().y);
+    togl_print_i32(TOGL::ToWindow().GetArea().width);
+    togl_print_i32(TOGL::ToWindow().GetArea().height);
+    togl_print_i32(TOGL::ToWindow().GetDrawArea().x);
+    togl_print_i32(TOGL::ToWindow().GetDrawArea().y);
+    togl_print_i32(TOGL::ToWindow().GetDrawArea().width);
+    togl_print_i32(TOGL::ToWindow().GetDrawArea().height);
+    togl_print_i32(TOGL::ToWindow().GetDrawAreaSize().width);
+    togl_print_i32(TOGL::ToWindow().GetDrawAreaSize().height);
+}
 
 //------------------------------------------------------------------------------
 
@@ -119,7 +162,7 @@ int main(int argc, char *argv[]) {
 
         data.window_name        = "TrivialOpenGL_Example CLIENT_SIZE";
         data.area               = {TOGL::DEF, TOGL::DEF, 400, 200};
-        data.style              = TOGL::StyleBit::CLIENT_SIZE;
+        data.style              = TOGL::StyleBit::DRAW_AREA_SIZE;
         data.icon_resource_id   = ICON_ID;
 
         return TOGL::Run(data);
@@ -129,7 +172,7 @@ int main(int argc, char *argv[]) {
 
         data.window_name        = "TrivialOpenGL_Example CLIENT_ONLY";
         data.area               = {TOGL::DEF, TOGL::DEF, 400, 200};
-        data.style              = TOGL::StyleBit::CLIENT_ONLY;
+        data.style              = TOGL::StyleBit::DRAW_AREA_ONLY;
         data.icon_resource_id   = ICON_ID;
 
         return TOGL::Run(data);
@@ -147,7 +190,7 @@ int main(int argc, char *argv[]) {
         TOGL::Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example DRAW_TRIANGLE";
-        data.style              = TOGL::StyleBit::CLIENT_SIZE;
+        data.style              = TOGL::StyleBit::DRAW_AREA_SIZE;
         data.icon_resource_id   = ICON_ID;
         data.info_level         = 3;
 
@@ -182,8 +225,131 @@ int main(int argc, char *argv[]) {
         TOGL::Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example MOVE_AND_RESIZE";
+        data.style              = 0;
+        data.style              |= TOGL::StyleBit::DRAW_AREA_SIZE;
+        //data.style              |= TOGL::StyleBit::CLIENT_ONLY;
+        //data.style              |= TOGL::StyleBit::REDRAW_ON_REQUEST_ONLY;
+        data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
+        data.icon_resource_id   = ICON_ID;
+        data.info_level         = 3;
+
+        data.do_on_create = []() {
+            glLoadIdentity();
+            glOrtho(0, s_resolution.width, 0, s_resolution.height, 1, -1);
+            glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
+        };
+
+        data.display = []() {
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            const TOGL::SizeI& size = s_resolution;
+
+            glColor3f(1, 0, 0);
+            DrawRectangle(0, 0, size.width, size.height);
+            glColor3f(0, 0, 0.5);
+            DrawRectangle(1, 1, size.width - 2, size.height - 2);
+
+            glPushMatrix();
+
+            glTranslatef(size.width / 2.0f, size.height / 2.0f, 0);
+            glScalef(100, 100, 1);
+
+            glBegin(GL_TRIANGLES);
+
+            glColor3f(1, 0, 0);
+            glVertex2f(-0.5, -0.5);
+
+            glColor3f(0, 1, 0);
+            glVertex2f(0.5, -0.5);
+
+            glColor3f(0, 0, 1);
+            glVertex2f(0, 0.5);
+
+            glEnd();
+
+            glPopMatrix();
+        };
+
+        data.do_on_key_up_raw = [](WPARAM w_param, LPARAM l_param) {
+            auto& window = TOGL::ToWindow();
+
+            if (!s_is_client) {
+                switch (w_param) {
+                case '1':       window.MoveTo(0, 0); break;
+                case '2':       window.MoveTo(10, 100); break;
+
+                case '3':       window.SetSize(400, 200); break;
+                case '4':       window.SetSize(800, 400); break;
+                     
+                case '5':       window.SetArea(100, 10, 800, 400); break;
+                case '6':       window.SetArea(window.GetArea()); break;
+                case '7':       window.SetArea(TOGL::GetDesktopAreaNoTaskBar()); break;
+                case '8':       window.SetArea({{}, TOGL::GetScreenSize()}); break;
+                     
+                case '9':       window.ChangeArea({100, 10, 800, 400}); break;
+
+                case 'C':       window.Center(); break;
+
+                case VK_LEFT:   window.MoveBy(-30, 0); break;
+                case VK_RIGHT:  window.MoveBy(30, 0); break;
+
+                case 'X':       window.MarkToClose(); break;
+
+                case 'I':       DisplayWindowInfo(); break;
+
+                case 'T':       s_is_client = !s_is_client; break;
+                }
+            } else {
+                switch (w_param) {
+                case '1':       window.SetDrawAreaPos(0, 0); break;
+                case '2':       window.SetDrawAreaPos(10, 100); break;
+                                
+                case '3':       window.SetDrawAreaSize(400, 200); break;
+                case '4':       window.SetDrawAreaSize(800, 400); break;
+                                
+                case '5':       window.SetDrawArea(100, 10, 800, 400); break;
+                case '6':       window.SetDrawArea(window.GetDrawArea()); break;
+                case '7':       window.SetDrawArea(TOGL::GetDesktopAreaNoTaskBar()); break;
+                case '8':       window.SetDrawArea({{}, TOGL::GetScreenSize()}); break;
+                                
+                case '9':       window.ChangeArea({100, 10, 800, 400}); break;
+                                
+                case 'C':       window.Center(); break;
+
+                case VK_LEFT:   window.MoveBy(-30, 0); break;
+                case VK_RIGHT:  window.MoveBy(30, 0); break;
+
+                case 'X':       window.MarkToClose(); break;
+
+                case 'I':       DisplayWindowInfo(); break;
+
+                case 'T':       s_is_client = !s_is_client; break;
+                }
+            }
+        };
+
+        data.do_on_size = [](uint32_t width, uint32_t height) {
+            glViewport(0, 0, width,  height ? height : 1);
+
+            glLoadIdentity();
+            glOrtho(0, width, 0, height, 1, -1);
+
+            s_resolution = TOGL::SizeI(width, height);
+
+            TOGL::ToWindow().MarkToRedraw();
+        };
+
+        return TOGL::Run(data);
+
+    } else if (IsFlag("WINDOW_STATE")) {
+        s_resolution = {600, 300};
+
+        TOGL::Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example MOVE_AND_RESIZE";
         // data.style              = TOGL::StyleBit::CLIENT_SIZE;
         // data.style              = TOGL::StyleBit::CLIENT_ONLY;
+        data.style              = TOGL::StyleBit::REDRAW_ON_REQUEST_ONLY;
         data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
         data.icon_resource_id   = ICON_ID;
         data.info_level         = 3;
@@ -227,26 +393,57 @@ int main(int argc, char *argv[]) {
 
         data.do_on_key_up_raw = [](WPARAM w_param, LPARAM l_param) {
             switch (w_param) {
-            case 'Z': TOGL::ToWindow().MoveTo(0, 0); break;
-            case 'M': TOGL::ToWindow().MoveTo(10, 100); break;
 
-            case 'S': TOGL::ToWindow().SetSize(400, 200); break;
-            case 'B': TOGL::ToWindow().SetSize(800, 400); break;
 
-            case 'R': TOGL::ToWindow().SetArea(100, 10, 800, 400); break;
-
-            case 'H': TOGL::ToWindow().SetArea(TOGL::ToWindow().GetArea()); break;
-
-            case 'G': TOGL::ToWindow().SetArea(TOGL::GetDesktopAreaNoTaskBar()); break;
-
+                
+            case 'Z': TOGL::ToWindow().MoveTo({0, 0}); break;
+            case 'M': TOGL::ToWindow().MoveTo({10, 100}); break;
+            case 'S': TOGL::ToWindow().SetSize({400, 200}); break;
+            case 'B': TOGL::ToWindow().SetSize({800, 400}); break;
+            case 'R': TOGL::ToWindow().SetArea({100, 10, 800, 400}); break;
             case 'A': TOGL::ToWindow().ChangeArea({100, 10, 800, 400}); break;
-
             case 'C': TOGL::ToWindow().Center(); break;
-
-            case VK_LEFT: TOGL::ToWindow().MoveBy(-30, 0); break;
-            case VK_RIGHT: TOGL::ToWindow().MoveBy(30, 0); break;
-
+            case 'T': 
+                Sleep(3000);
+                TOGL::ToWindow().Top(); 
+                break;
             case 'X': TOGL::ToWindow().MarkToClose(); break;
+            case 'P': TOGL::ToWindow().MarkToRedraw(); break;
+            case VK_LEFT: TOGL::ToWindow().MoveBy({-30, 0}); break;
+            case VK_RIGHT: TOGL::ToWindow().MoveBy({30, 0}); break;
+                
+            case '1': 
+                TOGL::ToWindow().Hide();
+                Sleep(1000);
+                TOGL::ToWindow().Restore(); 
+                break;
+
+            case '2': 
+                TOGL::ToWindow().Minimize();
+                Sleep(1000);
+                TOGL::ToWindow().Restore(); 
+                break;
+
+            case '3':
+                TOGL::ToWindow().Restore(); 
+                break;
+
+            case '4':
+                TOGL::ToWindow().Maximize(); 
+                break;
+
+            case '5':
+                TOGL::ToWindow().MakeFullScreen(); 
+                break;
+
+            case '6':
+                TOGL::ToWindow().Hide();
+                Sleep(1000);
+                TOGL::ToWindow().MakeFullScreen(); 
+                break;
+
+            case '7':
+                break;
 
             case 'I': {
                 RECT client, window, border;
@@ -288,7 +485,7 @@ int main(int argc, char *argv[]) {
                 togl_print_i32(TOGL::ToWindow().GetDrawAreaSize().height);
                 break;
             }
-            };
+            }
         };
 
         data.do_on_size = [](uint32_t width, uint32_t height) {
@@ -300,235 +497,6 @@ int main(int argc, char *argv[]) {
             s_resolution = TOGL::SizeI(width, height);
 
             TOGL::ToWindow().MarkToRedraw();
-        };
-
-        return TOGL::Run(data);
-
-    } else if (IsFlag("WINDOW_FUNCTIONS")) {
-        TOGL::Data data = {};
-
-        data.window_name        = "TrivialOpenGL_Example WINDOW_FUNCTIONS";
-        // data.style              = TOGL::StyleBit::CLIENT_SIZE;
-        // data.style              = TOGL::StyleBit::CLIENT_ONLY;
-        data.area               = {TOGL::DEF, TOGL::DEF, 600, 300};
-        data.icon_resource_id   = ICON_ID;
-        data.info_level         = 3;
-
-        struct TestResolution {
-            int width, height;
-        };
-        TOGL::Static<TestResolution>::To() = {600, 300};
-
-        data.do_on_create = []() {
-            glLoadIdentity();
-            glOrtho(0, 600, 0, 300, 1, -1);
-            glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
-
-            //TOGL::ToWindow().MakeFullScreen(); 
-            //TOGL::ToWindow().MarkToRedraw();
-        };
-
-        data.display = []() {
-            glClear(GL_COLOR_BUFFER_BIT);
-
-            auto DrawRectangle = [](int x, int y, int width, int height) {
-                glBegin(GL_TRIANGLE_FAN);
-                glVertex2i(x, y);
-                glVertex2i(x + width, y);
-                glVertex2i(x + width, y + height);
-                glVertex2i(y, y + height);
-                glEnd();
-            };
-
-            auto& size = TOGL::Static<TestResolution>::To();
-
-            glColor3f(1, 0, 0);
-            DrawRectangle(0, 0, size.width, size.height);
-            glColor3f(0, 0, 0.5);
-            DrawRectangle(1, 1, size.width - 2, size.height - 2);
-
-
-            glPushMatrix();
-            glTranslatef(size.width / 2.0f, size.height / 2.0f, 0);
-            glScalef(100, 100, 1);
-
-            glBegin(GL_TRIANGLES);
-
-            glColor3f(1, 0, 0);
-            glVertex2f(-0.5, -0.5);
-
-            glColor3f(0, 1, 0);
-            glVertex2f(0.5, -0.5);
-
-            glColor3f(0, 0, 1);
-            glVertex2f(0, 0.5);
-
-            glEnd();
-
-            glPopMatrix();
-        };
-
-        data.do_on_key_up_raw = [](WPARAM w_param, LPARAM l_param) {
-            switch (w_param) {
-            case 'Z': TOGL::ToWindow().MoveTo({0, 0}); break;
-            case 'M': TOGL::ToWindow().MoveTo({10, 100}); break;
-            case 'S': TOGL::ToWindow().SetSize({400, 200}); break;
-            case 'B': TOGL::ToWindow().SetSize({800, 400}); break;
-            case 'R': TOGL::ToWindow().SetArea({100, 10, 800, 400}); break;
-            case 'A': TOGL::ToWindow().ChangeArea({100, 10, 800, 400}); break;
-            case 'C': TOGL::ToWindow().Center(); break;
-            case 'T': 
-                Sleep(3000);
-                TOGL::ToWindow().Top(); 
-                break;
-            case 'X': TOGL::ToWindow().MarkToClose(); break;
-            case 'P': TOGL::ToWindow().MarkToRedraw(); break;
-            case VK_LEFT: TOGL::ToWindow().MoveBy({-30, 0}); break;
-            case VK_RIGHT: TOGL::ToWindow().MoveBy({30, 0}); break;
-
-            case '1': 
-                TOGL::ToWindow().Hide();
-                Sleep(1000);
-                TOGL::ToWindow().Restore(); 
-                break;
-
-            case '2': 
-                TOGL::ToWindow().Minimize();
-                Sleep(1000);
-                TOGL::ToWindow().Restore(); 
-                break;
-
-            case '3':
-                TOGL::ToWindow().Restore(); 
-                break;
-
-            case '4':
-                TOGL::ToWindow().Maximize(); 
-                break;
-
-            case '5':
-                TOGL::ToWindow().MakeFullScreen(); 
-                break;
-
-            case '6':
-                TOGL::ToWindow().Hide();
-                Sleep(1000);
-                TOGL::ToWindow().MakeFullScreen(); 
-                break;
-
-            case '7':
-                break;
-
-            case 'I': {
-                togl_print_i32(GetSystemMetrics(SM_CXSIZEFRAME));
-                togl_print_i32(GetSystemMetrics(SM_CYSIZEFRAME));
-                togl_print_i32(GetSystemMetrics(SM_CXFOCUSBORDER));
-                togl_print_i32(GetSystemMetrics(SM_CYFOCUSBORDER));
-                togl_print_i32(GetSystemMetrics(SM_CXPADDEDBORDER));
-                // togl_print_i32(GetSystemMetrics(SM_CYPADDEDBORDER));
-                togl_print_i32(GetSystemMetrics(SM_CXBORDER));
-                togl_print_i32(GetSystemMetrics(SM_CYBORDER));
-                togl_print_i32(GetSystemMetrics(SM_CXEDGE));
-                togl_print_i32(GetSystemMetrics(SM_CYEDGE));
-                togl_print_i32(GetSystemMetrics(SM_CXDLGFRAME));
-                togl_print_i32(GetSystemMetrics(SM_CYDLGFRAME));
-
-                togl_print_i32(GetSystemMetrics(SM_CYMENU));
-                togl_print_i32(GetSystemMetrics(SM_CYCAPTION));
-
-                NONCLIENTMETRICSW m;
-                m.cbSize = sizeof(NONCLIENTMETRICSW);
-                SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &m, 0);
-
-                togl_print_i32(m.iBorderWidth);
-                togl_print_i32(m.iPaddedBorderWidth);
-                togl_print_i32(m.iScrollWidth);
-                togl_print_i32(m.iScrollHeight);
-                togl_print_i32(m.iCaptionWidth);
-                togl_print_i32(m.iCaptionHeight);
-                togl_print_i32(m.iSmCaptionWidth);
-                togl_print_i32(m.iSmCaptionHeight);
-                togl_print_i32(m.iMenuWidth);
-                togl_print_i32(m.iMenuHeight);
-
-                // window borders
-
-                RECT client, window, border;
-                GetWindowRect(TOGL::ToWindow().GetHWND(), &window);
-                GetClientRect(TOGL::ToWindow().GetHWND(), &client);
-                MapWindowPoints(TOGL::ToWindow().GetHWND(), NULL, (LPPOINT)&client, 2);
-
-                border.left     = client.left - window.left;
-                border.top      = client.top - window.top;
-                border.right    = window.right - client.right;
-                border.bottom   = window.bottom - client.bottom;
-
-                togl_print_i32(window.left);
-                togl_print_i32(window.top);
-                togl_print_i32(window.right);
-                togl_print_i32(window.bottom);
-
-                togl_print_i32(border.left);
-                togl_print_i32(border.top);
-                togl_print_i32(border.right);
-                togl_print_i32(border.bottom);
-
-                // RECT win10_invisible_border = {7, 0, 7, 7};
-
-
-                {
-                    HMODULE lib_handle = LoadLibraryA("Dwmapi.dll");
-                    if (lib_handle) {
-                        HRESULT (*DwmGetWindowAttribute)(HWND hwnd, DWORD dwAttribute, PVOID pvAttribute, DWORD cbAttribute) = nullptr;
-
-                        DwmGetWindowAttribute = (decltype(DwmGetWindowAttribute)) GetProcAddress(lib_handle, "DwmGetWindowAttribute");
-                        if (DwmGetWindowAttribute) {
-
-                            enum { DWMWA_EXTENDED_FRAME_BOUNDS = 9 };
-                            RECT actual_window;
-
-                            // Note: To return correct values, must be called after ShowWindow(window_handle, SW_SHOW).
-                            DwmGetWindowAttribute(TOGL::ToWindow().GetHWND(), DWMWA_EXTENDED_FRAME_BOUNDS, &actual_window, sizeof(RECT));
-
-                            togl_print_i32(actual_window.left);
-                            togl_print_i32(actual_window.top);
-                            togl_print_i32(actual_window.right);
-                            togl_print_i32(actual_window.bottom);
-
-                            togl_print_i32(actual_window.left - window.left);
-                            togl_print_i32(actual_window.top - window.top);
-                            togl_print_i32(actual_window.right - window.right);
-                            togl_print_i32(actual_window.bottom - window.bottom);
-                        }
-                        FreeLibrary(lib_handle);
-                    }
-                }
-                togl_print_i32(TOGL::GetScreenSize().width);
-                togl_print_i32(TOGL::GetScreenSize().height);
-                togl_print_i32(TOGL::ToWindow().GetArea().x);
-                togl_print_i32(TOGL::ToWindow().GetArea().y);
-                togl_print_i32(TOGL::ToWindow().GetArea().width);
-                togl_print_i32(TOGL::ToWindow().GetArea().height);
-                togl_print_i32(TOGL::ToWindow().GetDrawArea().x);
-                togl_print_i32(TOGL::ToWindow().GetDrawArea().y);
-                togl_print_i32(TOGL::ToWindow().GetDrawArea().width);
-                togl_print_i32(TOGL::ToWindow().GetDrawArea().height);
-                togl_print_i32(TOGL::ToWindow().GetDrawAreaSize().width);
-                togl_print_i32(TOGL::ToWindow().GetDrawAreaSize().height);
-                break;
-            }
-            };
-        };
-
-        data.do_on_size = [](uint32_t width, uint32_t height) {
-            glViewport(0, 0, width,  height ? height : 1);
-
-            glLoadIdentity();
-            glOrtho(0, width, 0, height, 1, -1);
-
-            TOGL::Static<TestResolution>::To() = {(int)width, (int)height};
-            TOGL::ToWindow().MarkToRedraw();
-
         };
 
         return TOGL::Run(data);

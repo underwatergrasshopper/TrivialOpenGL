@@ -23,8 +23,8 @@ namespace TrivialOpenGL {
             NO_RESIZE               = 0x0001,
             NO_MAXIMIZE             = 0x0002,
             CENTERED                = 0x0004,
-            CLIENT_SIZE             = 0x0008,
-            CLIENT_ONLY             = 0x0010,
+            DRAW_AREA_SIZE          = 0x0008,
+            DRAW_AREA_ONLY          = 0x0010,
             REDRAW_ON_REQUEST_ONLY  = 0x0020,
         };
     };
@@ -41,12 +41,14 @@ namespace TrivialOpenGL {
         // Encoding: ASCII or UTF8.
         std::string     window_name         = "Window";
 
+        // Window area.
         // If x is DEF then created window will be centered on X axis.
         // If y is DEF then created window will be centered on Y axis.
         // If width is DEF then created window will have with equal to half width of the screen.
         // If height is DEF then created window will have with equal to half height of the screen.
         AreaI           area                = {DEF, DEF, DEF, DEF};
 
+        // DRAW_AREA_SIZE - Window width and height will represent draw area width and height instead.
         StyleBit::Field style               = 0;
 
         // Tries create OpenGL Rendering Context which support to at least this version, with compatibility to all previous versions.
@@ -62,10 +64,10 @@ namespace TrivialOpenGL {
         // Loaded icon will be presented on window title bar and at application button on task bar. 
         uint16_t        icon_resource_id    = 0;       
 
-        // 0 - error
-        // 1 - info
-        // 2 - debug
-        // 3 - deep debug; Warning!!! Can slowdown application significantly.
+        // 0 - error        (only)
+        // 1 - info         (and above)
+        // 2 - debug        (and above)
+        // 3 - deep debug   (and above); Warning!!! Can slowdown application significantly.
         uint32_t        info_level          = 0;
 
         // Is called right before window is opened.
@@ -226,17 +228,33 @@ namespace TrivialOpenGL {
         // Changes area by applying style from data parameter which was provided to Run function.
         void ChangeArea(const AreaI& area);
 
-        // Puts window in top most position in z-order.
-        void Top();
-
         // Centers window in desktop area excluding task bar area.
         void Center();
 
+        // ---
+        
+        // Returns window left-top corner position in screen coordinates.
+        PointI GetPos() const;
+
+        // Returns window size.
+        SizeI GetSize() const;
+
+        // Returns window area in screen coordinates.
         AreaI GetArea() const;
-        AreaI GetDrawArea() const;
+
+        // Returns draw area top-left corner position in screen coordinates.
+        PointI GetDrawAreaPos() const;
+
+        // Returns draw area size.
         SizeI GetDrawAreaSize() const;
 
+        // Returns draw area in screen coordinates.
+        AreaI GetDrawArea() const;
+
         // ---
+
+        // Puts window in top most position in z-order.
+        void Top();
 
         // Ignores MAXIMIZED when REDRAW_ON_REQUEST_ONLY and CLIENT_ONLY.
         // Ignores FULL_SCREEN when REDRAW_ON_REQUEST_ONLY.
@@ -267,6 +285,14 @@ namespace TrivialOpenGL {
         HDC GetWindowDC();
 
     private:
+        enum class AreaPartId {
+            POSITION,
+            SIZE,
+            ALL
+        };
+
+        void SetArea(const AreaI& area, AreaPartId area_part_id, bool is_client_area);
+
         void SingletonCheck();
         int ExecuteMainLoop();
         HICON TryLoadIcon();
@@ -311,6 +337,10 @@ namespace TrivialOpenGL {
 
 namespace TrivialOpenGL {
 
+    //--------------------------------------------------------------------------
+    // Constructor, Destructor
+    //--------------------------------------------------------------------------
+
     inline Window::Window() {
         SingletonCheck();
 
@@ -329,20 +359,15 @@ namespace TrivialOpenGL {
 
     }
 
+    //--------------------------------------------------------------------------
+    // Position, Size, Area
+    //--------------------------------------------------------------------------
+
     inline void Window::MoveTo(int x, int y) {
-        MoveTo({x, y});
+        SetArea({x, y, 0, 0}, AreaPartId::POSITION, false);
     }
     inline void Window::MoveTo(const PointI& pos) {
-        const PointI correct_pos = m_area_correction.Apply(pos, m_window_handle);
-        SetWindowPos(m_window_handle, HWND_TOP, correct_pos.x, correct_pos.y, 0, 0, SWP_NOSIZE);
-    }
-
-    inline void Window::SetDrawAreaPos(int x, int y) {
-        SetDrawAreaPos({x, y});
-    }
-    inline void Window::SetDrawAreaPos(const PointI& pos) {
-        const PointI window_pos = GetWindowAreaFromDrawArea(AreaI(pos, {1, 1}), m_window_style).GetPos();
-        SetWindowPos(m_window_handle, HWND_TOP, window_pos.x, window_pos.y, 0, 0, SWP_NOSIZE);
+        MoveTo(pos.x, pos.y);
     }
 
     inline void Window::MoveBy(int x, int y) {
@@ -355,39 +380,54 @@ namespace TrivialOpenGL {
     }
 
     inline void Window::SetSize(int width, int height) {
-        SetSize({width, height});
+        SetArea({0, 0, width, height}, AreaPartId::SIZE, false);
     }
     inline void Window::SetSize(const SizeI& size) {
-        const SizeI correct_size = m_area_correction.Apply(size, m_window_handle);
-        SetWindowPos(m_window_handle, HWND_TOP, 0, 0, correct_size.width, correct_size.height, SWP_NOMOVE);
-    }
-
-    inline void Window::SetDrawAreaSize(int width, int height) {
-        SetDrawAreaSize({width, height});
-    }
-    inline void Window::SetDrawAreaSize(const SizeI& size) {
-        const SizeI window_size = GetWindowAreaFromDrawArea(AreaI({}, size), m_window_style).GetSize();
-        SetWindowPos(m_window_handle, HWND_TOP, 0, 0, window_size.width, window_size.height, SWP_NOMOVE);
+        SetSize(size.width, size.height);
     }
 
     inline void Window::SetArea(int x, int y, int width, int height) {
-        SetArea({x, y, width, height});
+        SetArea({x, y, width, height}, AreaPartId::ALL, false);
     }
     inline void Window::SetArea(const AreaI& area) {
-        const AreaI correct_area = m_area_correction.Apply(area, m_window_handle);
-        SetWindowPos(m_window_handle, HWND_TOP, correct_area.x, correct_area.y, correct_area.width, correct_area.height, 0);
+        SetArea(area.x, area.y, area.width, area.height);
+    }
+
+    //--------------------------------------------------------------------------
+
+    inline void Window::SetDrawAreaPos(int x, int y) {
+        SetArea({x, y, 0, 0}, AreaPartId::POSITION, true);
+    }
+    inline void Window::SetDrawAreaPos(const PointI& pos) {
+        SetDrawAreaPos(pos.x, pos.y);
+    }
+
+    inline void Window::SetDrawAreaSize(int width, int height) {
+        SetArea({0, 0, width, height}, AreaPartId::SIZE, true);
+    }
+    inline void Window::SetDrawAreaSize(const SizeI& size) {
+        SetDrawAreaSize(size.width, size.height);
     }
 
     inline void Window::SetDrawArea(int x, int y, int width, int height) {
-        SetDrawArea({x, y, width, height});
+        SetArea({x, y, width, height}, AreaPartId::ALL, true);
     }
     inline void Window::SetDrawArea(const AreaI& area) {
-        const AreaI window_area = GetWindowAreaFromDrawArea(area, m_window_style);
-        SetWindowPos(m_window_handle, HWND_TOP, window_area.x, window_area.y, window_area.width, window_area.height, 0);
+        SetDrawArea(area.x, area.y, area.width, area.height);
     }
 
-    inline void Window::Top() {
-        BringWindowToTop(m_window_handle);
+    inline void Window::ChangeArea(const AreaI& area) {
+        const AreaI window_area = GenerateWindowArea(area);
+        //SetArea(window_area, AreaPartId::ALL, m_data.style & StyleBit::DRAW_AREA_ONLY);
+        SetWindowPos(m_window_handle, HWND_TOP, window_area.x, window_area.y, window_area.width, window_area.height, 0);
+
+        //if (!(m_data.style & StyleBit::DRAW_AREA_ONLY) && !(m_data.style & StyleBit::DRAW_AREA_SIZE)) {
+        //    SetArea(window_area);
+        //} else {
+        //    const PointI correct_window_pos = m_area_correction.Apply(window_area.GetPos(), m_window_handle);
+        //
+        //    SetWindowPos(m_window_handle, HWND_TOP, correct_window_pos.x, correct_window_pos.y, window_area.width, window_area.height, 0);
+        //}
     }
 
     inline void Window::Center() {
@@ -401,13 +441,62 @@ namespace TrivialOpenGL {
         MoveTo(window_area.GetPos());
     }
 
-    inline void Window::ChangeArea(const AreaI& area) {
-        const AreaI window_area = GenerateWindowArea(area);
-        if (!(m_data.style & StyleBit::CLIENT_ONLY) && !(m_data.style & StyleBit::CLIENT_SIZE)) {
-            SetArea(window_area);
-        } else {
-            SetWindowPos(m_window_handle, HWND_TOP, window_area.x, window_area.y, window_area.width, window_area.height, 0);
+    //--------------------------------------------------------------------------
+
+    inline PointI Window::GetPos() const {
+        return GetArea().GetPos();
+    }
+
+    inline SizeI Window::GetSize() const {
+        return GetArea().GetSize();
+    }
+
+    inline AreaI Window::GetArea() const {
+        return m_area_correction.Revert(GetWindowArea(m_window_handle), m_window_handle);
+    }
+
+    inline PointI Window::GetDrawAreaPos() const {
+        return GetDrawArea().GetPos();
+    }
+
+    inline SizeI Window::GetDrawAreaSize() const {
+        return GetDrawArea().GetSize();
+    }
+
+    inline AreaI Window::GetDrawArea() const {
+        RECT r;
+        if (GetClientRect(m_window_handle, &r) && ClientToScreen(m_window_handle, (POINT*)&r) && ClientToScreen(m_window_handle, (POINT*)&r.right)) {
+            return MakeArea(r);
         }
+        return AreaI(0, 0, 0, 0);
+    }
+
+    //--------------------------------------------------------------------------
+
+    inline void Window::SetArea(const AreaI& area, AreaPartId area_part_id, bool is_draw_area) {
+
+        auto GetFlags = [](AreaPartId area_part_id) -> UINT {
+            switch (area_part_id) {
+            case AreaPartId::POSITION:  return SWP_NOSIZE;
+            case AreaPartId::SIZE:      return SWP_NOMOVE;
+            case AreaPartId::ALL:       return 0;
+            }
+        };
+
+        const AreaI correct_area = 
+            is_draw_area ? 
+            GetWindowAreaFromDrawArea(area, m_window_style) : 
+            m_area_correction.Apply(area, m_window_handle);
+
+        SetWindowPos(m_window_handle, HWND_TOP, correct_area.x, correct_area.y, correct_area.width, correct_area.height, GetFlags(area_part_id));
+    }
+
+    //--------------------------------------------------------------------------
+    // Window State
+    //--------------------------------------------------------------------------
+
+    inline void Window::Top() {
+        BringWindowToTop(m_window_handle);
     }
 
     inline void Window::Hide() {
@@ -454,22 +543,6 @@ namespace TrivialOpenGL {
         return GetState() == WindowState::FULL_SCREEN;
     }
 
-    inline AreaI Window::GetArea() const {
-        return m_area_correction.Revert(GetWindowArea(m_window_handle), m_window_handle);
-    }
-
-    inline AreaI Window::GetDrawArea() const {
-        RECT r;
-        if (GetClientRect(m_window_handle, &r)) {
-            return MakeArea(r);
-        }
-        return AreaI(0, 0, 0, 0);
-    }
-
-    inline SizeI Window::GetDrawAreaSize() const {
-        return GetDrawArea().GetSize();
-    }
-
 
     inline void Window::MarkToClose() {
         DestroyWindow(m_window_handle);
@@ -499,7 +572,7 @@ namespace TrivialOpenGL {
         // Forbidden combination of states and styles. 
         // Window do not redraw its content in some cases. 
         // Window loses focus and locks at top most z-position.
-        if (state == WindowState::MAXIMIZED && (m_data.style & StyleBit::REDRAW_ON_REQUEST_ONLY) && (m_data.style & StyleBit::CLIENT_ONLY)) return; 
+        if (state == WindowState::MAXIMIZED && (m_data.style & StyleBit::REDRAW_ON_REQUEST_ONLY) && (m_data.style & StyleBit::DRAW_AREA_ONLY)) return; 
         if (state == WindowState::FULL_SCREEN && (m_data.style & StyleBit::REDRAW_ON_REQUEST_ONLY)) return; 
 
         if (m_state != WindowState::NORMAL) {
@@ -577,19 +650,17 @@ namespace TrivialOpenGL {
         m_window_style = WS_OVERLAPPEDWINDOW;
         if (m_data.style & StyleBit::NO_RESIZE)     m_window_style &= ~WS_THICKFRAME;
         if (m_data.style & StyleBit::NO_MAXIMIZE)   m_window_style &= ~WS_MAXIMIZEBOX;
-        if (m_data.style & StyleBit::CLIENT_ONLY) {
+        if (m_data.style & StyleBit::DRAW_AREA_ONLY) {
             m_window_extended_style = WS_EX_TOOLWINDOW | WS_EX_APPWINDOW;
             m_window_style          = WS_POPUP;
         }
-
-        const AreaI window_area = GenerateWindowArea(m_data.area);
 
         m_window_handle = CreateWindowExW(
             m_window_extended_style,
             WINDOW_CLASS_NAME,
             ToUTF16(m_data.window_name).c_str(),
             m_window_style,
-            window_area.x, window_area.y, window_area.width, window_area.height,
+            CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
             NULL,
             NULL,
             m_instance_handle,
@@ -604,12 +675,8 @@ namespace TrivialOpenGL {
 
         ShowWindow(m_window_handle, SW_SHOW);
 
-        if (!(m_data.style & StyleBit::CLIENT_ONLY) && !(m_data.style & StyleBit::CLIENT_SIZE)) {
-            // Here because, actual window area can be fetched by DwmGetWindowAttribute only after SW_SHOW.
-            SetArea(window_area); 
-
-            if (m_data.style & StyleBit::CENTERED ) Center();
-        }
+        // Here because, actual window area can be fetched by DwmGetWindowAttribute only after SW_SHOW.
+        ChangeArea(m_data.area);
 
         UpdateWindow(m_window_handle);
 
@@ -719,12 +786,13 @@ namespace TrivialOpenGL {
         if (area.width == DEF)  window_area.width     = desktop_area.width / 2;
         if (area.height == DEF) window_area.height    = desktop_area.height / 2;
 
-        if ((m_data.style & StyleBit::CLIENT_SIZE) && !(m_data.style & StyleBit::CLIENT_ONLY)) {
+        if ((m_data.style & StyleBit::DRAW_AREA_SIZE) && !(m_data.style & StyleBit::DRAW_AREA_ONLY)) {
             window_area.SetSize(GetWindowAreaFromDrawArea(AreaI({}, window_area.GetSize()), m_window_style).GetSize());
 
             if (window_area.width < 0)    window_area.width = 0;
             if (window_area.height < 1)   window_area.height = 1;
         }
+        window_area.SetSize(m_area_correction.Apply(window_area.GetSize(), m_window_handle));
 
         // === Solve Position === //
 
@@ -735,6 +803,8 @@ namespace TrivialOpenGL {
             if (area.x == DEF) window_area.x = (desktop_area.width - window_area.width) / 2;
             if (area.y == DEF) window_area.y = (desktop_area.height - window_area.height) / 2;
         }
+
+        window_area.SetPos(m_area_correction.Revert(window_area.GetPos(), m_window_handle));
 
         // ===
 
