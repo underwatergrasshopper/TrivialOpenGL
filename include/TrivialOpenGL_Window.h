@@ -86,10 +86,10 @@ namespace TrivialOpenGL {
 
     };
 
-    // Corrects window position and size to removes invisible borders in Windows 10. 
-    class WindowAreaCorrection {
+    // Corrects window position and size to remove invisible window frame in Windows 10. 
+    class WindowAreaCorrector {
     public:
-        WindowAreaCorrection() {
+        WindowAreaCorrector() {
             m_dwmapi_lib_handle = LoadLibraryA("Dwmapi.dll");
             if (m_dwmapi_lib_handle) {
                 m_dwm_get_window_attribute = (decltype(m_dwm_get_window_attribute)) GetProcAddress(m_dwmapi_lib_handle, "DwmGetWindowAttribute");
@@ -97,7 +97,7 @@ namespace TrivialOpenGL {
                 m_dwm_get_window_attribute = nullptr;
             }
         }
-        virtual ~WindowAreaCorrection() {
+        virtual ~WindowAreaCorrector() {
             FreeLibrary(m_dwmapi_lib_handle);
         }
 
@@ -127,7 +127,8 @@ namespace TrivialOpenGL {
             return area;
         }
 
-        AreaI Apply(const AreaI& area, HWND window_hangle) const {
+        // area         - Window area without invisible frame.
+        AreaI AddInvisibleFrameTo(const AreaI& area, HWND window_hangle) const {
             const AreaI correction = Get(window_hangle);
             return {
                 area.x      + correction.x,
@@ -137,7 +138,8 @@ namespace TrivialOpenGL {
             };
         }
 
-        SizeI Apply(const SizeI& size, HWND window_hangle) const {
+        // size         - Window size without invisible frame.
+        SizeI AddInvisibleFrameTo(const SizeI& size, HWND window_hangle) const {
             const AreaI correction = Get(window_hangle);
             return {
                 size.width  + correction.width,
@@ -145,7 +147,8 @@ namespace TrivialOpenGL {
             };
         }
 
-        PointI Apply(const PointI& pos, HWND window_hangle) const {
+        // pos          - Window position without invisible frame.
+        PointI AddInvisibleFrameTo(const PointI& pos, HWND window_hangle) const {
             const AreaI correction = Get(window_hangle);
             return {
                 pos.x + correction.x,
@@ -153,7 +156,8 @@ namespace TrivialOpenGL {
             };
         }
 
-        AreaI Revert(const AreaI& area, HWND window_hangle) const {
+        // area         - Window area with invisible frame.
+        AreaI RemoveInvisibleFrameFrom(const AreaI& area, HWND window_hangle) const {
             const AreaI correction = Get(window_hangle);
             return {
                 area.x      - correction.x,
@@ -163,7 +167,8 @@ namespace TrivialOpenGL {
             };
         }
 
-        SizeI Revert(const SizeI& size, HWND window_hangle) const {
+        // size         - Window size with invisible frame.
+        SizeI RemoveInvisibleFrameFrom(const SizeI& size, HWND window_hangle) const {
             const AreaI correction = Get(window_hangle);
             return {
                 size.width  - correction.width,
@@ -171,7 +176,8 @@ namespace TrivialOpenGL {
             };
         }
 
-        PointI Revert(const PointI& pos, HWND window_hangle) const {
+        // pos          - Window position with invisible frame.
+        PointI RemoveInvisibleFrameFrom(const PointI& pos, HWND window_hangle) const {
             const AreaI correction = Get(window_hangle);
             return {
                 pos.x - correction.x,
@@ -321,7 +327,7 @@ namespace TrivialOpenGL {
 
         WindowState m_state;
 
-        WindowAreaCorrection m_area_correction;
+        WindowAreaCorrector m_window_area_corrector;
     };
 
     inline Window& ToWindow() {
@@ -442,7 +448,7 @@ namespace TrivialOpenGL {
     }
 
     inline AreaI Window::GetArea() const {
-        return m_area_correction.Revert(GetWindowArea(m_window_handle), m_window_handle);
+        return m_window_area_corrector.RemoveInvisibleFrameFrom(GetWindowArea(m_window_handle), m_window_handle);
     }
 
     inline PointI Window::GetDrawAreaPos() const {
@@ -476,7 +482,7 @@ namespace TrivialOpenGL {
         const AreaI correct_area = 
             is_draw_area ? 
             GetWindowAreaFromDrawArea(area, m_window_style) : 
-            m_area_correction.Apply(area, m_window_handle);
+            m_window_area_corrector.AddInvisibleFrameTo(area, m_window_handle);
 
         SetWindowPos(m_window_handle, HWND_TOP, correct_area.x, correct_area.y, correct_area.width, correct_area.height, GetFlags(area_part_id));
     }
@@ -767,7 +773,6 @@ namespace TrivialOpenGL {
     }
 
     inline AreaI Window::GenerateWindowArea(const AreaI& area) {
-#if 1
         AreaI window_area;
 
         // --- Size --- //
@@ -777,13 +782,14 @@ namespace TrivialOpenGL {
         window_area.width   = (area.width != DEF)   ? area.width    : (desktop_area.width / 2);
         window_area.height  = (area.height != DEF)  ? area.height   : (desktop_area.height / 2);
 
+        // In a case of unreasonable values.
         if (window_area.width < 0)    window_area.width = 0;
         if (window_area.height < 1)   window_area.height = 1;
 
         if ((m_data.style & StyleBit::DRAW_AREA_SIZE) && !(m_data.style & StyleBit::DRAW_AREA_ONLY)) {
-            const AreaI window_area_with_extended_border = GetWindowAreaFromDrawArea(window_area, m_window_style);
+            const AreaI window_area_with_invisible_frame = GetWindowAreaFromDrawArea(window_area, m_window_style);
 
-            window_area = m_area_correction.Revert(window_area_with_extended_border, m_window_handle);
+            window_area = m_window_area_corrector.RemoveInvisibleFrameFrom(window_area_with_invisible_frame, m_window_handle);
         }
 
         // --- Position --- //
@@ -796,50 +802,12 @@ namespace TrivialOpenGL {
             window_area.y = (area.y != DEF) ? area.y : ((desktop_area.height - window_area.height) / 2);
         }
 
+        // No need for additional adjustment for invisible window frame. 
+        // Already done for both position and size in 'Size' section.
+
         // ---
 
         return window_area;
-
-#else
-        AreaI window_area = area;
-
-        const AreaI desktop_area = GetDesktopAreaNoTaskBar();
-
-        // === Solve Size === //
-
-        if (area.width == DEF)  window_area.width     = desktop_area.width / 2;
-        if (area.height == DEF) window_area.height    = desktop_area.height / 2;
-
-        if ((m_data.style & StyleBit::DRAW_AREA_SIZE) && !(m_data.style & StyleBit::DRAW_AREA_ONLY)) {
-
-            const AreaI x_window_area = GetWindowAreaFromDrawArea(AreaI({}, window_area.GetSize()), m_window_style);
-
-            const SizeI size = m_area_correction.Revert(x_window_area, m_window_handle).GetSize();
-
-            window_area.SetSize(size);
-
-            if (window_area.width < 0)    window_area.width = 0;
-            if (window_area.height < 1)   window_area.height = 1;
-        }
-        window_area.SetSize(m_area_correction.Apply(window_area.GetSize(), m_window_handle));
-
-        // === Solve Position === //
-
-        if (m_data.style & StyleBit::CENTERED) {
-            window_area.x = (desktop_area.width - window_area.width) / 2;
-            window_area.y = (desktop_area.height - window_area.height) / 2;
-        } else {
-            if (area.x == DEF) window_area.x = (desktop_area.width - window_area.width) / 2;
-            if (area.y == DEF) window_area.y = (desktop_area.height - window_area.height) / 2;
-        }
-
-        window_area.SetPos(m_area_correction.Revert(window_area.GetPos(), m_window_handle));
-
-        // ===
-
-        return window_area;
-
-#endif
     }
 
     inline AreaI Window::GetWindowAreaFromDrawArea(const AreaI& draw_area, DWORD window_style) {
