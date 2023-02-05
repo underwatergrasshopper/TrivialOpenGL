@@ -417,17 +417,7 @@ namespace TrivialOpenGL {
     }
 
     inline void Window::ChangeArea(const AreaI& area) {
-        const AreaI window_area = GenerateWindowArea(area);
-        //SetArea(window_area, AreaPartId::ALL, m_data.style & StyleBit::DRAW_AREA_ONLY);
-        SetWindowPos(m_window_handle, HWND_TOP, window_area.x, window_area.y, window_area.width, window_area.height, 0);
-
-        //if (!(m_data.style & StyleBit::DRAW_AREA_ONLY) && !(m_data.style & StyleBit::DRAW_AREA_SIZE)) {
-        //    SetArea(window_area);
-        //} else {
-        //    const PointI correct_window_pos = m_area_correction.Apply(window_area.GetPos(), m_window_handle);
-        //
-        //    SetWindowPos(m_window_handle, HWND_TOP, correct_window_pos.x, correct_window_pos.y, window_area.width, window_area.height, 0);
-        //}
+        SetArea(GenerateWindowArea(area), AreaPartId::ALL, m_data.style & StyleBit::DRAW_AREA_ONLY);
     }
 
     inline void Window::Center() {
@@ -777,6 +767,40 @@ namespace TrivialOpenGL {
     }
 
     inline AreaI Window::GenerateWindowArea(const AreaI& area) {
+#if 1
+        AreaI window_area;
+
+        // --- Size --- //
+
+        const AreaI desktop_area = GetDesktopAreaNoTaskBar();
+
+        window_area.width   = (area.width != DEF)   ? area.width    : (desktop_area.width / 2);
+        window_area.height  = (area.height != DEF)  ? area.height   : (desktop_area.height / 2);
+
+        if (window_area.width < 0)    window_area.width = 0;
+        if (window_area.height < 1)   window_area.height = 1;
+
+        if ((m_data.style & StyleBit::DRAW_AREA_SIZE) && !(m_data.style & StyleBit::DRAW_AREA_ONLY)) {
+            const AreaI window_area_with_extended_border = GetWindowAreaFromDrawArea(window_area, m_window_style);
+
+            window_area = m_area_correction.Revert(window_area_with_extended_border, m_window_handle);
+        }
+
+        // --- Position --- //
+
+        if (m_data.style & StyleBit::CENTERED) {
+            window_area.x = (desktop_area.width - window_area.width) / 2;
+            window_area.y = (desktop_area.height - window_area.height) / 2;
+        } else {
+            window_area.x = (area.x != DEF) ? area.x : ((desktop_area.width - window_area.width) / 2);
+            window_area.y = (area.y != DEF) ? area.y : ((desktop_area.height - window_area.height) / 2);
+        }
+
+        // ---
+
+        return window_area;
+
+#else
         AreaI window_area = area;
 
         const AreaI desktop_area = GetDesktopAreaNoTaskBar();
@@ -787,7 +811,12 @@ namespace TrivialOpenGL {
         if (area.height == DEF) window_area.height    = desktop_area.height / 2;
 
         if ((m_data.style & StyleBit::DRAW_AREA_SIZE) && !(m_data.style & StyleBit::DRAW_AREA_ONLY)) {
-            window_area.SetSize(GetWindowAreaFromDrawArea(AreaI({}, window_area.GetSize()), m_window_style).GetSize());
+
+            const AreaI x_window_area = GetWindowAreaFromDrawArea(AreaI({}, window_area.GetSize()), m_window_style);
+
+            const SizeI size = m_area_correction.Revert(x_window_area, m_window_handle).GetSize();
+
+            window_area.SetSize(size);
 
             if (window_area.width < 0)    window_area.width = 0;
             if (window_area.height < 1)   window_area.height = 1;
@@ -809,6 +838,8 @@ namespace TrivialOpenGL {
         // ===
 
         return window_area;
+
+#endif
     }
 
     inline AreaI Window::GetWindowAreaFromDrawArea(const AreaI& draw_area, DWORD window_style) {

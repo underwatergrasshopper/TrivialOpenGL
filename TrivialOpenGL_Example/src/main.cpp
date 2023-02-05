@@ -33,6 +33,8 @@ void DisplayWindowInfo() {
     border.right    = window.right - client.right;
     border.bottom   = window.bottom - client.bottom;
 
+    puts("---");
+
     togl_print_i32(client.left);
     togl_print_i32(client.top);
     togl_print_i32(client.right);
@@ -47,21 +49,36 @@ void DisplayWindowInfo() {
     togl_print_i32(border.top);
     togl_print_i32(border.right);
     togl_print_i32(border.bottom);
+    puts("");
 
-    togl_print_i32(TOGL::GetScreenSize().width);
-    togl_print_i32(TOGL::GetScreenSize().height);
-    togl_print_i32(TOGL::GetDesktopAreaSizeNoTaskBar().width);
-    togl_print_i32(TOGL::GetDesktopAreaSizeNoTaskBar().height);
-    togl_print_i32(TOGL::ToWindow().GetArea().x);
-    togl_print_i32(TOGL::ToWindow().GetArea().y);
-    togl_print_i32(TOGL::ToWindow().GetArea().width);
-    togl_print_i32(TOGL::ToWindow().GetArea().height);
-    togl_print_i32(TOGL::ToWindow().GetDrawArea().x);
-    togl_print_i32(TOGL::ToWindow().GetDrawArea().y);
-    togl_print_i32(TOGL::ToWindow().GetDrawArea().width);
-    togl_print_i32(TOGL::ToWindow().GetDrawArea().height);
-    togl_print_i32(TOGL::ToWindow().GetDrawAreaSize().width);
-    togl_print_i32(TOGL::ToWindow().GetDrawAreaSize().height);
+    const TOGL::SizeI screen_size = TOGL::GetScreenSize();
+    togl_print_i32(screen_size.width);
+    togl_print_i32(screen_size.height);
+
+    const TOGL::SizeI work_area_size = TOGL::GetDesktopAreaSizeNoTaskBar();
+    togl_print_i32(work_area_size.width);
+    togl_print_i32(work_area_size.height);
+    puts("");
+
+    const TOGL::AreaI window_area = TOGL::ToWindow().GetArea();
+    togl_print_i32(window_area.x);
+    togl_print_i32(window_area.y);
+    togl_print_i32(window_area.width);
+    togl_print_i32(window_area.height);
+    puts("");
+
+    const TOGL::AreaI window_draw_area = TOGL::ToWindow().GetDrawArea();
+    togl_print_i32(window_draw_area.x);
+    togl_print_i32(window_draw_area.y);
+    togl_print_i32(window_draw_area.width);
+    togl_print_i32(window_draw_area.height);
+    puts("");
+
+    puts("Window Center Check:");
+    togl_print_i32(window_area.width + (window_area.x * 2));
+    togl_print_i32(window_area.height + (window_area.y * 2));
+    togl_print_i32(work_area_size.width);
+    togl_print_i32(work_area_size.height);
 }
 
 //------------------------------------------------------------------------------
