@@ -364,8 +364,9 @@ int main(int argc, char *argv[]) {
         TOGL::Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example MOVE_AND_RESIZE";
-        // data.style              = TOGL::StyleBit::CLIENT_SIZE;
-        // data.style              = TOGL::StyleBit::CLIENT_ONLY;
+        //data.style              |= TOGL::StyleBit::DRAW_AREA_SIZE;
+        //data.style              |= TOGL::StyleBit::DRAW_AREA_ONLY;
+        //data.style              |= TOGL::StyleBit::REDRAW_ON_REQUEST_ONLY;
         data.style              = TOGL::StyleBit::REDRAW_ON_REQUEST_ONLY;
         data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
         data.icon_resource_id   = ICON_ID;
@@ -411,8 +412,6 @@ int main(int argc, char *argv[]) {
         data.do_on_key_up_raw = [](WPARAM w_param, LPARAM l_param) {
             switch (w_param) {
 
-
-                
             case 'Z': TOGL::ToWindow().MoveTo({0, 0}); break;
             case 'M': TOGL::ToWindow().MoveTo({10, 100}); break;
             case 'S': TOGL::ToWindow().SetSize({400, 200}); break;
