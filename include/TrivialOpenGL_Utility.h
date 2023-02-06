@@ -371,6 +371,113 @@ namespace TrivialOpenGL {
     void SetCustomLogFunction(CustomLogFnP_T custom_log);
 
     //--------------------------------------------------------------------------
+    // WindowAreaCorrector
+    //--------------------------------------------------------------------------
+    
+    // Corrects window position and size to remove invisible window frame in Windows 10. 
+    class WindowAreaCorrector {
+    public:
+        WindowAreaCorrector() {
+            m_dwmapi_lib_handle = LoadLibraryA("Dwmapi.dll");
+            if (m_dwmapi_lib_handle) {
+                m_dwm_get_window_attribute = (decltype(m_dwm_get_window_attribute)) GetProcAddress(m_dwmapi_lib_handle, "DwmGetWindowAttribute");
+            } else {
+                m_dwm_get_window_attribute = nullptr;
+            }
+        }
+        virtual ~WindowAreaCorrector() {
+            FreeLibrary(m_dwmapi_lib_handle);
+        }
+
+        AreaI Get(HWND window_handle) const {
+            AreaI area = {};
+
+            if (m_dwm_get_window_attribute) {
+                RECT window_rect;
+                GetWindowRect(window_handle, &window_rect);
+
+                // Added TOGL_ prefix.
+                enum { TOGL_DWMWA_EXTENDED_FRAME_BOUNDS = 9 };
+                RECT actual_window_rect;
+
+                // Note: To return correct values, must be called after ShowWindow(window_handle, SW_SHOW).
+                m_dwm_get_window_attribute(window_handle, TOGL_DWMWA_EXTENDED_FRAME_BOUNDS, &actual_window_rect, sizeof(RECT));
+
+                RECT frame = {};
+                frame.left      = actual_window_rect.left   - window_rect.left;
+                frame.top       = actual_window_rect.top    - window_rect.top;
+                frame.right     = window_rect.right         - actual_window_rect.right;
+                frame.bottom    = window_rect.bottom        - actual_window_rect.bottom;
+
+                area = {-frame.left, -frame.top, frame.left + frame.right, frame.top + frame.bottom};
+            }
+
+            return area;
+        }
+
+        // area         - Window area without invisible frame.
+        AreaI AddInvisibleFrameTo(const AreaI& area, HWND window_hangle) const {
+            const AreaI correction = Get(window_hangle);
+            return {
+                area.x      + correction.x,
+                area.y      + correction.y,
+                area.width  + correction.width,
+                area.height + correction.height
+            };
+        }
+
+        // size         - Window size without invisible frame.
+        SizeI AddInvisibleFrameTo(const SizeI& size, HWND window_hangle) const {
+            const AreaI correction = Get(window_hangle);
+            return {
+                size.width  + correction.width,
+                size.height + correction.height
+            };
+        }
+
+        // pos          - Window position without invisible frame.
+        PointI AddInvisibleFrameTo(const PointI& pos, HWND window_hangle) const {
+            const AreaI correction = Get(window_hangle);
+            return {
+                pos.x + correction.x,
+                pos.y + correction.y,
+            };
+        }
+
+        // area         - Window area with invisible frame.
+        AreaI RemoveInvisibleFrameFrom(const AreaI& area, HWND window_hangle) const {
+            const AreaI correction = Get(window_hangle);
+            return {
+                area.x      - correction.x,
+                area.y      - correction.y,
+                area.width  - correction.width,
+                area.height - correction.height
+            };
+        }
+
+        // size         - Window size with invisible frame.
+        SizeI RemoveInvisibleFrameFrom(const SizeI& size, HWND window_hangle) const {
+            const AreaI correction = Get(window_hangle);
+            return {
+                size.width  - correction.width,
+                size.height - correction.height
+            };
+        }
+
+        // pos          - Window position with invisible frame.
+        PointI RemoveInvisibleFrameFrom(const PointI& pos, HWND window_hangle) const {
+            const AreaI correction = Get(window_hangle);
+            return {
+                pos.x - correction.x,
+                pos.y - correction.y,
+            };
+        }
+    private:
+        HMODULE  m_dwmapi_lib_handle;
+        HRESULT (*m_dwm_get_window_attribute)(HWND hwnd, DWORD dwAttribute, PVOID pvAttribute, DWORD cbAttribute);
+    };
+
+    //--------------------------------------------------------------------------
 
     inline AreaI GetDesktopAreaNoTaskBar() {
         RECT rc;

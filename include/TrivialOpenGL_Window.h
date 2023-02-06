@@ -11,6 +11,10 @@
 
 #include "TrivialOpenGL_Utility.h"
 
+//==========================================================================
+// Declarations
+//==========================================================================
+
 namespace TrivialOpenGL {
 
     enum {
@@ -44,36 +48,48 @@ namespace TrivialOpenGL {
         // Window area.
         // If x is DEF then created window will be centered on X axis.
         // If y is DEF then created window will be centered on Y axis.
-        // If width is DEF then created window will have with equal to half width of the screen.
-        // If height is DEF then created window will have with equal to half height of the screen.
+        // If width is DEF then created window will have with equal to half width of working area (desktop area excluding task bar area).
+        // If height is DEF then created window will have with equal to half height of working area (desktop area excluding task bar area).
         AreaI           area                = {DEF, DEF, DEF, DEF};
 
-        // DRAW_AREA_SIZE - Window width and height will represent draw area width and height instead.
+        // NO_RESIZE                      - Window wont have resize frame.
+        // NO_MAXIMIZE                    - Window wont have maximize button.
+        // CENTERED                       - Window will be centered at middle of working area (desktop area excluding task bar area).
+        // DRAW_AREA_SIZE                 - Width and height from 'area' variable will set size of window draw area instead whole window area.
+        // DRAW_AREA_ONLY                 - Window will contain only draw area (without borders and title bar).
+        // REDRAW_ON_CHANGE_OR_REQUEST    - Window will only be redrawing on change or call of Window::RequestDraw method.
         StyleBit::Field style               = 0;
 
         // Tries create OpenGL Rendering Context which support to at least this version, with compatibility to all previous versions.
         // If opengl_version.major and opengl_version.minor is DEF then creates for any available OpenGL version. Can be checked by GetOpenGL_Version().
         Version         opengl_verion       = {DEF, DEF};
 
-        // (Optional) File name of icon image file (.ico). 
+        // File name of icon image file (.ico). 
         // Loaded icon will be presented on window title bar and on task bar.
+
+        // If not empty string, then will load icon image (.ico). 
+        // Will be visible on window title bar and task bar.
+        // Encoding: ASCII or UTF8.
         std::string     icon_file_name      = "";
 
         // (Optional) Resource id of icon file. 
         // Id must be different than 0 and icon_file_name must be an empty string.
         // Loaded icon will be presented on window title bar and at application button on task bar. 
+
+        // Resource identifier.
+        // If not 0, then will use icon image from resources identified by this variable as application icon, title bar icon and task bar icon.
         uint16_t        icon_resource_id    = 0;       
 
         // 0 - error        (only)
         // 1 - info         (and above)
         // 2 - debug        (and above)
-        // 3 - deep debug   (and above); Warning!!! Can slowdown application significantly.
+        // 3 - deep debug   (and above)     Warning!!! Can slowdown application significantly.
         uint32_t        info_level          = 0;
 
-        // Is called right before window is opened.
+        // Is called right after window is created.
         void (*do_on_create)()                                          = nullptr;
 
-        // Is called right after window is closed.
+        // Is called right before window is closed.
         void (*do_on_destroy)()                                         = nullptr;
 
         // Is called each time when window content needs to be redrawn.
@@ -86,109 +102,14 @@ namespace TrivialOpenGL {
 
     };
 
-    // Corrects window position and size to remove invisible window frame in Windows 10. 
-    class WindowAreaCorrector {
-    public:
-        WindowAreaCorrector() {
-            m_dwmapi_lib_handle = LoadLibraryA("Dwmapi.dll");
-            if (m_dwmapi_lib_handle) {
-                m_dwm_get_window_attribute = (decltype(m_dwm_get_window_attribute)) GetProcAddress(m_dwmapi_lib_handle, "DwmGetWindowAttribute");
-            } else {
-                m_dwm_get_window_attribute = nullptr;
-            }
-        }
-        virtual ~WindowAreaCorrector() {
-            FreeLibrary(m_dwmapi_lib_handle);
-        }
+    // Creates and runs window.
+    int Run(const Data& data = {});
 
-        AreaI Get(HWND window_handle) const {
-            AreaI area = {};
+    // Get access to window singleton.
+    class Window;
+    Window& ToWindow();
 
-            if (m_dwm_get_window_attribute) {
-                RECT window_rect;
-                GetWindowRect(window_handle, &window_rect);
-
-                // Added TOGL_ prefix.
-                enum { TOGL_DWMWA_EXTENDED_FRAME_BOUNDS = 9 };
-                RECT actual_window_rect;
-
-                // Note: To return correct values, must be called after ShowWindow(window_handle, SW_SHOW).
-                m_dwm_get_window_attribute(window_handle, TOGL_DWMWA_EXTENDED_FRAME_BOUNDS, &actual_window_rect, sizeof(RECT));
-
-                RECT frame = {};
-                frame.left      = actual_window_rect.left   - window_rect.left;
-                frame.top       = actual_window_rect.top    - window_rect.top;
-                frame.right     = window_rect.right         - actual_window_rect.right;
-                frame.bottom    = window_rect.bottom        - actual_window_rect.bottom;
-
-                area = {-frame.left, -frame.top, frame.left + frame.right, frame.top + frame.bottom};
-            }
-
-            return area;
-        }
-
-        // area         - Window area without invisible frame.
-        AreaI AddInvisibleFrameTo(const AreaI& area, HWND window_hangle) const {
-            const AreaI correction = Get(window_hangle);
-            return {
-                area.x      + correction.x,
-                area.y      + correction.y,
-                area.width  + correction.width,
-                area.height + correction.height
-            };
-        }
-
-        // size         - Window size without invisible frame.
-        SizeI AddInvisibleFrameTo(const SizeI& size, HWND window_hangle) const {
-            const AreaI correction = Get(window_hangle);
-            return {
-                size.width  + correction.width,
-                size.height + correction.height
-            };
-        }
-
-        // pos          - Window position without invisible frame.
-        PointI AddInvisibleFrameTo(const PointI& pos, HWND window_hangle) const {
-            const AreaI correction = Get(window_hangle);
-            return {
-                pos.x + correction.x,
-                pos.y + correction.y,
-            };
-        }
-
-        // area         - Window area with invisible frame.
-        AreaI RemoveInvisibleFrameFrom(const AreaI& area, HWND window_hangle) const {
-            const AreaI correction = Get(window_hangle);
-            return {
-                area.x      - correction.x,
-                area.y      - correction.y,
-                area.width  - correction.width,
-                area.height - correction.height
-            };
-        }
-
-        // size         - Window size with invisible frame.
-        SizeI RemoveInvisibleFrameFrom(const SizeI& size, HWND window_hangle) const {
-            const AreaI correction = Get(window_hangle);
-            return {
-                size.width  - correction.width,
-                size.height - correction.height
-            };
-        }
-
-        // pos          - Window position with invisible frame.
-        PointI RemoveInvisibleFrameFrom(const PointI& pos, HWND window_hangle) const {
-            const AreaI correction = Get(window_hangle);
-            return {
-                pos.x - correction.x,
-                pos.y - correction.y,
-            };
-        }
-    private:
-        HMODULE  m_dwmapi_lib_handle;
-        HRESULT (*m_dwm_get_window_attribute)(HWND hwnd, DWORD dwAttribute, PVOID pvAttribute, DWORD cbAttribute);
-    };
-
+    // It's a singleton. Access by ToWindow function.
     class Window {
     public:
         Window();
@@ -196,9 +117,13 @@ namespace TrivialOpenGL {
 
         // ---
 
+        // Creates and runs window.
         int Run(const Data& data);
 
+        // If called from inside of do_on_{...} function, then close window after exiting from current do_on_{...} function.
         void RequestClose();
+
+        // If called from inside of do_on_{...} function, then redraws window after exiting from current do_on_{...} function.
         void RequestRedraw();
 
         // ---
@@ -231,11 +156,11 @@ namespace TrivialOpenGL {
         void SetDrawArea(int x, int y, int width, int height);
         void SetDrawArea(const AreaI& area);
 
+        // Puts window in center of desktop area excluding task bar area.
+        void Center();
+
         // Changes area by applying style from data parameter which was provided to Run function.
         void ChangeArea(const AreaI& area);
-
-        // Centers window in desktop area excluding task bar area.
-        void Center();
 
         // ---
         
@@ -259,7 +184,7 @@ namespace TrivialOpenGL {
 
         // ---
 
-        // Puts window in top most position in z-order.
+        // Puts window in top most position of z-order.
         void Top();
 
         void ChangeState(WindowState state);
@@ -276,17 +201,12 @@ namespace TrivialOpenGL {
         bool IsHidden() const;
         bool IsMinimized() const;
         bool IsMaximized() const;
-        bool IsWindowedFullScreen() const;
+        bool IsWindowedFullScreend() const;
 
         // ---
 
         uint32_t GetDebugLevel() const;
         Version GetOpenGL_Version() const;
-
-        // ---
-        // On your responsibility.
-        HWND GetHWND();
-        HDC GetWindowDC();
 
     private:
         enum class AreaPartId {
@@ -295,22 +215,23 @@ namespace TrivialOpenGL {
             ALL
         };
 
-        void SetArea(const AreaI& area, AreaPartId area_part_id, bool is_client_area);
-
         void SingletonCheck();
-        int ExecuteMainLoop();
         HICON TryLoadIcon();
+        int ExecuteMainLoop();
+
+        void Display();
 
         AreaI GenerateWindowArea(const AreaI& area);
+        void SetArea(const AreaI& area, AreaPartId area_part_id, bool is_client_area);
 
         void Create(HWND window_handle);
         void Destroy();
         void Paint();
-        void Display();
         void Close();
 
         static AreaI GetWindowArea(HWND window_handle);
         static AreaI GetWindowAreaFromDrawArea(const AreaI& draw_area, DWORD window_style);
+        
         static LRESULT CALLBACK WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
 
         Data        m_data;
@@ -328,16 +249,11 @@ namespace TrivialOpenGL {
         WindowAreaCorrector m_window_area_corrector;
     };
 
-    inline Window& ToWindow() {
-        return Static<Window>::To();
-    }
-
-    inline int Run(const Data& data = {}) {
-        return ToWindow().Run(data);
-    }
-
 } // namespace TrivialOpenGL
 
+//==========================================================================
+// Definitions
+//==========================================================================
 
 namespace TrivialOpenGL {
 
@@ -437,6 +353,14 @@ namespace TrivialOpenGL {
         return ExecuteMainLoop();
     }
 
+    inline void Window::RequestClose() {
+        DestroyWindow(m_window_handle);
+    }
+
+    inline void Window::RequestRedraw() {
+        InvalidateRect(m_window_handle, NULL, FALSE);
+    }
+
     //--------------------------------------------------------------------------
     // Position, Size, Area
     //--------------------------------------------------------------------------
@@ -494,10 +418,6 @@ namespace TrivialOpenGL {
         SetDrawArea(area.x, area.y, area.width, area.height);
     }
 
-    inline void Window::ChangeArea(const AreaI& area) {
-        SetArea(GenerateWindowArea(area), AreaPartId::ALL, m_data.style & StyleBit::DRAW_AREA_ONLY);
-    }
-
     inline void Window::Center() {
         const AreaI desktop_area = GetDesktopAreaNoTaskBar();
 
@@ -507,6 +427,10 @@ namespace TrivialOpenGL {
         window_area.y = (desktop_area.height - window_area.height) / 2;
 
         MoveTo(window_area.GetPos());
+    }
+
+    inline void Window::ChangeArea(const AreaI& area) {
+        SetArea(GenerateWindowArea(area), AreaPartId::ALL, m_data.style & StyleBit::DRAW_AREA_ONLY);
     }
 
     //--------------------------------------------------------------------------
@@ -540,29 +464,9 @@ namespace TrivialOpenGL {
     }
 
     //--------------------------------------------------------------------------
-
-    inline void Window::SetArea(const AreaI& area, AreaPartId area_part_id, bool is_draw_area) {
-        if (GetState() != WindowState::NORMAL) ChangeState(WindowState::NORMAL);
-
-        auto GetFlags = [](AreaPartId area_part_id) -> UINT {
-            switch (area_part_id) {
-            case AreaPartId::POSITION:  return SWP_NOSIZE;
-            case AreaPartId::SIZE:      return SWP_NOMOVE;
-            case AreaPartId::ALL:       return 0;
-            }
-        };
-
-        m_last_window_area = 
-            is_draw_area ? 
-            GetWindowAreaFromDrawArea(area, m_window_style) : 
-            m_window_area_corrector.AddInvisibleFrameTo(area, m_window_handle);
-
-        SetWindowPos(m_window_handle, HWND_TOP, m_last_window_area.x, m_last_window_area.y, m_last_window_area.width, m_last_window_area.height, GetFlags(area_part_id));
-    }
-
+    // State
     //--------------------------------------------------------------------------
-    // Window State
-    //--------------------------------------------------------------------------
+
     inline void Window::Top() {
         BringWindowToTop(m_window_handle);
     }
@@ -671,30 +575,16 @@ namespace TrivialOpenGL {
         return GetState() == WindowState::MAXIMIZED;
     }
 
-    inline bool Window::IsWindowedFullScreen() const {
-        togl_print_i32(GetState());
+    inline bool Window::IsWindowedFullScreend() const {
         return GetState() == WindowState::WINDOWED_FULL_SCREEN;
     }
 
-
-    inline void Window::RequestClose() {
-        DestroyWindow(m_window_handle);
-    }
-
-    inline void Window::RequestRedraw() {
-        InvalidateRect(m_window_handle, NULL, FALSE);
-    }
+    //--------------------------------------------------------------------------
+    // Get Generic
+    //--------------------------------------------------------------------------
 
     inline uint32_t Window::GetDebugLevel() const { 
         return m_data.info_level; 
-    }
-
-    inline HWND Window::GetHWND() {
-        return m_window_handle;
-    }
-
-    inline HDC Window::GetWindowDC() {
-        return m_device_context_handle;
     }
 
     inline Version Window::GetOpenGL_Version() const {
@@ -702,45 +592,8 @@ namespace TrivialOpenGL {
     }
 
     //--------------------------------------------------------------------------
-
-
-
-    inline LRESULT CALLBACK Window::WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param) {
-        switch (message) {
-            case WM_CREATE: 
-                ToWindow().Create(window_handle);
-                return 0;
-
-            case WM_DESTROY:
-                ToWindow().Destroy();
-                return 0;
-
-            case WM_CLOSE:
-                ToWindow().Close();
-                return 0;
-
-            case WM_PAINT:
-                ToWindow().Paint();
-                return 0;
-
-            case WM_KEYDOWN:
-                ToWindow().m_data.do_on_key_down_raw(w_param, l_param);
-                return 0;
-
-            case WM_KEYUP:
-                ToWindow().m_data.do_on_key_up_raw(w_param, l_param);
-                return 0;
-
-            case WM_SIZE:
-                ToWindow().m_data.do_on_size(LOWORD(l_param), HIWORD(l_param));
-                return 0;
-
-            case WM_ERASEBKGND:
-                // Tells DefWindowProc to not erase background. It's unnecessary since background is handled by OpenGL.
-                return 1;
-        }
-        return DefWindowProcW(window_handle, message, w_param, l_param);
-    }
+    // Private
+    //--------------------------------------------------------------------------
 
     inline void Window::SingletonCheck() {
         static bool is_instance_exists = false;
@@ -748,6 +601,22 @@ namespace TrivialOpenGL {
             LogFatalError("Error TOGL::Window::SingletonCheck: Can't be more than one instance of Window class.");
         }
         is_instance_exists = true;
+    }
+
+    inline HICON Window::TryLoadIcon() {
+        if (!m_data.icon_file_name.empty()) {
+            return (HICON)LoadImageW(
+                NULL,
+                ToUTF16(m_data.icon_file_name).c_str(),
+                IMAGE_ICON,
+                0, 0,
+                LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED
+            );
+        } else if (m_data.icon_resource_id > 0) {
+            return LoadIconW(m_instance_handle, MAKEINTRESOURCEW(m_data.icon_resource_id));
+        } else {
+            return NULL;
+        }
     }
 
     inline int Window::ExecuteMainLoop() {
@@ -774,28 +643,16 @@ namespace TrivialOpenGL {
 
         return EXIT_FAILURE;
     }
-    inline HICON Window::TryLoadIcon() {
-        if (!m_data.icon_file_name.empty()) {
-            return (HICON)LoadImageW(
-                NULL,
-                ToUTF16(m_data.icon_file_name).c_str(),
-                IMAGE_ICON,
-                0, 0,
-                LR_LOADFROMFILE | LR_DEFAULTSIZE | LR_SHARED
-            );
-        } else if (m_data.icon_resource_id > 0) {
-            return LoadIconW(m_instance_handle, MAKEINTRESOURCEW(m_data.icon_resource_id));
-        } else {
-            return NULL;
+    
+    inline void Window::Display() {
+        if (m_data.info_level > 3) {
+            puts("TOGLW::Window::Display"); 
+            fflush(stdout);
         }
-    }
 
-    inline AreaI Window::GetWindowArea(HWND window_handle) {
-        RECT r;
-        if (GetWindowRect(window_handle, &r)) {
-            return MakeArea(r);
-        }
-        return AreaI(0, 0, 0, 0);
+        m_data.display();
+
+        SwapBuffers(m_device_context_handle);
     }
 
     inline AreaI Window::GenerateWindowArea(const AreaI& area) {
@@ -835,12 +692,43 @@ namespace TrivialOpenGL {
 
         return window_area;
     }
+    
+    inline void Window::SetArea(const AreaI& area, AreaPartId area_part_id, bool is_draw_area) {
+        if (GetState() != WindowState::NORMAL) ChangeState(WindowState::NORMAL);
+
+        auto GetFlags = [](AreaPartId area_part_id) -> UINT {
+            switch (area_part_id) {
+            case AreaPartId::POSITION:  return SWP_NOSIZE;
+            case AreaPartId::SIZE:      return SWP_NOMOVE;
+            case AreaPartId::ALL:       return 0;
+            }
+        };
+
+        m_last_window_area = 
+            is_draw_area ? 
+            GetWindowAreaFromDrawArea(area, m_window_style) : 
+            m_window_area_corrector.AddInvisibleFrameTo(area, m_window_handle);
+
+        SetWindowPos(m_window_handle, HWND_TOP, m_last_window_area.x, m_last_window_area.y, m_last_window_area.width, m_last_window_area.height, GetFlags(area_part_id));
+    }
+
+    //--------------------------------------------------------------------------
+    
+    inline AreaI Window::GetWindowArea(HWND window_handle) {
+        RECT r;
+        if (GetWindowRect(window_handle, &r)) {
+            return MakeArea(r);
+        }
+        return AreaI(0, 0, 0, 0);
+    }
 
     inline AreaI Window::GetWindowAreaFromDrawArea(const AreaI& draw_area, DWORD window_style) {
         RECT rect = MakeRECT(draw_area);
         AdjustWindowRect(&rect, window_style, FALSE);
         return MakeArea(rect);
     }
+    
+    //--------------------------------------------------------------------------
 
     inline void Window::Create(HWND window_handle) {
         PIXELFORMATDESCRIPTOR pfd = {};
@@ -978,20 +866,9 @@ namespace TrivialOpenGL {
         Display();
 
         // Workaround for WINDOWED_FULL_SCREEN with REDRAW_ON_REQUEST to work.
-        if (!((m_data.style & StyleBit::REDRAW_ON_CHANGE_OR_REQUEST) && IsWindowedFullScreen())) {
+        if (!((m_data.style & StyleBit::REDRAW_ON_CHANGE_OR_REQUEST) && IsWindowedFullScreend())) {
             ValidateRect(m_window_handle, NULL); // to decrease number of WM_PAINT messages
         }
-    }
-
-    inline void Window::Display() {
-        if (m_data.info_level > 3) {
-            puts("TOGLW::Window::Display"); 
-            fflush(stdout);
-        }
-
-        m_data.display();
-
-        SwapBuffers(m_device_context_handle);
     }
 
     inline void Window::Close() {
@@ -1003,6 +880,56 @@ namespace TrivialOpenGL {
         DestroyWindow(m_window_handle);
     }
 
+    //--------------------------------------------------------------------------
+
+    inline LRESULT CALLBACK Window::WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param) {
+        switch (message) {
+        case WM_CREATE: 
+            ToWindow().Create(window_handle);
+            return 0;
+
+        case WM_DESTROY:
+            ToWindow().Destroy();
+            return 0;
+
+        case WM_CLOSE:
+            ToWindow().Close();
+            return 0;
+
+        case WM_PAINT:
+            ToWindow().Paint();
+            return 0;
+
+        case WM_KEYDOWN:
+            ToWindow().m_data.do_on_key_down_raw(w_param, l_param);
+            return 0;
+
+        case WM_KEYUP:
+            ToWindow().m_data.do_on_key_up_raw(w_param, l_param);
+            return 0;
+
+        case WM_SIZE:
+            ToWindow().m_data.do_on_size(LOWORD(l_param), HIWORD(l_param));
+            return 0;
+
+        case WM_ERASEBKGND:
+            // Tells DefWindowProc to not erase background. It's unnecessary since background is handled by OpenGL.
+            return 1;
+        }
+        return DefWindowProcW(window_handle, message, w_param, l_param);
+    }
+
+    //--------------------------------------------------------------------------
+    // Other
+    //--------------------------------------------------------------------------
+
+    inline Window& ToWindow() {
+        return Static<Window>::To();
+    }
+
+    inline int Run(const Data& data) {
+        return ToWindow().Run(data);
+    }
 }
 
 #endif // TRIVIALOPENGL_WINDOW_H_
