@@ -366,7 +366,7 @@ int main(int argc, char *argv[]) {
         data.window_name        = "TrivialOpenGL_Example MOVE_AND_RESIZE";
         //data.style              |= TOGL::StyleBit::DRAW_AREA_SIZE;
         //data.style              |= TOGL::StyleBit::DRAW_AREA_ONLY;
-        //data.style              |= TOGL::StyleBit::REDRAW_ON_CHANGE_OR_REQUEST;
+        data.style              |= TOGL::StyleBit::REDRAW_ON_CHANGE_OR_REQUEST;
         data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
         data.icon_resource_id   = ICON_ID;
         data.info_level         = 3;

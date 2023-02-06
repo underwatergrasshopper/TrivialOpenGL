@@ -262,8 +262,6 @@ namespace TrivialOpenGL {
         // Puts window in top most position in z-order.
         void Top();
 
-        // Ignores MAXIMIZED when REDRAW_ON_REQUEST_ONLY and CLIENT_ONLY.
-        // Ignores FULL_SCREEN when REDRAW_ON_REQUEST_ONLY.
         void ChangeState(WindowState state);
 
         void Hide();
@@ -325,9 +323,7 @@ namespace TrivialOpenGL {
         DWORD       m_window_style;
         DWORD       m_window_extended_style;
 
-        WindowState m_state;
-
-        AreaI       m_window_area_backup;
+        AreaI       m_last_window_area;
 
         WindowAreaCorrector m_window_area_corrector;
     };
@@ -365,6 +361,80 @@ namespace TrivialOpenGL {
 
     inline Window::~Window() {
 
+    }
+
+    //--------------------------------------------------------------------------
+    // Run
+    //--------------------------------------------------------------------------
+
+    inline int Window::Run(const Data& data) {
+        m_data = data;
+
+        if (!m_data.do_on_create)       m_data.do_on_create         = []() {};
+        if (!m_data.do_on_destroy)      m_data.do_on_destroy        = []() {};
+        if (!m_data.display)            m_data.display              = []() {};
+
+        if (!m_data.do_on_key_down_raw) m_data.do_on_key_down_raw   = [](WPARAM w_param, LPARAM l_param) {};
+        if (!m_data.do_on_key_up_raw)   m_data.do_on_key_up_raw     = [](WPARAM w_param, LPARAM l_param) {};
+
+        if (!m_data.do_on_size)         m_data.do_on_size           = [](uint32_t width, uint32_t height) {};
+
+        m_instance_handle = GetModuleHandleW(NULL);
+
+        constexpr wchar_t WINDOW_CLASS_NAME[] = L"TrivialOpenGL_WindowClass";
+
+        WNDCLASSEXW wc = {};
+        wc.cbSize           = sizeof(WNDCLASSEXW);
+        wc.style            = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
+        wc.lpfnWndProc      = WindowProc;
+        wc.cbClsExtra       = 0;
+        wc.cbWndExtra       = 0;
+        wc.hInstance        = m_instance_handle;
+        wc.hIcon            = TryLoadIcon();
+        wc.hCursor          = LoadCursor(NULL, IDC_ARROW);
+        wc.hbrBackground    = NULL;
+        wc.lpszMenuName     = NULL;
+        wc.lpszClassName    = WINDOW_CLASS_NAME;
+        wc.hIconSm          = NULL;
+
+        if (!RegisterClassExW(&wc)) {
+            LogFatalError("Error TOGLW::Window::Run: Cannot create window class.");
+        }
+
+        m_window_style = WS_OVERLAPPEDWINDOW;
+        if (m_data.style & StyleBit::NO_RESIZE)     m_window_style &= ~WS_THICKFRAME;
+        if (m_data.style & StyleBit::NO_MAXIMIZE)   m_window_style &= ~WS_MAXIMIZEBOX;
+        if (m_data.style & StyleBit::DRAW_AREA_ONLY) {
+            m_window_style          = WS_POPUP;
+            m_window_extended_style = WS_EX_APPWINDOW;
+        }
+
+        m_window_handle = CreateWindowExW(
+            m_window_extended_style,
+            WINDOW_CLASS_NAME,
+            ToUTF16(m_data.window_name).c_str(),
+            m_window_style,
+            CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+            NULL,
+            NULL,
+            m_instance_handle,
+            NULL
+        );
+
+        if (!m_window_handle) {
+            LogFatalError("Error TOGLW::Window::Run: Cannot create window.");
+        }
+
+        m_data.do_on_create();
+
+        ShowWindow(m_window_handle, SW_SHOW);
+
+        // Here because, actual window area can be fetched by DwmGetWindowAttribute only after SW_SHOW.
+        ChangeArea(m_data.area);
+
+        UpdateWindow(m_window_handle);
+
+        return ExecuteMainLoop();
     }
 
     //--------------------------------------------------------------------------
@@ -472,7 +542,7 @@ namespace TrivialOpenGL {
     //--------------------------------------------------------------------------
 
     inline void Window::SetArea(const AreaI& area, AreaPartId area_part_id, bool is_draw_area) {
-        if (m_state != WindowState::NORMAL) ChangeState(WindowState::NORMAL);
+        if (GetState() != WindowState::NORMAL) ChangeState(WindowState::NORMAL);
 
         auto GetFlags = [](AreaPartId area_part_id) -> UINT {
             switch (area_part_id) {
@@ -482,20 +552,70 @@ namespace TrivialOpenGL {
             }
         };
 
-        const AreaI correct_area = 
+        m_last_window_area = 
             is_draw_area ? 
             GetWindowAreaFromDrawArea(area, m_window_style) : 
             m_window_area_corrector.AddInvisibleFrameTo(area, m_window_handle);
 
-        SetWindowPos(m_window_handle, HWND_TOP, correct_area.x, correct_area.y, correct_area.width, correct_area.height, GetFlags(area_part_id));
+        SetWindowPos(m_window_handle, HWND_TOP, m_last_window_area.x, m_last_window_area.y, m_last_window_area.width, m_last_window_area.height, GetFlags(area_part_id));
     }
 
     //--------------------------------------------------------------------------
     // Window State
     //--------------------------------------------------------------------------
-
     inline void Window::Top() {
         BringWindowToTop(m_window_handle);
+    }
+
+    inline void Window::ChangeState(WindowState state) {
+        // Current State -> Normal
+
+        if (m_data.style & StyleBit::DRAW_AREA_ONLY) {
+            if (GetArea() == GetDesktopAreaNoTaskBar()) {
+                SetWindowPos(m_window_handle, HWND_TOP, m_last_window_area.x, m_last_window_area.y, m_last_window_area.width, m_last_window_area.height, 0);
+            }
+        } else {
+            if (!(GetWindowLongPtrW(m_window_handle, GWL_STYLE) & WS_OVERLAPPEDWINDOW)) {
+                // Recovers from windowed full screen state (or from any external changes of window styles).
+                SetWindowLongPtrA(m_window_handle, GWL_STYLE,   m_window_style);
+                SetWindowLongPtrA(m_window_handle, GWL_EXSTYLE, m_window_extended_style);
+
+                SetWindowPos(m_window_handle, HWND_TOP, m_last_window_area.x, m_last_window_area.y, m_last_window_area.width, m_last_window_area.height, 0);
+            }
+        }
+
+        ShowWindow(m_window_handle, SW_NORMAL);
+
+        // Normal -> New State
+
+        switch (state) {
+        case WindowState::NORMAL:
+            break;
+
+        case WindowState::HIDDEN:
+            ShowWindow(m_window_handle, SW_HIDE);
+            break;
+
+        case WindowState::MINIMIZED:
+            ShowWindow(m_window_handle, SW_MINIMIZE);
+            break;
+
+        case WindowState::MAXIMIZED: 
+            if (m_data.style & StyleBit::DRAW_AREA_ONLY) {
+                const SizeI work_area_size = GetDesktopAreaSizeNoTaskBar();
+
+                SetWindowPos(m_window_handle, HWND_TOP, 0, 0, work_area_size.width, work_area_size.height, 0);
+            } else {
+                ShowWindow(m_window_handle, SW_MAXIMIZE);
+            }
+            break;
+
+        case WindowState::WINDOWED_FULL_SCREEN:
+            SetWindowLongPtrA(m_window_handle, GWL_STYLE, WS_POPUP);
+            SetWindowLongPtrA(m_window_handle, GWL_EXSTYLE, WS_EX_APPWINDOW);
+            ShowWindow(m_window_handle, SW_MAXIMIZE);
+            break;
+        }
     }
 
     inline void Window::Hide() {
@@ -519,7 +639,20 @@ namespace TrivialOpenGL {
     }
 
     inline WindowState Window::GetState() const {
-        return m_state;
+        if (!IsWindowVisible(m_window_handle))  return WindowState::HIDDEN;
+
+        if (IsIconic(m_window_handle))          return WindowState::MINIMIZED;
+   
+        if (IsZoomed(m_window_handle)) {
+            if ((GetWindowLongPtrW(m_window_handle, GWL_STYLE) & WS_POPUP) && (GetWindowLongPtrW(m_window_handle, GWL_EXSTYLE) & WS_EX_APPWINDOW)) {
+                return WindowState::WINDOWED_FULL_SCREEN;
+            }
+            return WindowState::MAXIMIZED;
+        }
+
+        if ((m_data.style & StyleBit::DRAW_AREA_ONLY) && GetArea() == GetDesktopAreaNoTaskBar()) return WindowState::MAXIMIZED;
+
+        return WindowState::NORMAL;
     }
 
     inline bool Window::IsNormal() const {
@@ -539,6 +672,7 @@ namespace TrivialOpenGL {
     }
 
     inline bool Window::IsWindowedFullScreen() const {
+        togl_print_i32(GetState());
         return GetState() == WindowState::WINDOWED_FULL_SCREEN;
     }
 
@@ -567,143 +701,9 @@ namespace TrivialOpenGL {
         return m_data.opengl_verion;
     }
 
-    inline void Window::ChangeState(WindowState state) {
+    //--------------------------------------------------------------------------
 
-        // Current State -> Normal
 
-        switch (m_state) {
-        case WindowState::NORMAL:
-            break;
-
-        case WindowState::HIDDEN:
-            break;
-
-        case WindowState::MINIMIZED:
-            break;
-
-        case WindowState::MAXIMIZED: 
-            if (m_data.style & StyleBit::DRAW_AREA_ONLY) {
-                SetWindowPos(m_window_handle, HWND_TOP, m_window_area_backup.x, m_window_area_backup.y, m_window_area_backup.width, m_window_area_backup.height, 0);
-            } 
-            break;
-
-        case WindowState::WINDOWED_FULL_SCREEN:
-            SetWindowLongPtrA(m_window_handle, GWL_STYLE, m_window_style);
-            SetWindowLongPtrA(m_window_handle, GWL_EXSTYLE, m_window_extended_style);
-
-            SetWindowPos(m_window_handle, HWND_TOP, m_window_area_backup.x, m_window_area_backup.y, m_window_area_backup.width, m_window_area_backup.height, 0);
-            break;
-        }
-
-        ShowWindow(m_window_handle, SW_NORMAL);
-
-        // Normal -> New State
-
-        switch (state) {
-        case WindowState::NORMAL:
-            break;
-
-        case WindowState::HIDDEN:
-            ShowWindow(m_window_handle, SW_HIDE);
-            break;
-
-        case WindowState::MINIMIZED:
-            ShowWindow(m_window_handle, SW_MINIMIZE);
-            break;
-
-        case WindowState::MAXIMIZED: 
-            if (m_data.style & StyleBit::DRAW_AREA_ONLY) {
-                m_window_area_backup = GetWindowArea(m_window_handle);
-
-                const SizeI work_area_size = GetDesktopAreaSizeNoTaskBar();
-
-                SetWindowPos(m_window_handle, HWND_TOP, 0, 0, work_area_size.width, work_area_size.height, 0);
-            } else {
-                ShowWindow(m_window_handle, SW_MAXIMIZE);
-            }
-            break;
-
-        case WindowState::WINDOWED_FULL_SCREEN:
-            m_window_area_backup = GetWindowArea(m_window_handle);
-
-            SetWindowLongPtrA(m_window_handle, GWL_STYLE, WS_POPUP);
-            SetWindowLongPtrA(m_window_handle, GWL_EXSTYLE, WS_EX_APPWINDOW);
-            ShowWindow(m_window_handle, SW_MAXIMIZE);
-            break;
-        }
-
-        m_state = state;
-    }
-
-    inline int Window::Run(const Data& data) {
-        m_data = data;
-
-        if (!m_data.do_on_create)   m_data.do_on_create     = []() {};
-        if (!m_data.do_on_destroy)  m_data.do_on_destroy    = []() {};
-        if (!m_data.display)        m_data.display          = []() {};
-
-        if (!m_data.do_on_key_down_raw) m_data.do_on_key_down_raw   = [](WPARAM w_param, LPARAM l_param) {};
-        if (!m_data.do_on_key_up_raw)   m_data.do_on_key_up_raw     = [](WPARAM w_param, LPARAM l_param) {};
-
-        if (!m_data.do_on_size)         m_data.do_on_size           = [](uint32_t width, uint32_t height) {};
-
-        m_instance_handle = GetModuleHandleW(NULL);
-
-        constexpr wchar_t WINDOW_CLASS_NAME[] = L"TrivialOpenGL_WindowClass";
-
-        WNDCLASSEXW wc = {};
-        wc.cbSize           = sizeof(WNDCLASSEXW);
-        wc.style            = CS_OWNDC | CS_HREDRAW | CS_VREDRAW;
-        wc.lpfnWndProc      = WindowProc;
-        wc.cbClsExtra       = 0;
-        wc.cbWndExtra       = 0;
-        wc.hInstance        = m_instance_handle;
-        wc.hIcon            = TryLoadIcon();
-        wc.hCursor          = LoadCursor(NULL, IDC_ARROW);
-        wc.hbrBackground    = NULL;
-        wc.lpszMenuName     = NULL;
-        wc.lpszClassName    = WINDOW_CLASS_NAME;
-        wc.hIconSm          = NULL;
-
-        if (!RegisterClassExW(&wc)) {
-            LogFatalError("Error TOGLW::Window::Run: Cannot create window class.");
-        }
-
-        m_window_style = WS_OVERLAPPEDWINDOW;
-        if (m_data.style & StyleBit::NO_RESIZE)     m_window_style &= ~WS_THICKFRAME;
-        if (m_data.style & StyleBit::NO_MAXIMIZE)   m_window_style &= ~WS_MAXIMIZEBOX;
-        if (m_data.style & StyleBit::DRAW_AREA_ONLY) {
-            m_window_style          = WS_POPUP;
-            m_window_extended_style = WS_EX_APPWINDOW;
-        }
-
-        m_window_handle = CreateWindowExW(
-            m_window_extended_style,
-            WINDOW_CLASS_NAME,
-            ToUTF16(m_data.window_name).c_str(),
-            m_window_style,
-            CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-            NULL,
-            NULL,
-            m_instance_handle,
-            NULL
-        );
-
-        if (!m_window_handle) {
-            LogFatalError("Error TOGLW::Window::Run: Cannot create window.");
-        }
-
-        m_data.do_on_create();
-
-        ShowWindow(m_window_handle, SW_SHOW);
-
-        // Here because, actual window area can be fetched by DwmGetWindowAttribute only after SW_SHOW.
-        ChangeArea(m_data.area);
-
-        UpdateWindow(m_window_handle);
-
-        return ExecuteMainLoop();
-    }
 
     inline LRESULT CALLBACK Window::WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param) {
         switch (message) {
