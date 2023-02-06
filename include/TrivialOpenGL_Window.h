@@ -20,12 +20,12 @@ namespace TrivialOpenGL {
     struct StyleBit {
         using Field = uint32_t;
         enum {
-            NO_RESIZE               = 0x0001,
-            NO_MAXIMIZE             = 0x0002,
-            CENTERED                = 0x0004,
-            DRAW_AREA_SIZE          = 0x0008,
-            DRAW_AREA_ONLY          = 0x0010,
-            REDRAW_ON_REQUEST_ONLY  = 0x0020,
+            NO_RESIZE                       = 0x0001,
+            NO_MAXIMIZE                     = 0x0002,
+            CENTERED                        = 0x0004,
+            DRAW_AREA_SIZE                  = 0x0008,
+            DRAW_AREA_ONLY                  = 0x0010,
+            REDRAW_ON_CHANGE_OR_REQUEST     = 0x0020,
         };
     };
 
@@ -34,7 +34,7 @@ namespace TrivialOpenGL {
         HIDDEN,
         MAXIMIZED,
         MINIMIZED,
-        FULL_SCREEN
+        WINDOWED_FULL_SCREEN
     };
 
     struct Data {
@@ -198,8 +198,8 @@ namespace TrivialOpenGL {
 
         int Run(const Data& data);
 
-        void MarkToClose();
-        void MarkToRedraw();
+        void RequestClose();
+        void RequestRedraw();
 
         // ---
 
@@ -270,7 +270,7 @@ namespace TrivialOpenGL {
         void Restore();
         void Minimize();
         void Maximize();
-        void MakeFullScreen();
+        void MakeWindowedFullScreen();
 
         WindowState GetState() const;
 
@@ -278,7 +278,7 @@ namespace TrivialOpenGL {
         bool IsHidden() const;
         bool IsMinimized() const;
         bool IsMaximized() const;
-        bool IsFullScreen() const;
+        bool IsWindowedFullScreen() const;
 
         // ---
 
@@ -311,7 +311,7 @@ namespace TrivialOpenGL {
         void Display();
         void Close();
 
-        static AreaI GetWindowArea(HWND window_handle); // Warning: Do not correct area.
+        static AreaI GetWindowArea(HWND window_handle);
         static AreaI GetWindowAreaFromDrawArea(const AreaI& draw_area, DWORD window_style);
         static LRESULT CALLBACK WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
 
@@ -326,6 +326,8 @@ namespace TrivialOpenGL {
         DWORD       m_window_extended_style;
 
         WindowState m_state;
+
+        AreaI       m_window_area_backup;
 
         WindowAreaCorrector m_window_area_corrector;
     };
@@ -470,6 +472,7 @@ namespace TrivialOpenGL {
     //--------------------------------------------------------------------------
 
     inline void Window::SetArea(const AreaI& area, AreaPartId area_part_id, bool is_draw_area) {
+        if (m_state != WindowState::NORMAL) ChangeState(WindowState::NORMAL);
 
         auto GetFlags = [](AreaPartId area_part_id) -> UINT {
             switch (area_part_id) {
@@ -511,8 +514,8 @@ namespace TrivialOpenGL {
         ChangeState(WindowState::MAXIMIZED);
     }
 
-    inline void Window::MakeFullScreen() {
-        ChangeState(WindowState::FULL_SCREEN);
+    inline void Window::MakeWindowedFullScreen() {
+        ChangeState(WindowState::WINDOWED_FULL_SCREEN);
     }
 
     inline WindowState Window::GetState() const {
@@ -535,16 +538,16 @@ namespace TrivialOpenGL {
         return GetState() == WindowState::MAXIMIZED;
     }
 
-    inline bool Window::IsFullScreen() const {
-        return GetState() == WindowState::FULL_SCREEN;
+    inline bool Window::IsWindowedFullScreen() const {
+        return GetState() == WindowState::WINDOWED_FULL_SCREEN;
     }
 
 
-    inline void Window::MarkToClose() {
+    inline void Window::RequestClose() {
         DestroyWindow(m_window_handle);
     }
 
-    inline void Window::MarkToRedraw() {
+    inline void Window::RequestRedraw() {
         InvalidateRect(m_window_handle, NULL, FALSE);
     }
 
@@ -565,43 +568,66 @@ namespace TrivialOpenGL {
     }
 
     inline void Window::ChangeState(WindowState state) {
-        // Forbidden combination of states and styles. 
-        // Window do not redraw its content in some cases. 
-        // Window loses focus and locks at top most z-position.
-        if (state == WindowState::MAXIMIZED && (m_data.style & StyleBit::REDRAW_ON_REQUEST_ONLY) && (m_data.style & StyleBit::DRAW_AREA_ONLY)) return; 
-        if (state == WindowState::FULL_SCREEN && (m_data.style & StyleBit::REDRAW_ON_REQUEST_ONLY)) return; 
 
-        if (m_state != WindowState::NORMAL) {
-            ShowWindow(m_window_handle, SW_NORMAL);
+        // Current State -> Normal
 
-            if (m_state == WindowState::FULL_SCREEN) {
-                SetWindowLongPtrA(m_window_handle, GWL_STYLE, m_window_style);
-                SetWindowLongPtrA(m_window_handle, GWL_EXSTYLE, m_window_extended_style);
+        switch (m_state) {
+        case WindowState::NORMAL:
+            break;
 
-                if (state == WindowState::HIDDEN) {
-                    // Just for testing.
-                    //SetWindowPos(m_window_handle, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE | SWP_NOOWNERZORDER);
-                    ShowWindow(m_window_handle, SW_NORMAL);
-                }
-            }
+        case WindowState::HIDDEN:
+            break;
+
+        case WindowState::MINIMIZED:
+            break;
+
+        case WindowState::MAXIMIZED: 
+            if (m_data.style & StyleBit::DRAW_AREA_ONLY) {
+                SetWindowPos(m_window_handle, HWND_TOP, m_window_area_backup.x, m_window_area_backup.y, m_window_area_backup.width, m_window_area_backup.height, 0);
+            } 
+            break;
+
+        case WindowState::WINDOWED_FULL_SCREEN:
+            SetWindowLongPtrA(m_window_handle, GWL_STYLE, m_window_style);
+            SetWindowLongPtrA(m_window_handle, GWL_EXSTYLE, m_window_extended_style);
+
+            SetWindowPos(m_window_handle, HWND_TOP, m_window_area_backup.x, m_window_area_backup.y, m_window_area_backup.width, m_window_area_backup.height, 0);
+            break;
         }
+
+        ShowWindow(m_window_handle, SW_NORMAL);
+
+        // Normal -> New State
 
         switch (state) {
         case WindowState::NORMAL:
-            ShowWindow(m_window_handle, SW_NORMAL);
             break;
+
         case WindowState::HIDDEN:
             ShowWindow(m_window_handle, SW_HIDE);
             break;
+
         case WindowState::MINIMIZED:
             ShowWindow(m_window_handle, SW_MINIMIZE);
             break;
+
         case WindowState::MAXIMIZED: 
-            ShowWindow(m_window_handle, SW_MAXIMIZE);
+            if (m_data.style & StyleBit::DRAW_AREA_ONLY) {
+                m_window_area_backup = GetWindowArea(m_window_handle);
+
+                const SizeI work_area_size = GetDesktopAreaSizeNoTaskBar();
+
+                SetWindowPos(m_window_handle, HWND_TOP, 0, 0, work_area_size.width, work_area_size.height, 0);
+            } else {
+                ShowWindow(m_window_handle, SW_MAXIMIZE);
+            }
             break;
-        case WindowState::FULL_SCREEN:
+
+        case WindowState::WINDOWED_FULL_SCREEN:
+            m_window_area_backup = GetWindowArea(m_window_handle);
+
             SetWindowLongPtrA(m_window_handle, GWL_STYLE, WS_POPUP);
-            SetWindowLongPtrA(m_window_handle, GWL_EXSTYLE, WS_EX_TOOLWINDOW | WS_EX_APPWINDOW);
+            SetWindowLongPtrA(m_window_handle, GWL_EXSTYLE, WS_EX_APPWINDOW);
             ShowWindow(m_window_handle, SW_MAXIMIZE);
             break;
         }
@@ -647,8 +673,8 @@ namespace TrivialOpenGL {
         if (m_data.style & StyleBit::NO_RESIZE)     m_window_style &= ~WS_THICKFRAME;
         if (m_data.style & StyleBit::NO_MAXIMIZE)   m_window_style &= ~WS_MAXIMIZEBOX;
         if (m_data.style & StyleBit::DRAW_AREA_ONLY) {
-            m_window_extended_style = WS_EX_TOOLWINDOW | WS_EX_APPWINDOW;
             m_window_style          = WS_POPUP;
+            m_window_extended_style = WS_EX_APPWINDOW;
         }
 
         m_window_handle = CreateWindowExW(
@@ -727,7 +753,7 @@ namespace TrivialOpenGL {
     inline int Window::ExecuteMainLoop() {
         MSG msg = {};
 
-        if (m_data.style & StyleBit::REDRAW_ON_REQUEST_ONLY) {
+        if (m_data.style & StyleBit::REDRAW_ON_CHANGE_OR_REQUEST) {
             while (GetMessageW(&msg, NULL, 0, 0)) {
                 TranslateMessage(&msg);
                 DispatchMessageW(&msg);
@@ -951,7 +977,10 @@ namespace TrivialOpenGL {
 
         Display();
 
-        ValidateRect(m_window_handle, NULL); // to decrease number of WM_PAINT messages
+        // Workaround for WINDOWED_FULL_SCREEN with REDRAW_ON_REQUEST to work.
+        if (!((m_data.style & StyleBit::REDRAW_ON_CHANGE_OR_REQUEST) && IsWindowedFullScreen())) {
+            ValidateRect(m_window_handle, NULL); // to decrease number of WM_PAINT messages
+        }
     }
 
     inline void Window::Display() {
