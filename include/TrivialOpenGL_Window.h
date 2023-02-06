@@ -229,9 +229,12 @@ namespace TrivialOpenGL {
         void Paint();
         void Close();
 
+        static DWORD GetWindowStyle_DrawAreaOnly() { return WS_POPUP;  }
+        static DWORD GetWindowExtendedStyle_DrawAreaOnly() { return WS_EX_APPWINDOW; }
+
         static AreaI GetWindowArea(HWND window_handle);
         static AreaI GetWindowAreaFromDrawArea(const AreaI& draw_area, DWORD window_style);
-        
+
         static LRESULT CALLBACK WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
 
         Data        m_data;
@@ -321,8 +324,8 @@ namespace TrivialOpenGL {
         if (m_data.style & StyleBit::NO_RESIZE)     m_window_style &= ~WS_THICKFRAME;
         if (m_data.style & StyleBit::NO_MAXIMIZE)   m_window_style &= ~WS_MAXIMIZEBOX;
         if (m_data.style & StyleBit::DRAW_AREA_ONLY) {
-            m_window_style          = WS_POPUP;
-            m_window_extended_style = WS_EX_APPWINDOW;
+            m_window_style          = GetWindowStyle_DrawAreaOnly();
+            m_window_extended_style = GetWindowExtendedStyle_DrawAreaOnly();
         }
 
         m_window_handle = CreateWindowExW(
@@ -481,8 +484,8 @@ namespace TrivialOpenGL {
         } else {
             if (!(GetWindowLongPtrW(m_window_handle, GWL_STYLE) & WS_OVERLAPPEDWINDOW)) {
                 // Recovers from windowed full screen state (or from any external changes of window styles).
-                SetWindowLongPtrA(m_window_handle, GWL_STYLE,   m_window_style);
-                SetWindowLongPtrA(m_window_handle, GWL_EXSTYLE, m_window_extended_style);
+                SetWindowLongPtrW(m_window_handle, GWL_STYLE,   m_window_style);
+                SetWindowLongPtrW(m_window_handle, GWL_EXSTYLE, m_window_extended_style);
 
                 SetWindowPos(m_window_handle, HWND_TOP, m_last_window_area.x, m_last_window_area.y, m_last_window_area.width, m_last_window_area.height, 0);
             }
@@ -515,8 +518,8 @@ namespace TrivialOpenGL {
             break;
 
         case WindowState::WINDOWED_FULL_SCREEN:
-            SetWindowLongPtrA(m_window_handle, GWL_STYLE, WS_POPUP);
-            SetWindowLongPtrA(m_window_handle, GWL_EXSTYLE, WS_EX_APPWINDOW);
+            SetWindowLongPtrW(m_window_handle, GWL_STYLE, GetWindowStyle_DrawAreaOnly());
+            SetWindowLongPtrW(m_window_handle, GWL_EXSTYLE, GetWindowExtendedStyle_DrawAreaOnly());
             ShowWindow(m_window_handle, SW_MAXIMIZE);
             break;
         }
@@ -548,7 +551,7 @@ namespace TrivialOpenGL {
         if (IsIconic(m_window_handle))          return WindowState::MINIMIZED;
    
         if (IsZoomed(m_window_handle)) {
-            if ((GetWindowLongPtrW(m_window_handle, GWL_STYLE) & WS_POPUP) && (GetWindowLongPtrW(m_window_handle, GWL_EXSTYLE) & WS_EX_APPWINDOW)) {
+            if ((GetWindowLongPtrW(m_window_handle, GWL_STYLE) & GetWindowStyle_DrawAreaOnly()) && (GetWindowLongPtrW(m_window_handle, GWL_EXSTYLE) & GetWindowExtendedStyle_DrawAreaOnly())) {
                 return WindowState::WINDOWED_FULL_SCREEN;
             }
             return WindowState::MAXIMIZED;
