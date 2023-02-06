@@ -367,15 +367,18 @@ int main(int argc, char *argv[]) {
     } else if (IsFlag("WINDOW_STATE")) {
         s_resolution = {600, 300};
 
+        const TOGL::SizeI screen_size = TOGL::GetScreenSize();
+
         TOGL::Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example WINDOW_STATE";
         //data.style              |= TOGL::StyleBit::DRAW_AREA_SIZE;
-        data.style              |= TOGL::StyleBit::DRAW_AREA_ONLY;
+        //data.style              |= TOGL::StyleBit::DRAW_AREA_ONLY;
         //data.style              |= TOGL::StyleBit::REDRAW_ON_CHANGE_OR_REQUEST;
         //data.style              |= TOGL::StyleBit::NO_RESIZE;
         //data.style              |= TOGL::StyleBit::NO_MAXIMIZE;
-        data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
+        //data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
+        //data.area               = {TOGL::DEF, TOGL::DEF, screen_size.width, screen_size.height};
         data.icon_resource_id   = ICON_ID;
         data.info_level         = 3;
 
