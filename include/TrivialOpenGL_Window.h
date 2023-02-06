@@ -319,7 +319,6 @@ namespace TrivialOpenGL {
         if (!RegisterClassExW(&wc)) {
             LogFatalError("Error TOGLW::Window::Run: Cannot create window class.");
         }
-
         m_window_style = WS_OVERLAPPEDWINDOW;
         if (m_data.style & StyleBit::NO_RESIZE)     m_window_style &= ~WS_THICKFRAME;
         if (m_data.style & StyleBit::NO_MAXIMIZE)   m_window_style &= ~WS_MAXIMIZEBOX;
@@ -482,7 +481,7 @@ namespace TrivialOpenGL {
                 SetWindowPos(m_window_handle, HWND_TOP, m_last_window_area.x, m_last_window_area.y, m_last_window_area.width, m_last_window_area.height, 0);
             }
         } else {
-            if (!(GetWindowLongPtrW(m_window_handle, GWL_STYLE) & WS_OVERLAPPEDWINDOW)) {
+            if ((GetWindowLongPtrW(m_window_handle, GWL_STYLE) & GetWindowStyle_DrawAreaOnly()) && (GetWindowLongPtrW(m_window_handle, GWL_EXSTYLE) & GetWindowExtendedStyle_DrawAreaOnly())) {
                 // Recovers from windowed full screen state (or from any external changes of window styles).
                 SetWindowLongPtrW(m_window_handle, GWL_STYLE,   m_window_style);
                 SetWindowLongPtrW(m_window_handle, GWL_EXSTYLE, m_window_extended_style);
@@ -517,7 +516,7 @@ namespace TrivialOpenGL {
             }
             break;
 
-        case WindowState::WINDOWED_FULL_SCREEN:
+        case WindowState::WINDOWED_FULL_SCREEN: 
             SetWindowLongPtrW(m_window_handle, GWL_STYLE, GetWindowStyle_DrawAreaOnly());
             SetWindowLongPtrW(m_window_handle, GWL_EXSTYLE, GetWindowExtendedStyle_DrawAreaOnly());
             ShowWindow(m_window_handle, SW_MAXIMIZE);

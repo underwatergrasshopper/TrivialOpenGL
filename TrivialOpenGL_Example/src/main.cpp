@@ -369,9 +369,9 @@ int main(int argc, char *argv[]) {
 
         TOGL::Data data = {};
 
-        data.window_name        = "TrivialOpenGL_Example MOVE_AND_RESIZE";
+        data.window_name        = "TrivialOpenGL_Example WINDOW_STATE";
         //data.style              |= TOGL::StyleBit::DRAW_AREA_SIZE;
-        //data.style              |= TOGL::StyleBit::DRAW_AREA_ONLY;
+        data.style              |= TOGL::StyleBit::DRAW_AREA_ONLY;
         //data.style              |= TOGL::StyleBit::REDRAW_ON_CHANGE_OR_REQUEST;
         //data.style              |= TOGL::StyleBit::NO_RESIZE;
         //data.style              |= TOGL::StyleBit::NO_MAXIMIZE;
