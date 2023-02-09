@@ -4,3 +4,6 @@
 [submodule "TrivialOpenGL_Test/externals/ToStr"]
 	path = TrivialOpenGL_Test/externals/ToStr
 	url = https://github.com/underwatergrasshopper/ToStr.git
+[submodule "TrivialOpenGL_Example/externals/TimeLapse"]
+	path = TrivialOpenGL_Example/externals/TimeLapse
+	url = https://github.com/underwatergrasshopper/TimeLapse.git
