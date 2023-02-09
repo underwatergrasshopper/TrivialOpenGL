@@ -3,13 +3,13 @@
 #include <string>
 #include <set>
 
+#include <TimeLapse.h>
+
 #include <TrivialOpenGL.h>
+
 #include "Resource.h"
 
 //------------------------------------------------------------------------------
-
-static TOGL::SizeI  s_resolution;
-static bool         s_is_client;
 
 void DrawRectangle(int x, int y, int width, int height) {
     glBegin(GL_TRIANGLE_FAN);
@@ -20,6 +20,113 @@ void DrawRectangle(int x, int y, int width, int height) {
     glVertex2i(y,           y + height);
 
     glEnd();
+};
+
+void DrawTriangle(float x, float y, float scale, float angle) {
+    glPushMatrix();
+
+    glTranslatef(x, y, 0);
+    glRotatef(angle, 0, 0, 1);
+    glScalef(scale, scale, 1);
+
+    glBegin(GL_TRIANGLES);
+
+    glColor3f(1, 0, 0);
+    glVertex2f(-0.5, -0.5);
+
+    glColor3f(0, 1, 0);
+    glVertex2f(0.5, -0.5);
+
+    glColor3f(0, 0, 1);
+    glVertex2f(0, 0.5);
+
+    glEnd();
+
+    glPopMatrix();
+};
+
+class TestImage {
+public:
+    TestImage() {
+        m_interval      = 0.1;   
+        m_speed         = 10;  
+
+        m_step          = m_speed * m_interval;   
+
+        m_accumulator   = 0; 
+        m_angle         = 0;       
+    }
+
+    virtual ~TestImage() {
+
+    }
+
+    void Initialize(int width, int height) {
+        Initialize({width, height});
+    }
+
+    void Initialize(const TOGL::SizeI& size) {
+        m_size = size;
+
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, m_size.width, 0, m_size.height, 1, -1);
+
+        glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
+
+        m_time_lapse.Reset();
+    }
+
+    // angle - in degrees
+    void Draw(float triangle_angle = 0) {
+        // frame
+        glColor3f(1, 0, 0);
+        DrawRectangle(0, 0, m_size.width, m_size.height);
+
+        // background
+        glColor3f(0, 0, 0.5);
+        DrawRectangle(1, 1, m_size.width - 2, m_size.height - 2);
+
+        // triangle
+        DrawTriangle(m_size.width / 2.0f, m_size.height / 2.0f, m_size.height / 3.0f, triangle_angle);
+    }
+
+    void Animate() {
+        m_time_lapse.Update();
+        m_accumulator += m_time_lapse.Get();
+
+        if (m_accumulator > m_interval) {
+            while (m_accumulator > m_interval) {
+                m_angle += m_step;
+                m_accumulator -= m_interval;
+            }
+            m_angle %= 360;
+        }
+
+        Draw(m_angle);
+    }
+
+    void Resize(int width, int height) {
+        glViewport(0, 0, width,  height ? height : 1);
+
+        glLoadIdentity();
+        glOrtho(0, width, 0, height, 1, -1);
+
+        m_size = {width, height};
+
+        TOGL::ToWindow().RequestRedraw();
+    }
+
+private:
+    TOGL::SizeI     m_size;
+
+    double          m_interval;         // in seconds
+    double          m_speed;            // in degrees per second
+    double          m_step;             // in degrees
+
+    TimeLapseF64    m_time_lapse;
+    double          m_accumulator;      // time in seconds
+    int             m_angle;            // in degrees
 };
 
 void DisplayWindowInfo() {
@@ -83,6 +190,12 @@ void DisplayWindowInfo() {
     togl_print_i32(work_area_size.width);
     togl_print_i32(work_area_size.height);
 }
+
+//------------------------------------------------------------------------------
+
+static TOGL::SizeI  s_resolution;
+static bool         s_is_client;
+static TestImage    s_test_image;
 
 //------------------------------------------------------------------------------
 
@@ -257,40 +370,15 @@ int main(int argc, char *argv[]) {
         data.info_level         = 3;
 
         data.do_on_create = []() {
-            glLoadIdentity();
-            glOrtho(0, s_resolution.width, 0, s_resolution.height, 1, -1);
-            glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
+            s_test_image.Initialize(s_resolution);
         };
 
         data.display = []() {
-            glClear(GL_COLOR_BUFFER_BIT);
+            s_test_image.Animate();
+        };
 
-            const TOGL::SizeI& size = s_resolution;
-
-            glColor3f(1, 0, 0);
-            DrawRectangle(0, 0, size.width, size.height);
-            glColor3f(0, 0, 0.5);
-            DrawRectangle(1, 1, size.width - 2, size.height - 2);
-
-            glPushMatrix();
-
-            glTranslatef(size.width / 2.0f, size.height / 2.0f, 0);
-            glScalef(100, 100, 1);
-
-            glBegin(GL_TRIANGLES);
-
-            glColor3f(1, 0, 0);
-            glVertex2f(-0.5, -0.5);
-
-            glColor3f(0, 1, 0);
-            glVertex2f(0.5, -0.5);
-
-            glColor3f(0, 0, 1);
-            glVertex2f(0, 0.5);
-
-            glEnd();
-
-            glPopMatrix();
+        data.do_on_size = [](uint32_t width, uint32_t height) {
+            s_test_image.Resize(width, height);
         };
 
         data.do_on_key_up_raw = [](WPARAM w_param, LPARAM l_param) {
@@ -351,17 +439,6 @@ int main(int argc, char *argv[]) {
             }
         };
 
-        data.do_on_size = [](uint32_t width, uint32_t height) {
-            glViewport(0, 0, width,  height ? height : 1);
-
-            glLoadIdentity();
-            glOrtho(0, width, 0, height, 1, -1);
-
-            s_resolution = TOGL::SizeI(width, height);
-
-            TOGL::ToWindow().RequestRedraw();
-        };
-
         return TOGL::Run(data);
 
     } else if (IsFlag("WINDOW_STATE")) {
@@ -383,40 +460,15 @@ int main(int argc, char *argv[]) {
         data.info_level         = 3;
 
         data.do_on_create = []() {
-            glLoadIdentity();
-            glOrtho(0, s_resolution.width, 0, s_resolution.height, 1, -1);
-            glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
+            s_test_image.Initialize(s_resolution);
         };
 
         data.display = []() {
-            glClear(GL_COLOR_BUFFER_BIT);
+            s_test_image.Animate();
+        };
 
-            const TOGL::SizeI& size = s_resolution;
-
-            glColor3f(1, 0, 0);
-            DrawRectangle(0, 0, size.width, size.height);
-            glColor3f(0, 0, 0.5);
-            DrawRectangle(1, 1, size.width - 2, size.height - 2);
-
-            glPushMatrix();
-
-            glTranslatef(size.width / 2.0f, size.height / 2.0f, 0);
-            glScalef(100, 100, 1);
-
-            glBegin(GL_TRIANGLES);
-
-            glColor3f(1, 0, 0);
-            glVertex2f(-0.5, -0.5);
-
-            glColor3f(0, 1, 0);
-            glVertex2f(0.5, -0.5);
-
-            glColor3f(0, 0, 1);
-            glVertex2f(0, 0.5);
-
-            glEnd();
-
-            glPopMatrix();
+        data.do_on_size = [](uint32_t width, uint32_t height) {
+            s_test_image.Resize(width, height);
         };
 
         data.do_on_key_up_raw = [](WPARAM w_param, LPARAM l_param) {
@@ -492,17 +544,6 @@ int main(int argc, char *argv[]) {
                 DisplayWindowInfo(); 
                 break;
             }
-        };
-
-        data.do_on_size = [](uint32_t width, uint32_t height) {
-            glViewport(0, 0, width,  height ? height : 1);
-
-            glLoadIdentity();
-            glOrtho(0, width, 0, height, 1, -1);
-
-            s_resolution = TOGL::SizeI(width, height);
-
-            TOGL::ToWindow().RequestRedraw();
         };
 
         return TOGL::Run(data);
