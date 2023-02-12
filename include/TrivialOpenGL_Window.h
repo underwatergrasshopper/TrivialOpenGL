@@ -226,6 +226,11 @@ namespace TrivialOpenGL {
             ALL
         };
 
+        // Window client area width extension to force functional windowed full screen window (reduced flashing and be able alt+tab in Windows 7).
+        enum {
+            WIDTH_EXTENTION = 1
+        };
+
         void SingletonCheck();
         HICON TryLoadIcon();
         int ExecuteMainLoop();
@@ -279,6 +284,8 @@ namespace TrivialOpenGL {
 
         bool        m_is_win7;
 
+        bool        m_is_apply_fake_width;
+
         WindowAreaCorrector m_window_area_corrector;
     };
 
@@ -310,7 +317,9 @@ namespace TrivialOpenGL {
         m_is_active                 = true;
         m_state                     = WindowState::NORMAL;
 
-        m_is_win7 = IsWindows7OrGreater() && !IsWindows8OrGreater();
+        m_is_win7                   = IsWindows7OrGreater() && !IsWindows8OrGreater();
+
+        m_is_apply_fake_width       = false;
     }
 
     inline Window::~Window() {
@@ -486,7 +495,13 @@ namespace TrivialOpenGL {
     }
 
     inline AreaI Window::GetArea() const {
-        return m_window_area_corrector.RemoveInvisibleFrameFrom(GetWindowArea(m_window_handle), m_window_handle);
+        AreaI area = GetWindowArea(m_window_handle);
+
+        // Workaround.
+        if (IsWindowedFullScreend()) area.width -= WIDTH_EXTENTION;
+
+
+        return m_window_area_corrector.RemoveInvisibleFrameFrom(area, m_window_handle);
     }
 
     inline PointI Window::GetDrawAreaPos() const {
@@ -500,7 +515,12 @@ namespace TrivialOpenGL {
     inline AreaI Window::GetDrawArea() const {
         RECT r;
         if (GetClientRect(m_window_handle, &r) && ClientToScreen(m_window_handle, (POINT*)&r) && ClientToScreen(m_window_handle, (POINT*)&r.right)) {
-            return MakeArea(r);
+            AreaI area = MakeArea(r);
+
+            // Workaround.
+            if (IsWindowedFullScreend()) area.width -= WIDTH_EXTENTION;
+
+            return area;
         }
         return AreaI(0, 0, 0, 0);
     }
@@ -557,7 +577,8 @@ namespace TrivialOpenGL {
             AdjustWindowRectEx(&screen_rect, GetWindowStyle_DrawAreaOnly(), FALSE, GetWindowExtendedStyle_DrawAreaOnly());
 
             const AreaI screen_area = MakeArea(screen_rect);
-            SetWindowPos(m_window_handle, HWND_TOP, screen_area.x, screen_area.y, screen_area.width, screen_area.height, SWP_SHOWWINDOW);
+            m_is_apply_fake_width = true;
+            SetWindowPos(m_window_handle, HWND_TOP, screen_area.x, screen_area.y, screen_area.width + WIDTH_EXTENTION, screen_area.height, SWP_SHOWWINDOW);
             // ---
 
             m_state = WindowState::WINDOWED_FULL_SCREEND;
@@ -683,7 +704,7 @@ namespace TrivialOpenGL {
     
     inline void Window::Display() {
         if (m_data.info_level >= INFO_LEVEL_DEEP_DEBUG) {
-            puts("TOGLW::Window::Display"); 
+            puts("TOGL::Window::Display"); 
             fflush(stdout);
         }
 
@@ -882,7 +903,7 @@ namespace TrivialOpenGL {
 
     inline void Window::Destroy() {
         if (m_data.info_level >= INFO_LEVEL_DEBUG) {
-            puts("TOGLW::Window::Destroy"); 
+            puts("TOGL::Window::Destroy"); 
             fflush(stdout);
         }
 
@@ -935,6 +956,19 @@ namespace TrivialOpenGL {
            m_data.do_on_key_up_raw(w_param, l_param);
             return 0;
 
+        case WM_SIZING: {
+            if (m_data.info_level >= INFO_LEVEL_DEBUG) {
+                puts("WM_SIZING");
+                fflush(stdout);
+            }
+
+            RECT window_rect;
+            GetWindowRect(m_window_handle, &window_rect);
+            m_last_window_area = MakeArea(window_rect);
+   
+            return TRUE;
+        }
+
         case WM_SIZE:
             if (m_data.info_level >= INFO_LEVEL_DEBUG) {
                 if (w_param == SIZE_MAXIMIZED) puts("WM_SIZE MAXIMIZED");
@@ -944,7 +978,14 @@ namespace TrivialOpenGL {
                 fflush(stdout);
             }
 
-            m_data.do_on_size(LOWORD(l_param), HIWORD(l_param));
+            if (m_is_apply_fake_width) {
+                m_data.do_on_size(LOWORD(l_param) - WIDTH_EXTENTION, HIWORD(l_param));
+
+                m_is_apply_fake_width = false;
+            } else {
+                m_data.do_on_size(LOWORD(l_param), HIWORD(l_param));
+            }
+
 
             switch (w_param) {
             case SIZE_MAXIMIZED:    m_state = WindowState::MAXIMIZED; break;
@@ -971,7 +1012,7 @@ namespace TrivialOpenGL {
             return 1;
 
         case WM_ACTIVATE:
-            if (!HIWORD(w_param)) {				// is not minimized
+            if (!HIWORD(w_param)) { // is not minimized
                 m_is_active  = true;		
                 SetForegroundWindow(m_window_handle);
             } else {
@@ -980,8 +1021,8 @@ namespace TrivialOpenGL {
             return 0;	
         case WM_ACTIVATEAPP:
             if (!w_param) {
-                // Workaround for disabled alt+tab in Windows 7.
-                if (m_is_win7) ShowWindow(m_window_handle, SW_SHOWMINIMIZED);
+                // Old workaround for disabled alt+tab in Windows 7.
+                //if (m_is_win7) ShowWindow(m_window_handle, SW_SHOWMINIMIZED);
             }
             return 0;
 
