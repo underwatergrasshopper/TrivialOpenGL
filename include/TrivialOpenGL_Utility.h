@@ -384,9 +384,22 @@ namespace TrivialOpenGL {
             } else {
                 m_dwm_get_window_attribute = nullptr;
             }
+
+            
         }
+
         virtual ~WindowAreaCorrector() {
             FreeLibrary(m_dwmapi_lib_handle);
+        }
+
+        void DisableComposition() {
+            enum {
+                TOGL_DWM_EC_DISABLECOMPOSITION  = 0,
+                TOGL_DWM_EC_ENABLECOMPOSITION   = 1,
+            };
+            HRESULT (*DwmEnableComposition)(UINT uCompositionAction) = (decltype(DwmEnableComposition)) GetProcAddress(m_dwmapi_lib_handle, "DwmEnableComposition");
+
+            DwmEnableComposition(TOGL_DWM_EC_DISABLECOMPOSITION);
         }
 
         AreaI Get(HWND window_handle) const {

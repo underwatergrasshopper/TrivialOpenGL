@@ -219,6 +219,10 @@ namespace TrivialOpenGL {
         HICON TryLoadIcon();
         int ExecuteMainLoop();
 
+        bool IsWin7() const {
+            return m_osvi.dwMajorVersion == 7;
+        }
+
         void Display();
 
         AreaI GenerateWindowArea(const AreaI& area);
@@ -229,12 +233,26 @@ namespace TrivialOpenGL {
         void Paint();
         void Close();
 
-        static DWORD GetWindowStyle_DrawAreaOnly() { return WS_POPUP;  }
+        static DWORD GetWindowStyle_DrawAreaOnly() { 
+            return 
+                WS_POPUP 
+                //| WS_THICKFRAME 
+                //| WS_CAPTION 
+                //| WS_SYSMENU 
+                //| WS_MAXIMIZEBOX 
+                //| WS_MINIMIZEBOX
+                //| WS_BORDER 
+                | WS_CLIPSIBLINGS 
+                | WS_CLIPCHILDREN
+            ; 
+        }
         static DWORD GetWindowExtendedStyle_DrawAreaOnly() { return WS_EX_APPWINDOW; }
 
         static AreaI GetWindowArea(HWND window_handle);
         static AreaI GetWindowAreaFromDrawArea(const AreaI& draw_area, DWORD window_style);
 
+
+        LRESULT InnerWindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
         static LRESULT CALLBACK WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
 
         Data        m_data;
@@ -248,6 +266,9 @@ namespace TrivialOpenGL {
         DWORD       m_window_extended_style;
 
         AreaI       m_last_window_area;
+        bool        m_is_active;
+
+        OSVERSIONINFOW      m_osvi;
 
         WindowAreaCorrector m_window_area_corrector;
     };
@@ -276,6 +297,20 @@ namespace TrivialOpenGL {
 
         m_window_style              = 0;
         m_window_extended_style     = 0;
+
+        m_is_active                 = true;
+
+        m_osvi                      = {};
+        m_osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+
+        #ifdef _MSC_VER 
+            #pragma warning(push)
+            #pragma warning(disable : 4996)
+        #endif
+        GetVersionExW(&m_osvi);
+        #ifdef _MSC_VER 
+            #pragma warning(pop)
+        #endif
     }
 
     inline Window::~Window() {
@@ -346,11 +381,19 @@ namespace TrivialOpenGL {
         m_data.do_on_create();
 
         ShowWindow(m_window_handle, SW_SHOW);
+        SetForegroundWindow(m_window_handle);
+        // test only
+        //m_window_area_corrector.DisableComposition();
+
+       
 
         // Here because, actual window area can be fetched by DwmGetWindowAttribute only after SW_SHOW.
         ChangeArea(m_data.area);
 
+        
         UpdateWindow(m_window_handle);
+
+
 
         return ExecuteMainLoop();
     }
@@ -490,6 +533,7 @@ namespace TrivialOpenGL {
             }
         }
 
+
         ShowWindow(m_window_handle, SW_NORMAL);
 
         // Normal -> New State
@@ -625,6 +669,7 @@ namespace TrivialOpenGL {
         MSG msg = {};
 
         if (m_data.style & StyleBit::REDRAW_ON_CHANGE_OR_REQUEST) {
+
             while (GetMessageW(&msg, NULL, 0, 0)) {
                 TranslateMessage(&msg);
                 DispatchMessageW(&msg);
@@ -632,15 +677,20 @@ namespace TrivialOpenGL {
             if (msg.message == WM_QUIT) return (int)msg.wParam;
 
         } else {
+
             while (true) {
-                while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
-                    if (msg.message == WM_QUIT) return (int)msg.wParam;
+                if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
+                    if (msg.message == WM_QUIT) {
+                        return (int)msg.wParam;
+                    }
 
                     TranslateMessage(&msg);
                     DispatchMessageW(&msg);
+                } else {
+                    if (m_is_active) Display();
                 }
-                Display();
             }
+
         }
 
         return EXIT_FAILURE;
@@ -653,7 +703,6 @@ namespace TrivialOpenGL {
         }
 
         m_data.display();
-
         SwapBuffers(m_device_context_handle);
     }
 
@@ -884,41 +933,70 @@ namespace TrivialOpenGL {
 
     //--------------------------------------------------------------------------
 
-    inline LRESULT CALLBACK Window::WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param) {
+    inline LRESULT Window::InnerWindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param) {
         switch (message) {
         case WM_CREATE: 
-            ToWindow().Create(window_handle);
+            Create(window_handle);
             return 0;
 
         case WM_DESTROY:
-            ToWindow().Destroy();
+            Destroy();
             return 0;
 
         case WM_CLOSE:
-            ToWindow().Close();
+            Close();
             return 0;
 
         case WM_PAINT:
-            ToWindow().Paint();
+            Paint();
             return 0;
 
         case WM_KEYDOWN:
-            ToWindow().m_data.do_on_key_down_raw(w_param, l_param);
+            m_data.do_on_key_down_raw(w_param, l_param);
             return 0;
 
         case WM_KEYUP:
-            ToWindow().m_data.do_on_key_up_raw(w_param, l_param);
+           m_data.do_on_key_up_raw(w_param, l_param);
             return 0;
 
         case WM_SIZE:
-            ToWindow().m_data.do_on_size(LOWORD(l_param), HIWORD(l_param));
+            m_data.do_on_size(LOWORD(l_param), HIWORD(l_param));
             return 0;
 
         case WM_ERASEBKGND:
             // Tells DefWindowProc to not erase background. It's unnecessary since background is handled by OpenGL.
             return 1;
+
+        case WM_ACTIVATE:
+            if (!HIWORD(w_param)) {				// is not minimized
+                m_is_active  = true;		
+                SetForegroundWindow(ToWindow().m_window_handle);
+            } else {
+                m_is_active  = false;
+            }
+            return 0;	
+        case WM_ACTIVATEAPP:
+            if (!w_param) {
+                // Testing.
+                //SetWindowPos(m_window_handle, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
+                //ShowWindow(m_window_handle, SW_SHOWMINNOACTIVE);
+            }
+            return 0;
+
+        case WM_SYSCOMMAND:
+            switch (w_param) {
+            case SC_SCREENSAVE:					// No screen saver.
+            case SC_MONITORPOWER:				// No entering to power save mode.
+                return 0;						
+            }
+            break;								
         }
+
         return DefWindowProcW(window_handle, message, w_param, l_param);
+    }
+
+    inline LRESULT CALLBACK Window::WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param) {
+        return ToWindow().InnerWindowProc(window_handle, message, w_param, l_param);
     }
 
     //--------------------------------------------------------------------------

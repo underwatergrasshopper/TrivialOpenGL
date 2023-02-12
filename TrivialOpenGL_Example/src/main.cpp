@@ -97,13 +97,13 @@ public:
 
         if (m_accumulator > m_interval) {
             while (m_accumulator > m_interval) {
-                m_angle += m_step;
+                m_angle += (int)m_step;
                 m_accumulator -= m_interval;
             }
             m_angle %= 360;
         }
 
-        Draw(m_angle);
+        Draw((float)m_angle);
     }
 
     void Resize(int width, int height) {
@@ -454,13 +454,15 @@ int main(int argc, char *argv[]) {
         //data.style              |= TOGL::StyleBit::REDRAW_ON_CHANGE_OR_REQUEST;
         //data.style              |= TOGL::StyleBit::NO_RESIZE;
         //data.style              |= TOGL::StyleBit::NO_MAXIMIZE;
-        //data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
+        data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
         //data.area               = {TOGL::DEF, TOGL::DEF, screen_size.width, screen_size.height};
         data.icon_resource_id   = ICON_ID;
         data.info_level         = 3;
 
         data.do_on_create = []() {
             s_test_image.Initialize(s_resolution);
+
+            //TOGL::ToWindow().MakeWindowedFullScreen();
         };
 
         data.display = []() {
