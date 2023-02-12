@@ -9,6 +9,8 @@
 #include <GL\GL.h>
 #include <string>
 
+#include <VersionHelpers.h>
+
 #include "TrivialOpenGL_Utility.h"
 
 //==========================================================================
@@ -228,10 +230,6 @@ namespace TrivialOpenGL {
         HICON TryLoadIcon();
         int ExecuteMainLoop();
 
-        bool IsWin7() const {
-            return m_osvi.dwMajorVersion == 6 && m_osvi.dwMinorVersion == 1;
-        }
-
         void Display();
 
         AreaI GenerateWindowArea(const AreaI& area);
@@ -279,7 +277,7 @@ namespace TrivialOpenGL {
         bool        m_is_active;
         WindowState m_state;
 
-        OSVERSIONINFOW      m_osvi;
+        bool        m_is_win7;
 
         WindowAreaCorrector m_window_area_corrector;
     };
@@ -312,17 +310,7 @@ namespace TrivialOpenGL {
         m_is_active                 = true;
         m_state                     = WindowState::NORMAL;
 
-        m_osvi                      = {};
-        m_osvi.dwOSVersionInfoSize  = sizeof(OSVERSIONINFO);
-
-        #ifdef _MSC_VER 
-            #pragma warning(push)
-            #pragma warning(disable : 4996)
-        #endif
-        GetVersionExW(&m_osvi);
-        #ifdef _MSC_VER 
-            #pragma warning(pop)
-        #endif
+        m_is_win7 = IsWindows7OrGreater() && !IsWindows8OrGreater();
     }
 
     inline Window::~Window() {
@@ -993,7 +981,7 @@ namespace TrivialOpenGL {
         case WM_ACTIVATEAPP:
             if (!w_param) {
                 // Workaround for disabled alt+tab in Windows 7.
-                if (IsWin7()) ShowWindow(m_window_handle, SW_SHOWMINIMIZED);
+                if (m_is_win7) ShowWindow(m_window_handle, SW_SHOWMINIMIZED);
             }
             return 0;
 
