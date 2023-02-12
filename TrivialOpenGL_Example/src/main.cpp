@@ -54,7 +54,7 @@ public:
         m_step          = m_speed * m_interval;   
 
         m_accumulator   = 0; 
-        m_angle         = 0;       
+        m_angle         = 0;    
     }
 
     virtual ~TestImage() {
@@ -79,6 +79,9 @@ public:
 
     // angle - in degrees
     void Draw(float triangle_angle = 0) {
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
         // frame
         glColor3f(1, 0, 0);
         DrawRectangle(0, 0, m_size.width, m_size.height);
@@ -109,6 +112,7 @@ public:
     void Resize(int width, int height) {
         glViewport(0, 0, width,  height ? height : 1);
 
+        glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
         glOrtho(0, width, 0, height, 1, -1);
 
@@ -128,6 +132,17 @@ private:
     double          m_accumulator;      // time in seconds
     int             m_angle;            // in degrees
 };
+
+void PrintWindowStates() {
+    puts("NHMmFf");
+    printf("%s%s%s%s%s%s\n", 
+        TOGL::ToWindow().IsNormal() ? "+" : " ",
+        TOGL::ToWindow().IsHidden() ? "+" : " ",
+        TOGL::ToWindow().IsMaximized() ? "+" : " ",
+        TOGL::ToWindow().IsMinimized() ? "+" : " ",
+        " ",
+        TOGL::ToWindow().IsWindowedFullScreend() ? "+" : " ");
+}
 
 void DisplayWindowInfo() {
     RECT client, window, border;
@@ -189,6 +204,8 @@ void DisplayWindowInfo() {
     togl_print_i32(window_area.height + (window_area.y * 2));
     togl_print_i32(work_area_size.width);
     togl_print_i32(work_area_size.height);
+
+    PrintWindowStates();
 }
 
 //------------------------------------------------------------------------------
@@ -367,7 +384,7 @@ int main(int argc, char *argv[]) {
         //data.style              |= TOGL::StyleBit::NO_MAXIMIZE;
         data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
         data.icon_resource_id   = ICON_ID;
-        data.info_level         = 3;
+        data.info_level         = TOGL::INFO_LEVEL_DEBUG;
 
         data.do_on_create = []() {
             s_test_image.Initialize(s_resolution);
@@ -457,7 +474,7 @@ int main(int argc, char *argv[]) {
         data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
         //data.area               = {TOGL::DEF, TOGL::DEF, screen_size.width, screen_size.height};
         data.icon_resource_id   = ICON_ID;
-        data.info_level         = 3;
+        data.info_level         = TOGL::INFO_LEVEL_DEBUG;
 
         data.do_on_create = []() {
             s_test_image.Initialize(s_resolution);
@@ -485,12 +502,14 @@ int main(int argc, char *argv[]) {
                 
             case '1': 
                 TOGL::ToWindow().Hide();
+                PrintWindowStates();
                 Sleep(1000);
                 TOGL::ToWindow().Restore(); 
                 break;
 
             case '2': 
                 TOGL::ToWindow().Minimize();
+                PrintWindowStates();
                 Sleep(1000);
                 TOGL::ToWindow().Restore(); 
                 break;
