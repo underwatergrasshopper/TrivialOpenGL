@@ -496,11 +496,13 @@ int main(int argc, char *argv[]) {
             case 'X': TOGL::ToWindow().RequestClose(); break;
             case 'R': TOGL::ToWindow().RequestRedraw(); break;
             case 'T': 
+                puts("---");
                 Sleep(3000);
                 TOGL::ToWindow().Top(); 
                 break;
                 
             case '1': 
+                puts("---");
                 TOGL::ToWindow().Hide();
                 PrintWindowStates();
                 Sleep(1000);
@@ -508,6 +510,7 @@ int main(int argc, char *argv[]) {
                 break;
 
             case '2': 
+                puts("---");
                 TOGL::ToWindow().Minimize();
                 PrintWindowStates();
                 Sleep(1000);
@@ -515,24 +518,29 @@ int main(int argc, char *argv[]) {
                 break;
 
             case '3':
+                puts("---");
                 TOGL::ToWindow().Restore(); 
                 break;
 
             case '4':
+                puts("---");
                 TOGL::ToWindow().Maximize(); 
                 break;
 
             case '5':
+                puts("---");
                 TOGL::ToWindow().MakeWindowedFullScreen(); 
                 break;
 
             case '6':
+                puts("---");
                 TOGL::ToWindow().Hide();
                 Sleep(1000);
                 TOGL::ToWindow().MakeWindowedFullScreen(); 
                 break;
 
             case '7':
+                puts("---");
                 TOGL::ToWindow().SetArea(100, 50, 300, 600);
                 break;
 

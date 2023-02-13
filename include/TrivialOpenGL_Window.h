@@ -1011,14 +1011,35 @@ namespace TrivialOpenGL {
             // Tells DefWindowProc to not erase background. It's unnecessary since background is handled by OpenGL.
             return 1;
 
-        case WM_ACTIVATE:
-            if (!HIWORD(w_param)) { // is not minimized
-                m_is_active  = true;		
-                SetForegroundWindow(m_window_handle);
-            } else {
-                m_is_active  = false;
+        case WM_ACTIVATE: {
+            const bool is_active = LOWORD(w_param);
+            const bool is_minimized = HIWORD(w_param);
+
+            if (m_data.info_level >= INFO_LEVEL_DEBUG) {
+                printf("%s", "WM_ACTIVATE");
+
+                if (is_active) printf("%s", " TRUE");
+                if (!is_active) printf("%s", " FALSE");
+
+                if(is_minimized) printf("%s", " MINIMIZED");
+                puts("");
+
+                fflush(stdout);
             }
+
+            if (is_active != m_is_active) {
+                m_is_active = is_active;
+
+                if (is_active) {
+                    SetForegroundWindow(m_window_handle);
+                    // do_on_activate(true, is_minimized)
+                } else {
+                    // do_on_activate(false, is_minimized)
+                }
+            }
+
             return 0;	
+        }
         case WM_ACTIVATEAPP:
             if (!w_param) {
                 // Old workaround for disabled alt+tab in Windows 7.
