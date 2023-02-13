@@ -394,7 +394,7 @@ int main(int argc, char *argv[]) {
             s_test_image.Animate();
         };
 
-        data.do_on_size = [](uint32_t width, uint32_t height) {
+        data.do_on_resize = [](uint32_t width, uint32_t height) {
             s_test_image.Resize(width, height);
         };
 
@@ -486,7 +486,7 @@ int main(int argc, char *argv[]) {
             s_test_image.Animate();
         };
 
-        data.do_on_size = [](uint32_t width, uint32_t height) {
+        data.do_on_resize = [](uint32_t width, uint32_t height) {
             s_test_image.Resize(width, height);
         };
 
