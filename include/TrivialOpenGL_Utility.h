@@ -353,6 +353,7 @@ namespace TrivialOpenGL {
 
     enum class LogMessageType {
         UNKNOWN,
+        DEBUG,
         INFO,
         FATAL_ERROR
     };
@@ -365,6 +366,7 @@ namespace TrivialOpenGL {
 
     // message      Message in ascii encoding.
     void Log(LogMessageType message_type, const std::string& message);
+    void LogDebug(const std::string& message);
     void LogInfo(const std::string& message);
     void LogFatalError(const std::string& message);
 
@@ -589,9 +591,9 @@ namespace TrivialOpenGL {
             custom_log(message_type, message);
         } else {
             if (fwide(stdout, 0) > 0) {
-                wprintf(L"%ls\n", ASCII_ToUTF16(message).c_str());
+                wprintf(L"%ls", ASCII_ToUTF16(message).c_str());
             } else {
-                printf("%s\n", message);
+                printf("%s", message);
             }
             fflush(stdout);
         }
@@ -602,12 +604,22 @@ namespace TrivialOpenGL {
         Log(message_type, message.c_str());
     }
 
+    inline void LogDebug(const std::string& message) {
+        const std::string info_message = std::string("(TOGL) Debug: ") + message + "\n";
+
+        Log(LogMessageType::DEBUG, info_message.c_str());
+    }
+
     inline void LogInfo(const std::string& message) {
-        Log(LogMessageType::INFO, message.c_str());
+        const std::string info_message = std::string("(TOGL) Info: ") + message + "\n";
+
+        Log(LogMessageType::INFO, info_message.c_str());
     }
 
     inline void LogFatalError(const std::string& message) {
-        Log(LogMessageType::FATAL_ERROR, message.c_str());
+        const std::string fatal_error_message = std::string("(TOGL) Fatal Error: ") + message + "\n";
+
+        Log(LogMessageType::FATAL_ERROR, fatal_error_message.c_str());
     }
 
     inline void SetCustomLogFunction(CustomLogFnP_T custom_log) {

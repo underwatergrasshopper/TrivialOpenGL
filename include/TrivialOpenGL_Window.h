@@ -650,7 +650,7 @@ namespace TrivialOpenGL {
     inline void Window::SingletonCheck() {
         static bool is_instance_exists = false;
         if (is_instance_exists) {
-            LogFatalError("Error TOGL::Window::SingletonCheck: Can't be more than one instance of Window class.");
+            LogFatalError("Window::SingletonCheck: Can't be more than one instance of Window class.");
         }
         is_instance_exists = true;
     }
@@ -680,7 +680,9 @@ namespace TrivialOpenGL {
                 TranslateMessage(&msg);
                 DispatchMessageW(&msg);
             }
-            if (msg.message == WM_QUIT) return (int)msg.wParam;
+            if (msg.message == WM_QUIT) {
+                return (int)msg.wParam;
+            }
 
         } else {
 
@@ -693,7 +695,7 @@ namespace TrivialOpenGL {
                     TranslateMessage(&msg);
                     DispatchMessageW(&msg);
                 } else {
-                    if (m_is_active) Display();
+                    Display();
                 }
             }
 
@@ -704,8 +706,7 @@ namespace TrivialOpenGL {
     
     inline void Window::Display() {
         if (m_data.info_level >= INFO_LEVEL_DEEP_DEBUG) {
-            puts("TOGL::Window::Display"); 
-            fflush(stdout);
+            LogDebug("Window::Display"); 
         }
 
         m_data.display();
@@ -801,21 +802,21 @@ namespace TrivialOpenGL {
         pfd.iLayerType      = PFD_MAIN_PLANE;
 
         m_device_context_handle = GetDC(window_handle);
-        if (!m_device_context_handle) LogFatalError("Error TOGL::Window::Create: Can not get device context.");
+        if (!m_device_context_handle) LogFatalError("Window::Create: Can not get device context.");
 
         int pfi = ChoosePixelFormat(m_device_context_handle, &pfd);
-        if (!pfi) LogFatalError(std::string() + "Error TOGL::Window::Create: Can not choose pixel format. (windows error code:" + std::to_string(GetLastError()) + ")");
+        if (!pfi) LogFatalError(std::string() + "Window::Create: Can not choose pixel format. (windows error code:" + std::to_string(GetLastError()) + ")");
 
         BOOL result = SetPixelFormat(m_device_context_handle, pfi, &pfd);
-        if (!result) LogFatalError(std::string() + "Error TOGL::Window::Create: Can not set pixel format. (windows error code:" + std::to_string(GetLastError()) + ")");
+        if (!result) LogFatalError(std::string() + "Window::Create: Can not set pixel format. (windows error code:" + std::to_string(GetLastError()) + ")");
 
         // --- Displaying Format Info --- //
 
         memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
         int max_pfi = DescribePixelFormat(m_device_context_handle, pfi, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
-        if (!max_pfi) LogFatalError(std::string() + "Error TOGL::Window::Create: Can not get pixel format. (windows error code:" + std::to_string(GetLastError()) + ")");
+        if (!max_pfi) LogFatalError(std::string() + "Window::Create: Can not get pixel format. (windows error code:" + std::to_string(GetLastError()) + ")");
 
-        LogInfo(std::string() + "(TOGL) OpenGL Pixel Format:"
+        LogInfo(std::string() + "OpenGL Pixel Format:"
             " Red:"     + std::to_string(pfd.cRedBits) + 
             " Green:"   + std::to_string(pfd.cGreenBits) + 
             " Blue:"    + std::to_string(pfd.cBlueBits) + 
@@ -826,14 +827,14 @@ namespace TrivialOpenGL {
         // --- Creates OpenGL Rendering Context --- //
 
         m_rendering_context_handle = wglCreateContext(m_device_context_handle);
-        if (!m_rendering_context_handle) LogFatalError(std::string() + "Error TOGL::Window::Create: Can not create OpenGl Rendering Context. (windows error code:" + std::to_string(GetLastError()) + ")");
+        if (!m_rendering_context_handle) LogFatalError(std::string() + "Window::Create: Can not create OpenGl Rendering Context. (windows error code:" + std::to_string(GetLastError()) + ")");
 
         if (!wglMakeCurrent(m_device_context_handle, m_rendering_context_handle)) {
-            LogFatalError(std::string() + "Error TOGL::Window::Create: Can not set created OpenGl Rendering Context to be current.");
+            LogFatalError("Window::Create: Can not set created OpenGl Rendering Context to be current.");
         }
 
         if ((m_data.opengl_verion.major == DEF || m_data.opengl_verion.minor == DEF) && m_data.opengl_verion.major != m_data.opengl_verion.minor) {
-            LogFatalError(std::string() + "Error TOGL::Window::Create: Incorrect OpenGL version is provided.");
+            LogFatalError("Window::Create: Incorrect OpenGL version is provided.");
         }
 
         // --- Creates OpenGL Rendering Context with required minimum version --- //
@@ -868,17 +869,17 @@ namespace TrivialOpenGL {
 
                 HGLRC rendering_context_handle = wglCreateContextAttribsARB(m_device_context_handle, 0, attribute_list);
                 if (!rendering_context_handle) {
-                    LogFatalError(std::string() + "Error TOGL::Window::Create: Can not create OpenGl Rendering Context for version " + std::to_string(m_data.opengl_verion.major) + "." + std::to_string(m_data.opengl_verion.minor) + ".");
+                    LogFatalError(std::string() + "Window::Create: Can not create OpenGl Rendering Context for version " + std::to_string(m_data.opengl_verion.major) + "." + std::to_string(m_data.opengl_verion.minor) + ".");
                 }
 
                 if (!wglMakeCurrent(m_device_context_handle, rendering_context_handle)) {
-                    LogFatalError(std::string() + "Error TOGL::Window::Create: Can not set created OpenGl Rendering Context for version " + std::to_string(m_data.opengl_verion.major) + "." + std::to_string(m_data.opengl_verion.minor) + " to be current.");
+                    LogFatalError(std::string() + "Window::Create: Can not set created OpenGl Rendering Context for version " + std::to_string(m_data.opengl_verion.major) + "." + std::to_string(m_data.opengl_verion.minor) + " to be current.");
                 }
 
                 m_rendering_context_handle = rendering_context_handle ;
 
             } else {
-                LogFatalError("Error TOGL::Window::Create: Can not load wglCreateContextAttribsARB function.");
+                LogFatalError("Window::Create: Can not load wglCreateContextAttribsARB function.");
             }
         }
 
@@ -898,13 +899,12 @@ namespace TrivialOpenGL {
             sscanf_s((const char*)glGetString(GL_VERSION), "%d.%d", &m_data.opengl_verion.major, &m_data.opengl_verion.minor);
         }
 
-        if (m_data.info_level >= INFO_LEVEL_INFO) LogInfo(std::string("(TOGL) OpenGl Version: ") + (const char*)glGetString(GL_VERSION));
+        if (m_data.info_level >= INFO_LEVEL_INFO) LogInfo(std::string("OpenGl Version: ") + (const char*)glGetString(GL_VERSION));
     }
 
     inline void Window::Destroy() {
         if (m_data.info_level >= INFO_LEVEL_DEBUG) {
-            puts("TOGL::Window::Destroy"); 
-            fflush(stdout);
+            LogDebug("Window::Destroy");
         }
 
         m_data.do_on_destroy();
@@ -929,8 +929,7 @@ namespace TrivialOpenGL {
 
         case WM_CLOSE:
             if (m_data.info_level >= INFO_LEVEL_DEBUG) {
-                puts("WM_CLOSE"); 
-                fflush(stdout);
+                LogDebug("WM_CLOSE"); 
             }
 
             DestroyWindow(m_window_handle);
@@ -938,8 +937,7 @@ namespace TrivialOpenGL {
 
         case WM_PAINT:
             if (m_data.info_level >= INFO_LEVEL_DEBUG) {
-                puts("WM_PAINT"); 
-                fflush(stdout);
+                LogDebug("WM_PAINT"); 
             }
 
             Display();
@@ -958,8 +956,7 @@ namespace TrivialOpenGL {
 
         case WM_SIZING: {
             if (m_data.info_level >= INFO_LEVEL_DEBUG) {
-                puts("WM_SIZING");
-                fflush(stdout);
+                LogDebug("WM_SIZING");
             }
 
             RECT window_rect;
@@ -971,11 +968,9 @@ namespace TrivialOpenGL {
 
         case WM_SIZE:
             if (m_data.info_level >= INFO_LEVEL_DEBUG) {
-                if (w_param == SIZE_MAXIMIZED) puts("WM_SIZE MAXIMIZED");
-                if (w_param == SIZE_MINIMIZED) puts("WM_SIZE MINIMIZED");
-                if (w_param == SIZE_RESTORED) puts("WM_SIZE RESTORED");
-
-                fflush(stdout);
+                if (w_param == SIZE_MAXIMIZED) LogDebug("WM_SIZE MAXIMIZED");
+                if (w_param == SIZE_MINIMIZED) LogDebug("WM_SIZE MINIMIZED");
+                if (w_param == SIZE_RESTORED) LogDebug("WM_SIZE RESTORED");
             }
 
             if (m_is_apply_fake_width) {
@@ -997,10 +992,8 @@ namespace TrivialOpenGL {
 
         case WM_SHOWWINDOW:
             if (m_data.info_level >= INFO_LEVEL_DEBUG) {
-                if (w_param == TRUE) puts("WM_SHOWWINDOW SHOW");
-                if (w_param != TRUE) puts("WM_SHOWWINDOW HIDE");
-
-                fflush(stdout);
+                if (w_param == TRUE) LogDebug("WM_SHOWWINDOW SHOW");
+                if (w_param != TRUE) LogDebug("WM_SHOWWINDOW HIDE");
             }
 
             m_state = (w_param == TRUE) ? WindowState::NORMAL : WindowState::HIDDEN;
@@ -1016,15 +1009,13 @@ namespace TrivialOpenGL {
             const bool is_minimized = HIWORD(w_param);
 
             if (m_data.info_level >= INFO_LEVEL_DEBUG) {
-                printf("%s", "WM_ACTIVATE");
+                std::string dbg_msg = "WM_ACTIVATE";
 
-                if (is_active) printf("%s", " TRUE");
-                if (!is_active) printf("%s", " FALSE");
+                dbg_msg += is_active ? " TRUE" : " FALSE";
 
-                if(is_minimized) printf("%s", " MINIMIZED");
-                puts("");
+                if (is_minimized) dbg_msg += " MINIMIZED";
 
-                fflush(stdout);
+                LogDebug(dbg_msg);
             }
 
             if (is_active != m_is_active) {
