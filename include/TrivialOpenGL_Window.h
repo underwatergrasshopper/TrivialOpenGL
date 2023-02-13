@@ -44,10 +44,10 @@ namespace TrivialOpenGL {
     };
 
     enum {
-        INFO_LEVEL_ERROR        = 0,
-        INFO_LEVEL_INFO         = 1,
-        INFO_LEVEL_DEBUG        = 2,
-        INFO_LEVEL_DEEP_DEBUG   = 3,
+        LOG_LEVEL_ERROR        = 0,
+        LOG_LEVEL_INFO         = 1,
+        LOG_LEVEL_DEBUG        = 2,
+        LOG_LEVEL_DEEP_DEBUG   = 3,
     };
 
     struct Data {
@@ -90,12 +90,12 @@ namespace TrivialOpenGL {
         uint16_t        icon_resource_id    = 0;       
 
 
-        // INFO_LEVEL_ERROR         - error messages only
-        // INFO_LEVEL_INFO          - info and error messages
-        // INFO_LEVEL_DEBUG         - debug, info and error messages
-        // INFO_LEVEL_DEEP_DEBUG    - deep debug, debug, info and error messages
+        // LOG_LEVEL_ERROR         - error messages only
+        // LOG_LEVEL_INFO          - info and error messages
+        // LOG_LEVEL_DEBUG         - debug, info and error messages
+        // LOG_LEVEL_DEEP_DEBUG    - deep debug, debug, info and error messages
         //                            Warning!!! Can slowdown application significantly.    
-        uint32_t        info_level          = INFO_LEVEL_INFO;
+        uint32_t        log_level          = LOG_LEVEL_INFO;
 
         // Is called right after window is created.
         void (*do_on_create)()                                          = nullptr;
@@ -113,14 +113,7 @@ namespace TrivialOpenGL {
 
     };
 
-    // Creates and runs window.
-    int Run(const Data& data = {});
-
-    // Get access to window singleton.
-    class Window;
-    Window& ToWindow();
-
-    // It's a singleton. Access by ToWindow function.
+    // It's a singleton.
     class Window {
     public:
         Window();
@@ -219,6 +212,11 @@ namespace TrivialOpenGL {
         uint32_t GetDebugLevel() const;
         Version GetOpenGL_Version() const;
 
+        // ---
+
+        // Get access to singleton instance.
+        static Window& To();
+
     private:
         enum class AreaPartId {
             POSITION,
@@ -245,21 +243,8 @@ namespace TrivialOpenGL {
         void Paint();
         void Close();
 
-        static DWORD GetWindowStyle_DrawAreaOnly() { 
-            return 
-                WS_POPUP 
-                // For tests.
-                //| WS_THICKFRAME 
-                //| WS_CAPTION 
-                //| WS_SYSMENU 
-                //| WS_MAXIMIZEBOX 
-                //| WS_MINIMIZEBOX
-                //| WS_BORDER 
-                | WS_CLIPSIBLINGS 
-                | WS_CLIPCHILDREN
-            ; 
-        }
-        static DWORD GetWindowExtendedStyle_DrawAreaOnly() { return WS_EX_APPWINDOW; }
+        static DWORD GetWindowStyle_DrawAreaOnly();
+        static DWORD GetWindowExtendedStyle_DrawAreaOnly();
 
         static AreaI GetWindowArea(HWND window_handle);
         static AreaI GetWindowAreaFromDrawArea(const AreaI& draw_area, DWORD window_style);
@@ -639,11 +624,15 @@ namespace TrivialOpenGL {
     //--------------------------------------------------------------------------
 
     inline uint32_t Window::GetDebugLevel() const { 
-        return m_data.info_level; 
+        return m_data.log_level; 
     }
 
     inline Version Window::GetOpenGL_Version() const {
         return m_data.opengl_verion;
+    }
+
+    inline Window& Window::To() {
+        return Static<Window>::To();
     }
 
     //--------------------------------------------------------------------------
@@ -708,7 +697,7 @@ namespace TrivialOpenGL {
     }
     
     inline void Window::Display() {
-        if (m_data.info_level >= INFO_LEVEL_DEEP_DEBUG) {
+        if (m_data.log_level >= LOG_LEVEL_DEEP_DEBUG) {
             LogDebug("Window::Display"); 
         }
 
@@ -775,6 +764,24 @@ namespace TrivialOpenGL {
     }
 
     //--------------------------------------------------------------------------
+
+    inline DWORD Window::GetWindowStyle_DrawAreaOnly() { 
+        return 
+            WS_POPUP 
+            // Commented for tests.
+            //| WS_THICKFRAME 
+            //| WS_CAPTION 
+            //| WS_SYSMENU 
+            //| WS_MAXIMIZEBOX 
+            //| WS_MINIMIZEBOX
+            //| WS_BORDER 
+            | WS_CLIPSIBLINGS 
+            | WS_CLIPCHILDREN
+            ; 
+    }
+    inline DWORD Window::GetWindowExtendedStyle_DrawAreaOnly() { 
+        return WS_EX_APPWINDOW; 
+    }
     
     inline AreaI Window::GetWindowArea(HWND window_handle) {
         RECT r;
@@ -902,11 +909,11 @@ namespace TrivialOpenGL {
             sscanf_s((const char*)glGetString(GL_VERSION), "%d.%d", &m_data.opengl_verion.major, &m_data.opengl_verion.minor);
         }
 
-        if (m_data.info_level >= INFO_LEVEL_INFO) LogInfo(std::string("OpenGl Version: ") + (const char*)glGetString(GL_VERSION));
+        if (m_data.log_level >= LOG_LEVEL_INFO) LogInfo(std::string("OpenGl Version: ") + (const char*)glGetString(GL_VERSION));
     }
 
     inline void Window::Destroy() {
-        if (m_data.info_level >= INFO_LEVEL_DEBUG) {
+        if (m_data.log_level >= LOG_LEVEL_DEBUG) {
             LogDebug("Window::Destroy");
         }
 
@@ -923,7 +930,7 @@ namespace TrivialOpenGL {
     inline LRESULT Window::InnerWindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param) {
         switch (message) {
         case WM_CREATE: 
-            if (m_data.info_level >= INFO_LEVEL_DEBUG) {
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
                 LogDebug("WM_CREATE"); 
             }
 
@@ -931,7 +938,7 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_DESTROY:
-            if (m_data.info_level >= INFO_LEVEL_DEBUG) {
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
                 LogDebug("WM_DESTROY"); 
             }
 
@@ -939,7 +946,7 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_CLOSE:
-            if (m_data.info_level >= INFO_LEVEL_DEBUG) {
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
                 LogDebug("WM_CLOSE"); 
             }
 
@@ -947,7 +954,7 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_PAINT:
-            if (m_data.info_level >= INFO_LEVEL_DEBUG) {
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
                 LogDebug("WM_PAINT"); 
             }
 
@@ -966,19 +973,35 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_SIZING: {
-            if (m_data.info_level >= INFO_LEVEL_DEBUG) {
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
                 LogDebug("WM_SIZING");
+            }
+
+            return TRUE;
+        }
+
+        case WM_ENTERSIZEMOVE: {
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+                LogDebug("WM_ENTERSIZEMOVE");
+            }
+
+            return TRUE;
+        }
+
+        case WM_EXITSIZEMOVE: {
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+                LogDebug("WM_EXITSIZEMOVE");
             }
 
             RECT window_rect;
             GetWindowRect(m_window_handle, &window_rect);
             m_last_window_area = MakeArea(window_rect);
-   
+
             return TRUE;
         }
 
         case WM_SIZE:
-            if (m_data.info_level >= INFO_LEVEL_DEBUG) {
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
                 std::string message = "WM_SIZE";
 
                 const int width     = LOWORD(l_param);
@@ -1022,7 +1045,7 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_SHOWWINDOW:
-            if (m_data.info_level >= INFO_LEVEL_DEBUG) {
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
                 if (w_param == TRUE) LogDebug("WM_SHOWWINDOW SHOW");
                 if (w_param != TRUE) LogDebug("WM_SHOWWINDOW HIDE");
             }
@@ -1039,7 +1062,7 @@ namespace TrivialOpenGL {
             const bool is_active = LOWORD(w_param);
             const bool is_minimized = HIWORD(w_param);
 
-            if (m_data.info_level >= INFO_LEVEL_DEBUG) {
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
                 std::string dbg_msg = "WM_ACTIVATE";
 
                 dbg_msg += is_active ? " TRUE" : " FALSE";
@@ -1082,19 +1105,7 @@ namespace TrivialOpenGL {
     }
 
     inline LRESULT CALLBACK Window::WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param) {
-        return ToWindow().InnerWindowProc(window_handle, message, w_param, l_param);
-    }
-
-    //--------------------------------------------------------------------------
-    // Other
-    //--------------------------------------------------------------------------
-
-    inline Window& ToWindow() {
-        return Static<Window>::To();
-    }
-
-    inline int Run(const Data& data) {
-        return ToWindow().Run(data);
+        return To().InnerWindowProc(window_handle, message, w_param, l_param);
     }
 }
 

@@ -334,7 +334,7 @@ int main(int argc, char *argv[]) {
         data.window_name        = "TrivialOpenGL_Example REDRAW_ON_CHANGE_OR_REQUEST";
         data.style              = TOGL::StyleBit::REDRAW_ON_CHANGE_OR_REQUEST;
         data.icon_resource_id   = ICON_ID;
-        data.info_level         = 3;
+        data.log_level         = 3;
 
         return TOGL::Run(data);
 
@@ -344,7 +344,7 @@ int main(int argc, char *argv[]) {
         data.window_name        = "TrivialOpenGL_Example DRAW_TRIANGLE";
         data.style              = TOGL::StyleBit::DRAW_AREA_SIZE;
         data.icon_resource_id   = ICON_ID;
-        data.info_level         = 3;
+        data.log_level         = 3;
 
         data.do_on_create = []() {
             glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
@@ -384,7 +384,7 @@ int main(int argc, char *argv[]) {
         //data.style              |= TOGL::StyleBit::NO_MAXIMIZE;
         data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
         data.icon_resource_id   = ICON_ID;
-        data.info_level         = TOGL::INFO_LEVEL_DEBUG;
+        data.log_level         = TOGL::LOG_LEVEL_DEBUG;
 
         data.do_on_create = []() {
             s_test_image.Initialize(s_resolution);
@@ -474,7 +474,7 @@ int main(int argc, char *argv[]) {
         data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
         //data.area               = {TOGL::DEF, TOGL::DEF, screen_size.width, screen_size.height};
         data.icon_resource_id   = ICON_ID;
-        data.info_level         = TOGL::INFO_LEVEL_DEBUG;
+        data.log_level          = TOGL::LOG_LEVEL_DEBUG;
 
         data.do_on_create = []() {
             s_test_image.Initialize(s_resolution);
@@ -582,7 +582,7 @@ int main(int argc, char *argv[]) {
 
         data.window_name        = "TrivialOpenGL_Example OPENGL_VERSION";
         data.opengl_verion      = {3, 3};
-        data.info_level         = 3;
+        data.log_level         = 3;
 
         data.do_on_create = []() {
             auto version = TOGL::ToWindow().GetOpenGL_Version();
@@ -615,7 +615,7 @@ int main(int argc, char *argv[]) {
 
         data.window_name        = "TrivialOpenGL_Example";
         data.icon_resource_id   = ICON_ID;
-        data.info_level         = 3;
+        data.log_level         = 3;
 
         return TOGL::Run(data);
     }
