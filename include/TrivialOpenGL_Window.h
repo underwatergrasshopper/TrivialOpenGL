@@ -542,7 +542,9 @@ namespace TrivialOpenGL {
 
         switch (state) {
         case WindowState::NORMAL:
-            ShowWindow(m_window_handle, SW_NORMAL);
+            if (m_state != WindowState::WINDOWED_FULL_SCREEND) {
+                ShowWindow(m_window_handle, SW_NORMAL);
+            }
             SetWindowPos(m_window_handle, HWND_TOP, m_last_window_area.x, m_last_window_area.y, m_last_window_area.width, m_last_window_area.height, SWP_SHOWWINDOW);
             break;
 
@@ -577,6 +579,7 @@ namespace TrivialOpenGL {
             AdjustWindowRectEx(&screen_rect, GetWindowStyle_DrawAreaOnly(), FALSE, GetWindowExtendedStyle_DrawAreaOnly());
 
             const AreaI screen_area = MakeArea(screen_rect);
+
             m_is_apply_fake_width = true;
             SetWindowPos(m_window_handle, HWND_TOP, screen_area.x, screen_area.y, screen_area.width + WIDTH_EXTENTION, screen_area.height, SWP_SHOWWINDOW);
             // ---
@@ -920,10 +923,18 @@ namespace TrivialOpenGL {
     inline LRESULT Window::InnerWindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param) {
         switch (message) {
         case WM_CREATE: 
+            if (m_data.info_level >= INFO_LEVEL_DEBUG) {
+                LogDebug("WM_CREATE"); 
+            }
+
             Create(window_handle);
             return 0;
 
         case WM_DESTROY:
+            if (m_data.info_level >= INFO_LEVEL_DEBUG) {
+                LogDebug("WM_DESTROY"); 
+            }
+
             Destroy();
             return 0;
 
@@ -968,9 +979,29 @@ namespace TrivialOpenGL {
 
         case WM_SIZE:
             if (m_data.info_level >= INFO_LEVEL_DEBUG) {
-                if (w_param == SIZE_MAXIMIZED) LogDebug("WM_SIZE MAXIMIZED");
-                if (w_param == SIZE_MINIMIZED) LogDebug("WM_SIZE MINIMIZED");
-                if (w_param == SIZE_RESTORED) LogDebug("WM_SIZE RESTORED");
+                std::string message = "WM_SIZE";
+
+                const int width     = LOWORD(l_param);
+                const int height    = HIWORD(l_param);
+
+                message += std::string() + " " + std::to_string(width) + " " + std::to_string(height);
+
+                auto GetRequest = [](WPARAM w_param) -> const char* {
+                    switch (w_param) {
+                    case SIZE_MAXHIDE:      return "SIZE_MAXHIDE";
+                    case SIZE_MAXIMIZED:    return "SIZE_MAXIMIZED";
+                    case SIZE_MAXSHOW:      return "SIZE_MAXSHOW";
+                    case SIZE_MINIMIZED:    return "SIZE_MINIMIZED";
+                    case SIZE_RESTORED:     return "SIZE_RESTORED";
+                    }
+                    return "?";
+                };
+
+                message += std::string() + " " + GetRequest(w_param);
+
+                if (m_is_apply_fake_width) message += " fake_width=" + std::to_string(width - WIDTH_EXTENTION);
+
+                LogDebug(message);
             }
 
             if (m_is_apply_fake_width) {
