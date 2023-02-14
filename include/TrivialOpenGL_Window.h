@@ -300,7 +300,7 @@ namespace TrivialOpenGL {
         m_window_style              = 0;
         m_window_extended_style     = 0;
 
-        m_is_active                 = true;
+        m_is_active                 = false;
         m_state                     = WindowState::NORMAL;
 
         m_is_win7                   = IsWindows7OrGreater() && !IsWindows8OrGreater();
@@ -981,7 +981,33 @@ namespace TrivialOpenGL {
 
         case WM_SIZING: {
             if (m_data.log_level >= LOG_LEVEL_DEBUG) {
-                LogDebug("WM_SIZING");
+                std::string message = "WM_SIZING";
+
+                auto GetEdgeName = [](WPARAM w_param) -> const char* {
+                    switch (w_param) {
+                    case WMSZ_BOTTOM:       return "WMSZ_BOTTOM";
+                    case WMSZ_BOTTOMLEFT:   return "WMSZ_BOTTOMLEFT";
+                    case WMSZ_BOTTOMRIGHT:  return "WMSZ_BOTTOMRIGHT";
+                    case WMSZ_LEFT:         return "WMSZ_LEFT";
+                    case WMSZ_RIGHT:        return "WMSZ_RIGHT";
+                    case WMSZ_TOP:          return "WMSZ_TOP";
+                    case WMSZ_TOPLEFT:      return "WMSZ_TOPLEFT";
+                    case WMSZ_TOPRIGHT:     return "WMSZ_TOPRIGHT";
+                    }
+                    return "?";
+                };
+
+                message += std::string() + " " + GetEdgeName(w_param);
+
+                RECT* drag_rect = (RECT*)(l_param); // in screen coordinates
+
+                message += std::string() + " drag_rect=" 
+                    + std::to_string(drag_rect->left) + "," 
+                    + std::to_string(drag_rect->top) + ","
+                    + std::to_string(drag_rect->right) + ","
+                    + std::to_string(drag_rect->bottom);
+
+                LogDebug(message);
             }
 
             RECT window_rect;
@@ -1054,8 +1080,25 @@ namespace TrivialOpenGL {
 
         case WM_SHOWWINDOW:
             if (m_data.log_level >= LOG_LEVEL_DEBUG) {
-                if (w_param == TRUE) LogDebug("WM_SHOWWINDOW SHOW");
-                if (w_param != TRUE) LogDebug("WM_SHOWWINDOW HIDE");
+                std::string message = "WM_SHOWWINDOW";
+
+                message += (w_param == TRUE) ? " SHOW" : " HIDE";
+
+                auto GetStatusName = [](WPARAM l_param) -> const char* {
+                    switch (l_param) {
+                    case SW_OTHERUNZOOM:    return "SW_OTHERUNZOOM";
+                    case SW_OTHERZOOM:      return "SW_OTHERZOOM";
+                    case SW_PARENTCLOSING:  return "SW_PARENTCLOSING";
+                    case SW_PARENTOPENING:  return "SW_PARENTOPENING";
+                    }
+                    return "?";
+                };
+
+                if (l_param) {
+                    message += std::string() + " " + GetStatusName(l_param);
+                }
+
+                LogDebug(message);
             }
 
             m_state = (w_param == TRUE) ? WindowState::NORMAL : WindowState::HIDDEN;
@@ -1067,24 +1110,36 @@ namespace TrivialOpenGL {
             return 1;
 
         case WM_ACTIVATE: {
-            const bool is_active = LOWORD(w_param);
+            const bool is_active    = LOWORD(w_param) != WA_INACTIVE;
             const bool is_minimized = HIWORD(w_param);
 
             if (m_data.log_level >= LOG_LEVEL_DEBUG) {
-                std::string dbg_msg = "WM_ACTIVATE";
+                std::string message = "WM_ACTIVATE";
 
-                dbg_msg += is_active ? " TRUE" : " FALSE";
+                auto GetActivationStateName = [](int state) -> const char* {
+                    switch (state) {
+                    case WA_ACTIVE:         return "WA_ACTIVE";
+                    case WA_CLICKACTIVE:    return "WA_CLICKACTIVE";
+                    case WA_INACTIVE:       return "WA_INACTIVE";
+                    }
+                    return "?";
+                };
+                message += std::string() + " " + GetActivationStateName(LOWORD(w_param));
 
-                if (is_minimized) dbg_msg += " MINIMIZED";
+                if (is_minimized) message += " MINIMIZED";
 
-                LogDebug(dbg_msg);
+                if (is_active != m_is_active) {
+                    message += m_is_active ? " active->inactive" : " inactive->active";
+                }
+
+                LogDebug(message);
             }
 
             if (is_active != m_is_active) {
                 m_is_active = is_active;
 
                 if (is_active) {
-                    SetForegroundWindow(m_window_handle);
+                    //SetForegroundWindow(m_window_handle);
                     // do_on_activate(true, is_minimized)
                 } else {
                     // do_on_activate(false, is_minimized)
