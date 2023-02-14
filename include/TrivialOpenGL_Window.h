@@ -1140,9 +1140,9 @@ namespace TrivialOpenGL {
 
                 if (is_active) {
                     //SetForegroundWindow(m_window_handle);
-                    // do_on_activate(true, is_minimized)
+                    // do_on_foreground(true)
                 } else {
-                    // do_on_activate(false, is_minimized)
+                    // do_on_foreground(false)
                 }
             }
 
