@@ -137,11 +137,11 @@ void PrintWindowStates() {
     puts("NHMmFf");
     printf("%s%s%s%s%s%s\n", 
         TOGL::ToWindow().IsNormal() ? "+" : " ",
-        TOGL::ToWindow().IsHidden() ? "+" : " ",
+        TOGL::ToWindow().IsVisible() == false ? "+" : " ",
         TOGL::ToWindow().IsMaximized() ? "+" : " ",
         TOGL::ToWindow().IsMinimized() ? "+" : " ",
         " ",
-        TOGL::ToWindow().IsWindowedFullScreend() ? "+" : " ");
+        TOGL::ToWindow().IsWindowedFullScreen() ? "+" : " ");
 }
 
 void DisplayWindowInfo() {
@@ -498,7 +498,7 @@ int main(int argc, char *argv[]) {
             case 'T': 
                 puts("---");
                 Sleep(3000);
-                TOGL::ToWindow().Top(); 
+                TOGL::ToWindow().Show();
                 break;
 
             case '0':  {
@@ -541,14 +541,14 @@ int main(int argc, char *argv[]) {
 
             case '5':
                 puts("---");
-                TOGL::ToWindow().MakeWindowedFullScreen(); 
+                TOGL::ToWindow().GoWindowedFullScreen(); 
                 break;
 
             case '6':
                 puts("---");
                 TOGL::ToWindow().Hide();
                 Sleep(1000);
-                TOGL::ToWindow().MakeWindowedFullScreen(); 
+                TOGL::ToWindow().GoWindowedFullScreen(); 
                 break;
 
             case '7':
