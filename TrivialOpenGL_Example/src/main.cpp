@@ -500,6 +500,18 @@ int main(int argc, char *argv[]) {
                 Sleep(3000);
                 TOGL::ToWindow().Top(); 
                 break;
+
+            case '0':  {
+                HWND handle = GetForegroundWindow();
+                puts("---");
+
+                //ShowWindow(handle, SW_MINIMIZE);
+                ShowWindow(handle, SW_HIDE);
+
+                Sleep(3000);
+                ShowWindow(handle, SW_RESTORE);
+                break;
+            }
                 
             case '1': 
                 puts("---");
