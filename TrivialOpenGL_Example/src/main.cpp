@@ -416,7 +416,7 @@ int main(int argc, char *argv[]) {
                      
                 case '9':       window.ChangeArea({100, 10, 800, 400}); break;
 
-                case 'C':       window.Center(); break;
+                case 'C':       window.Center(s_resolution); break;
 
                 case VK_LEFT:   window.MoveBy(-30, 0); break;
                 case VK_RIGHT:  window.MoveBy(30, 0); break;
@@ -429,20 +429,20 @@ int main(int argc, char *argv[]) {
                 }
             } else {
                 switch (w_param) {
-                case '1':       window.SetDrawAreaPos(0, 0); break;
-                case '2':       window.SetDrawAreaPos(10, 100); break;
+                case '1':       window.MoveTo(0, 0, true); break;
+                case '2':       window.MoveTo(10, 100, true); break;
                                 
-                case '3':       window.SetDrawAreaSize(400, 200); break;
-                case '4':       window.SetDrawAreaSize(800, 400); break;
+                case '3':       window.SetSize(400, 200, true); break;
+                case '4':       window.SetSize(800, 400, true); break;
                                 
-                case '5':       window.SetDrawArea(100, 10, 800, 400); break;
-                case '6':       window.SetDrawArea(window.GetDrawArea()); break;
-                case '7':       window.SetDrawArea(TOGL::GetDesktopAreaNoTaskBar()); break;
-                case '8':       window.SetDrawArea({{}, TOGL::GetScreenSize()}); break;
+                case '5':       window.SetArea(100, 10, 800, 400, false); break;
+                case '6':       window.SetArea(window.GetDrawArea(), false); break;
+                case '7':       window.SetArea(TOGL::GetDesktopAreaNoTaskBar(), false); break;
+                case '8':       window.SetArea({{}, TOGL::GetScreenSize()}, false); break;
                                 
                 case '9':       window.ChangeArea({100, 10, 800, 400}); break;
                                 
-                case 'C':       window.Center(); break;
+                case 'C':       window.Center(s_resolution); break;
 
                 case VK_LEFT:   window.MoveBy(-30, 0); break;
                 case VK_RIGHT:  window.MoveBy(30, 0); break;
@@ -495,48 +495,99 @@ int main(int argc, char *argv[]) {
 
             case 'X': TOGL::ToWindow().RequestClose(); break;
             case 'R': TOGL::ToWindow().RequestRedraw(); break;
-            case 'T': 
+            case 'C': TOGL::ToWindow().Center(s_resolution); break;
+            case 'V': TOGL::ToWindow().Center(s_resolution, true); break;
+
+            case '0': 
+                puts("--- Show --");
+                TOGL::ToWindow().Hide();
+                PrintWindowStates();
+                
+                Sleep(1000);
+                
                 puts("---");
-                Sleep(3000);
-                TOGL::ToWindow().Show();
-                break;
-
-            case '0':  {
-                HWND handle = GetForegroundWindow();
+                TOGL::ToWindow().Show(); 
+                PrintWindowStates();
+                
+                Sleep(1000);
+                
+                puts("--- Restore ---");
+                TOGL::ToWindow().Hide();
+                PrintWindowStates();
+                
+                Sleep(1000);
+                
                 puts("---");
+                TOGL::ToWindow().Restore(); 
+                PrintWindowStates();
+                
+                Sleep(1000);
+                
+                puts("--- Minimize ---");
+                TOGL::ToWindow().Hide();
+                PrintWindowStates();
+                
+                Sleep(1000);
+                
+                puts("---");
+                TOGL::ToWindow().Minimize(); 
+                PrintWindowStates();
+                
+                Sleep(1000);
+                
+                puts("--- Maximize ---");
+                TOGL::ToWindow().Hide();
+                PrintWindowStates();
+                
+                Sleep(1000);
+                
+                puts("---");
+                TOGL::ToWindow().Maximize(); 
+                PrintWindowStates();
 
-                //ShowWindow(handle, SW_MINIMIZE);
-                ShowWindow(handle, SW_HIDE);
-
-                Sleep(3000);
-                ShowWindow(handle, SW_RESTORE);
                 break;
-            }
+        
                 
             case '1': 
                 puts("---");
                 TOGL::ToWindow().Hide();
                 PrintWindowStates();
+
                 Sleep(1000);
-                TOGL::ToWindow().Restore(); 
+
+                puts("---");
+                TOGL::ToWindow().Show(); 
+                //TOGL::ToWindow().Restore(); 
+                //TOGL::ToWindow().Center(s_resolution);
+                
+                PrintWindowStates();
                 break;
 
             case '2': 
                 puts("---");
                 TOGL::ToWindow().Minimize();
                 PrintWindowStates();
+
                 Sleep(1000);
-                TOGL::ToWindow().Restore(); 
+
+                puts("---");
+  
+                //TOGL::ToWindow().Restore(); 
+                TOGL::ToWindow().Center(s_resolution);
+                PrintWindowStates();
                 break;
 
             case '3':
                 puts("---");
-                TOGL::ToWindow().Restore(); 
+                //TOGL::ToWindow().Restore(); 
+                TOGL::ToWindow().Center(s_resolution);
+                PrintWindowStates();
                 break;
 
             case '4':
                 puts("---");
                 TOGL::ToWindow().Maximize(); 
+                PrintWindowStates();
                 break;
 
             case '5':

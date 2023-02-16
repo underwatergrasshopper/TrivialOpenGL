@@ -47,8 +47,8 @@ namespace TrivialOpenGL {
 
         Point(const Type& x, const Type& y) : x(x), y(y) {}
 
-        template <typename Type2>
-        explicit Point(const Point<Type2>& p) : x(Type(p.x)), y(Type(p.y)) {}
+        template <typename SizeType>
+        explicit Point(const Point<SizeType>& p) : x(Type(p.x)), y(Type(p.y)) {}
 
         virtual ~Point() {}
     };
@@ -153,8 +153,8 @@ namespace TrivialOpenGL {
 
         Size(const Type& width, const Type& height) : width(width), height(height) {}
 
-        template <typename Type2>
-        explicit Size(const Size<Type2>& s) : width(Type(s.width)), height(Type(s.height)) {}
+        template <typename SizeType>
+        explicit Size(const Size<SizeType>& s) : width(Type(s.width)), height(Type(s.height)) {}
 
         virtual ~Size() {}
     };
@@ -248,37 +248,40 @@ namespace TrivialOpenGL {
     // Area
     //--------------------------------------------------------------------------
 
-    template <typename Type>
+    template <typename PointType, typename SizeType = PointType>
     struct Area {
-        Type x;
-        Type y;
-        Type width;
-        Type height;
+        PointType  x;
+        PointType  y;
+        SizeType   width;
+        SizeType   height;
 
-        Area() : x(Type()), y(Type()), width(Type()), height(Type()) {}
+        Area() : x(PointType()), y(PointType()), width(SizeType()), height(SizeType()) {}
 
-        Area(const Type& x, const Type& y, const Type& width, const Type& height) : x(x), y(y), width(width), height(height) {}
+        Area(const PointType& x, const PointType& y, const SizeType& width, const SizeType& height) : x(x), y(y), width(width), height(height) {}
 
-        template <typename Type2>
-        explicit Area(const Area<Type2>& area) : x(Type(area.x)), y(Type(area.y)), width(Type(area.width)), height(Type(area.height)) {}
+        template <typename PointType2, typename SizeType2 = PointType2>
+        explicit Area(const Area<PointType2, SizeType2>& area) : x(PointType(area.x)), y(PointType(area.y)), width(SizeType(area.width)), height(SizeType(area.height)) {}
 
-        Area(const Point<Type>& pos, const Size<Type>& size) : x(pos.x), y(pos.y), width(size.width), height(size.height) {}
+        Area(const Point<PointType>& pos, const Size<SizeType>& size) : x(pos.x), y(pos.y), width(size.width), height(size.height) {}
 
-        void SetPos(const Point<Type>& pos) {  
+        explicit Area(const Point<PointType>& pos) : x(pos.x), y(pos.y), width(SizeType()), height(SizeType()) {}
+        explicit Area(const Size<SizeType>& size) : x(PointType()), y(PointType()), width(size.width), height(size.height) {}
+
+        void SetPos(const Point<PointType>& pos) {  
             x = pos.x;
             y = pos.y;
         }
 
-        void SetSize(const Size<Type>& size) {  
+        void SetSize(const Size<SizeType>& size) {  
             width   = size.width;
             height  = size.height;
         }
 
-        Point<Type> GetPos() const { return Point<Type>(x, y); }
-        Size<Type> GetSize() const { return Size<Type>(width, height); }
+        Point<PointType> GetPos() const { return Point<PointType>(x, y); }
+        Size<SizeType> GetSize() const { return Size<SizeType>(width, height); }
 
-        bool IsIn(const Point<Type>& pos) const {
-            return Point<Type>(x, y) <= pos && pos < Point<Type>(x + width, y + height);
+        bool IsIn(const Point<PointType>& pos) const {
+            return Point<PointType>(x, y) <= pos && pos < Point<PointType>(x + width, y + height);
         }
 
         virtual ~Area() {}
@@ -293,6 +296,8 @@ namespace TrivialOpenGL {
     using AreaF    = Area<float>;
     using AreaD    = Area<float>;
 
+    using AreaIU   = Area<int32_t, uint32_t>;
+
     template <typename Type>
     inline bool operator==(const Area<Type>& l, const Area<Type>& r) {
         return l.x == r.x && l.y == r.y && l.width == r.width && l.height == r.height;
@@ -303,8 +308,8 @@ namespace TrivialOpenGL {
         return l.x != r.x || l.y != r.y || l.width != r.width || l.height != r.height;
     }
 
-    template <typename Type>
-    inline RECT MakeRECT(const Area<Type>& area) {
+    template <typename PointType, typename SizeType = PointType>
+    inline RECT MakeRECT(const Area<PointType, SizeType>& area) {
         return {LONG(area.x), LONG(area.y), LONG(area.x + area.width), LONG(area.y + area.height)};
     }
 
@@ -315,6 +320,15 @@ namespace TrivialOpenGL {
             r.right - r.left,
             r.bottom - r.top
         };
+    }
+
+    inline AreaIU MakeAreaIU(const RECT& r) {
+        return AreaIU(
+            r.left,
+            r.top,
+            r.right - r.left,
+            r.bottom - r.top
+        );
     }
 
     //--------------------------------------------------------------------------
@@ -382,12 +396,14 @@ namespace TrivialOpenGL {
         WindowAreaCorrector() {
             m_dwmapi_lib_handle = LoadLibraryA("Dwmapi.dll");
             if (m_dwmapi_lib_handle) {
-                m_dwm_get_window_attribute = (decltype(m_dwm_get_window_attribute)) GetProcAddress(m_dwmapi_lib_handle, "DwmGetWindowAttribute");
-            } else {
-                m_dwm_get_window_attribute = nullptr;
-            }
 
-            
+                m_dwm_get_window_attribute          = (decltype(m_dwm_get_window_attribute)) GetProcAddress(m_dwmapi_lib_handle, "DwmGetWindowAttribute");
+                m_dwm_extend_frame_into_client_area = (decltype(m_dwm_extend_frame_into_client_area)) GetProcAddress(m_dwmapi_lib_handle, "DwmExtendFrameIntoClientArea");
+                
+            } else {
+                m_dwm_get_window_attribute          = nullptr;
+                m_dwm_extend_frame_into_client_area = nullptr;
+            }
         }
 
         virtual ~WindowAreaCorrector() {
@@ -489,7 +505,16 @@ namespace TrivialOpenGL {
         }
     private:
         HMODULE  m_dwmapi_lib_handle;
+
+        struct MARGINS {
+            int cxLeftWidth;
+            int cxRightWidth;
+            int cyTopHeight;
+            int cyBottomHeight;
+        };
+        
         HRESULT (*m_dwm_get_window_attribute)(HWND hwnd, DWORD dwAttribute, PVOID pvAttribute, DWORD cbAttribute);
+        HRESULT (*m_dwm_extend_frame_into_client_area)(HWND hWnd, const MARGINS *pMarInset);
     };
 
     //--------------------------------------------------------------------------

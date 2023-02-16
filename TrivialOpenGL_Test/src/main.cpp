@@ -344,6 +344,27 @@ void TestTOGL_Area() {
         TTK_ASSERT_M(a.width    == 3, ToStr("%d", a.width));
         TTK_ASSERT_M(a.height   == 4, ToStr("%d", a.height));
     }
+    {
+        Area<int, unsigned> a(Point<int>(1, 2), Size<unsigned>(3, 4));
+        TTK_ASSERT_M(a.x        == 1, ToStr("%d", a.x));
+        TTK_ASSERT_M(a.y        == 2, ToStr("%d", a.y));
+        TTK_ASSERT_M(a.width    == 3, ToStr("%d", a.width));
+        TTK_ASSERT_M(a.height   == 4, ToStr("%d", a.height));
+    }
+    {
+        Area<int> a(Point<int>(1, 2));
+        TTK_ASSERT_M(a.x        == 1, ToStr("%d", a.x));
+        TTK_ASSERT_M(a.y        == 2, ToStr("%d", a.y));
+        TTK_ASSERT_M(a.width    == 0, ToStr("%d", a.width));
+        TTK_ASSERT_M(a.height   == 0, ToStr("%d", a.height));
+    }
+    {
+        Area<int> a(Size<int>(3, 4));
+        TTK_ASSERT_M(a.x        == 0, ToStr("%d", a.x));
+        TTK_ASSERT_M(a.y        == 0, ToStr("%d", a.y));
+        TTK_ASSERT_M(a.width    == 3, ToStr("%d", a.width));
+        TTK_ASSERT_M(a.height   == 4, ToStr("%d", a.height));
+    }
     // operator ==, !=
     {
         TTK_ASSERT((Area<int>(1, 2, 3, 4)       == Area<int>(1, 2, 3, 4)) == true);
