@@ -347,6 +347,39 @@ namespace TrivialOpenGL {
     Type Static<Type>::sm_object;
 
     //--------------------------------------------------------------------------
+    // CountStack
+    //--------------------------------------------------------------------------
+
+    class CountStack {
+    public:
+        CountStack() {
+            count = 0;
+        }
+
+        virtual ~CountStack() {}
+
+        bool Push() {
+            if (count == -1) return false;
+
+            count += 1;
+            return true;
+        }
+
+        bool Pop() {
+            if (count == 0) return false;
+
+            count -= 1;
+            return true;
+        }
+
+        bool Is() const {
+            return count > 0;
+        }
+    private:
+        uint32_t count;
+    };
+
+    //--------------------------------------------------------------------------
     // Conversion
     //--------------------------------------------------------------------------
 

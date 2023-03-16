@@ -39,6 +39,7 @@ namespace TrivialOpenGL {
         WINDOW_STATE_NORMAL,
         WINDOW_STATE_MAXIMIZED,
         WINDOW_STATE_MINIMIZED,
+        WINDOW_STATE_WINDOWED_FULL_SCREENED,
     };
 
     enum {
@@ -139,7 +140,7 @@ namespace TrivialOpenGL {
 
         // Moves from current position by offset (x, y).
         void MoveBy(int x, int y);
-        void MoveBy(const PointI& pos);
+        void MoveBy(const PointI& offset);
 
         // Resizes window and keeps current window position.
         void SetSize(int width, int height, bool is_draw_area = false);
@@ -198,9 +199,6 @@ namespace TrivialOpenGL {
 
         // ---
 
-        void ChangeStateTo(WindowState state); // todo: remove
-
-        void Restore(); // todo: remove
         void Minimize();
         void Maximize();
         void GoWindowedFullScreen();
@@ -234,6 +232,9 @@ namespace TrivialOpenGL {
         enum {
             WIDTH_EXTENTION = 1
         };
+
+        void ChangeStateTo(WindowState state); 
+        void Restore(); 
 
         void SingletonCheck();
         HICON TryLoadIcon();
@@ -277,6 +278,7 @@ namespace TrivialOpenGL {
         bool        m_is_active;
         bool        m_is_visible;
         WindowState m_state;
+        WindowState m_prev_state;
 
         bool        m_is_dragging;  // moving or resizing by holding mouse button
         bool        m_is_stretching_by_edge; // sizing by edge
@@ -288,7 +290,7 @@ namespace TrivialOpenGL {
         bool        m_is_win7;
 
         bool        m_is_apply_fake_width;
-        bool        m_is_do_on_resize_enabled;
+        CountStack  m_disable_do_on_resize_count_stack;
         uint64_t    m_dbg_message_id;
 
         WindowAreaCorrector m_window_area_corrector;
@@ -322,6 +324,7 @@ namespace TrivialOpenGL {
         m_is_active                 = false;
         m_is_visible                = false;
         m_state                     = WINDOW_STATE_NORMAL;
+        m_prev_state                = m_state;
 
         m_is_save_last_restored_area = true;
 
@@ -336,7 +339,6 @@ namespace TrivialOpenGL {
         m_is_win7                   = IsWindows7OrGreater() && !IsWindows8OrGreater();
 
         m_is_apply_fake_width       = false;
-        m_is_do_on_resize_enabled   = true;
 
         m_dbg_message_id            = 0;
     }
@@ -445,8 +447,8 @@ namespace TrivialOpenGL {
     inline void Window::MoveBy(int x, int y) {
         SetArea({x, y, 0, 0}, AreaPartId::POSITION_OFFSET, false);
     }
-    inline void Window::MoveBy(const PointI& pos) {
-        MoveBy(pos.x, pos.y);
+    inline void Window::MoveBy(const PointI& offset) {
+        MoveBy(offset.x, offset.y);
     }
 
     inline void Window::SetSize(int width, int height, bool is_draw_area) {
@@ -503,7 +505,7 @@ namespace TrivialOpenGL {
         AreaI window_area = AreaI({}, size);
 
         Restore();
-        
+
         if (is_draw_area_size) {
             window_area = GetWindowAreaFromDrawArea(window_area, m_window_style);
             window_area = m_window_area_corrector.RemoveInvisibleFrameFrom(window_area, m_window_handle);
@@ -569,20 +571,26 @@ namespace TrivialOpenGL {
     //--------------------------------------------------------------------------
 
     inline void Window::ChangeStateTo(WindowState state) {
+        m_prev_state = m_state;
+
+        if (m_state == WINDOW_STATE_WINDOWED_FULL_SCREENED && state != m_state) {
+            m_disable_do_on_resize_count_stack.Push();
+            SetWindowLongPtrW(m_window_handle, GWL_STYLE,   m_window_style);
+            SetWindowLongPtrW(m_window_handle, GWL_EXSTYLE, m_window_extended_style);
+            ShowWindow(m_window_handle, SW_RESTORE);
+            m_disable_do_on_resize_count_stack.Pop();
+        }
+
+
         switch (state) {
         case WINDOW_STATE_NORMAL: {
-            //if ((m_data.style & StyleBit::DRAW_AREA_ONLY) && m_state == WINDOW_STATE_MAXIMIZED) {
-            //    SetWindowPos(m_window_handle, HWND_TOP, m_last_restored_raw_area.x, m_last_restored_raw_area.y, m_last_restored_raw_area.width, m_last_restored_raw_area.height, SWP_SHOWWINDOW);
-            //} else {
-                
-                if (m_state == WINDOW_STATE_MINIMIZED || m_state == WINDOW_STATE_MAXIMIZED) {
-                    ShowWindow(m_window_handle, SW_RESTORE);
-                }
+            if (m_state == WINDOW_STATE_MINIMIZED || m_state == WINDOW_STATE_MAXIMIZED) {
+                ShowWindow(m_window_handle, SW_RESTORE);
+            }
 
-                if (!m_is_visible) {
-                    ShowWindow(m_window_handle, SW_SHOW);
-                }
-            //}
+            if (!m_is_visible) {
+                ShowWindow(m_window_handle, SW_SHOW);
+            }
             break;
         }
         case WINDOW_STATE_MINIMIZED: {
@@ -590,19 +598,37 @@ namespace TrivialOpenGL {
             break;
         }
         case WINDOW_STATE_MAXIMIZED: {
-            //if (m_data.style & StyleBit::DRAW_AREA_ONLY) {
-            //    const SizeI work_area_size = GetDesktopAreaSizeNoTaskBar();
-            //
-            //    m_is_save_last_restored_area = false;
-            //    SetWindowPos(m_window_handle, HWND_TOP, 0, 0, work_area_size.width, work_area_size.height, SWP_SHOWWINDOW);
-            //    m_is_save_last_restored_area = true;
-            //
-            //    m_state = WINDOW_STATE_MAXIMIZED;
-            //} else {
-                ShowWindow(m_window_handle, SW_MAXIMIZE);
-            //}
+            ShowWindow(m_window_handle, SW_MAXIMIZE);
             break;
         }
+
+        case WINDOW_STATE_WINDOWED_FULL_SCREENED: 
+            m_disable_do_on_resize_count_stack.Push();
+            SetWindowLongPtrW(m_window_handle, GWL_STYLE, GetWindowStyle_DrawAreaOnly());
+            SetWindowLongPtrW(m_window_handle, GWL_EXSTYLE, GetWindowExtendedStyle_DrawAreaOnly());
+            m_disable_do_on_resize_count_stack.Pop();
+
+            // ---
+            // Workaround.
+            // In Windows 7, if window is borderless and covers exactly whole screen then alt+tab is not working. 
+            // To omit that, size of window is extended beyond borders of screen, internally.
+            // Library provides size of window without this internal adjustment.
+
+            RECT screen_rectangle = MakeRECT(AreaI({}, GetScreenSize()));
+            AdjustWindowRectEx(&screen_rectangle, GetWindowStyle_DrawAreaOnly(), FALSE, GetWindowExtendedStyle_DrawAreaOnly());
+
+            const AreaI screen_area = MakeArea(screen_rectangle);
+
+            m_is_apply_fake_width = true;
+            SetWindowPos(m_window_handle, HWND_TOP, screen_area.x, screen_area.y, screen_area.width + WIDTH_EXTENTION, screen_area.height, SWP_SHOWWINDOW);
+            m_is_apply_fake_width = false;
+
+            // ---
+
+            m_state = WINDOW_STATE_WINDOWED_FULL_SCREENED;
+
+            break;
+
         } // switch end
 
 
@@ -698,7 +724,7 @@ namespace TrivialOpenGL {
     }
 
     inline void Window::GoWindowedFullScreen() {
-        //ChangeStateTo(WindowState::WINDOWED_FULL_SCREENED);
+        ChangeStateTo(WINDOW_STATE_WINDOWED_FULL_SCREENED);
     }
 
     inline WindowState Window::GetState() const {
@@ -718,7 +744,7 @@ namespace TrivialOpenGL {
     }
 
     inline bool Window::IsWindowedFullScreen() const {
-        return false; //GetState() == WindowState::WINDOWED_FULL_SCREENED;
+        return GetState() == WINDOW_STATE_WINDOWED_FULL_SCREENED;
     }
 
     //--------------------------------------------------------------------------
@@ -1261,7 +1287,7 @@ namespace TrivialOpenGL {
 
                 if (m_is_apply_fake_width) dbg_msg += " fake_width=" + std::to_string(width - WIDTH_EXTENTION);
 
-                if (!m_is_do_on_resize_enabled) dbg_msg += " without:do_on_resize";
+                if (m_disable_do_on_resize_count_stack.Is()) dbg_msg += " without:do_on_resize";
 
                 LogDebug(dbg_msg);
             }
@@ -1280,7 +1306,7 @@ namespace TrivialOpenGL {
                 }
             }
 #endif
-            if (m_is_do_on_resize_enabled) {
+            if (!m_disable_do_on_resize_count_stack.Is()) {
                 if (m_is_apply_fake_width) {
                     m_data.do_on_resize(LOWORD(l_param) - WIDTH_EXTENTION, HIWORD(l_param));
                 } else {
