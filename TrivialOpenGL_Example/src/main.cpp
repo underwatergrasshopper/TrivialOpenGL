@@ -479,7 +479,7 @@ int main(int argc, char *argv[]) {
         data.do_on_create = []() {
             s_test_image.Initialize(s_resolution);
 
-            //TOGL::ToWindow().MakeWindowedFullScreen();
+            TOGL::ToWindow().GoWindowedFullScreen();
         };
 
         data.display = []() {

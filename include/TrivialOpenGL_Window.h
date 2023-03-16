@@ -600,6 +600,16 @@ namespace TrivialOpenGL {
         }
         case WINDOW_STATE_MAXIMIZED: {
             ShowWindow(m_window_handle, SW_MAXIMIZE);
+
+            if (m_data.style & StyleBit::DRAW_AREA_ONLY) {
+                const SizeI work_area_size = GetDesktopAreaSizeNoTaskBar();
+
+                SetWindowPos(m_window_handle, HWND_TOP, 0, 0, work_area_size.width, work_area_size.height, SWP_SHOWWINDOW);
+
+                m_state = WINDOW_STATE_MAXIMIZED;
+            } else {
+                ShowWindow(m_window_handle, SW_MAXIMIZE);
+            }
             break;
         }
 
