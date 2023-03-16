@@ -413,8 +413,6 @@ int main(int argc, char *argv[]) {
                 case '6':       window.SetArea(window.GetArea()); break;
                 case '7':       window.SetArea(TOGL::GetDesktopAreaNoTaskBar()); break;
                 case '8':       window.SetArea({{}, TOGL::GetScreenSize()}); break;
-                     
-                case '9':       window.ChangeArea({100, 10, 800, 400}); break;
 
                 case 'C':       window.Center(s_resolution); break;
 
@@ -439,8 +437,6 @@ int main(int argc, char *argv[]) {
                 case '6':       window.SetArea(window.GetDrawArea(), false); break;
                 case '7':       window.SetArea(TOGL::GetDesktopAreaNoTaskBar(), false); break;
                 case '8':       window.SetArea({{}, TOGL::GetScreenSize()}, false); break;
-                                
-                case '9':       window.ChangeArea({100, 10, 800, 400}); break;
                                 
                 case 'C':       window.Center(s_resolution); break;
 
@@ -479,7 +475,7 @@ int main(int argc, char *argv[]) {
         data.do_on_create = []() {
             s_test_image.Initialize(s_resolution);
 
-            TOGL::ToWindow().GoWindowedFullScreen();
+            // TOGL::ToWindow().GoWindowedFullScreen();
         };
 
         data.display = []() {

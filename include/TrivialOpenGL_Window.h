@@ -151,26 +151,10 @@ namespace TrivialOpenGL {
         void SetArea(int x, int y, int width, int height, bool is_draw_area = false);
         void SetArea(const AreaI& area, bool is_draw_area = false);
 
-        //void SetDrawAreaPos(int x, int y);
-        //void SetDrawAreaPos(const PointI& pos);
-        //
-        //// Resizes window draw area and keeps current window position.
-        //// width        Window draw area width.
-        //// height       Window draw area height.
-        //void SetDrawAreaSize(int width, int height);
-        //void SetDrawAreaSize(const SizeI& draw_area_size);
-        //
-        //void SetDrawArea(int x, int y, int width, int height);
-        //void SetDrawArea(const AreaI& area);
-
         // Puts window in center of desktop area excluding task bar area.
         // void Center();
         void Center(int width, int height, bool is_draw_area_size = false);
         void Center(const SizeI& size, bool is_draw_area_size = false);
-
-        // todo: private
-        // Changes area by applying style from data parameter which was provided to Run function.
-        void ChangeArea(const AreaI& area);
 
         // ---
         
@@ -235,6 +219,9 @@ namespace TrivialOpenGL {
         };
 
         Window();
+
+        // Changes area by applying style from data parameter which was provided to Run function.
+        void ChangeArea(const AreaI& area);
 
         void ChangeStateTo(WindowState state); 
         void Restore(); 
@@ -641,71 +628,6 @@ namespace TrivialOpenGL {
             break;
 
         } // switch end
-
-
-#if 0
-        // Exits from windowed fullscreen.
-        if (m_state == WindowState::WINDOWED_FULL_SCREENED) {
-            SetWindowLongPtrW(m_window_handle, GWL_STYLE,   m_window_style);
-            SetWindowLongPtrW(m_window_handle, GWL_EXSTYLE, m_window_extended_style);
-        }
-
-        switch (state) {
-        case WindowState::NORMAL:
-            m_force_undock = true;
-            if (m_state != WindowState::WINDOWED_FULL_SCREENED) {
-                ShowWindow(m_window_handle, SW_NORMAL);
-            }
-            SetWindowPos(m_window_handle, HWND_TOP, m_last_window_area.x, m_last_window_area.y, m_last_window_area.width, m_last_window_area.height, SWP_SHOWWINDOW);
-            m_force_undock = false;
-            break;
-
-        case WindowState::HIDDEN:
-            SetWindowPos(m_window_handle, HWND_TOP, m_last_window_area.x, m_last_window_area.y, m_last_window_area.width, m_last_window_area.height, SWP_SHOWWINDOW);
-            ShowWindow(m_window_handle, SW_HIDE);
-            break;
-
-        case WindowState::MINIMIZED:
-            ShowWindow(m_window_handle, SW_MINIMIZE);
-            break;
-
-        case WindowState::MAXIMIZED: 
-            if (m_data.style & StyleBit::DRAW_AREA_ONLY) {
-                const SizeI work_area_size = GetDesktopAreaSizeNoTaskBar();
-
-                SetWindowPos(m_window_handle, HWND_TOP, 0, 0, work_area_size.width, work_area_size.height, SWP_SHOWWINDOW);
-
-                m_state = WindowState::MAXIMIZED;
-            } else {
-                ShowWindow(m_window_handle, SW_MAXIMIZE);
-            }
-            break;
-
-        case WindowState::WINDOWED_FULL_SCREENED: 
-            m_is_do_on_resize_enabled = false;
-            SetWindowLongPtrW(m_window_handle, GWL_STYLE, GetWindowStyle_DrawAreaOnly());
-            SetWindowLongPtrW(m_window_handle, GWL_EXSTYLE, GetWindowExtendedStyle_DrawAreaOnly());
-            m_is_do_on_resize_enabled = true;
-
-            // ---
-            
-            // Workaround. To omit situation in Windows 7 where alt+tab not working when window is borderless and covers exactly whole screen.
-            RECT screen_rect = MakeRECT(AreaI({}, GetScreenSize()));
-            AdjustWindowRectEx(&screen_rect, GetWindowStyle_DrawAreaOnly(), FALSE, GetWindowExtendedStyle_DrawAreaOnly());
-
-            const AreaI screen_area = MakeArea(screen_rect);
-
-            m_is_apply_fake_width = true;
-            SetWindowPos(m_window_handle, HWND_TOP, screen_area.x, screen_area.y, screen_area.width + WIDTH_EXTENTION, screen_area.height, SWP_SHOWWINDOW);
-            m_is_apply_fake_width = false;
-
-            // ---
-
-            m_state = WindowState::WINDOWED_FULL_SCREENED;
-
-            break;
-        }
-#endif
     }
 
     inline void Window::Hide() {
