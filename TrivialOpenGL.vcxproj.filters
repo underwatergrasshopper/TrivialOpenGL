@@ -34,5 +34,8 @@
     <ClInclude Include="include\TrivialOpenGL_Window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\TrivialOpenGL_Debug.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

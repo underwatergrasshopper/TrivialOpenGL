@@ -30,6 +30,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\TrivialOpenGL.h" />
+    <ClInclude Include="include\TrivialOpenGL_Debug.h" />
     <ClInclude Include="include\TrivialOpenGL_Utility.h" />
     <ClInclude Include="include\TrivialOpenGL_Window.h" />
   </ItemGroup>
