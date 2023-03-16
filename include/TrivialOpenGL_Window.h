@@ -118,7 +118,8 @@ namespace TrivialOpenGL {
     // It's a singleton.
     class Window {
     public:
-        Window();
+        friend Global<Window>;
+
         virtual ~Window();
 
         // ---
@@ -233,6 +234,8 @@ namespace TrivialOpenGL {
             WIDTH_EXTENTION = 1
         };
 
+        Window();
+
         void ChangeStateTo(WindowState state); 
         void Restore(); 
 
@@ -309,8 +312,6 @@ namespace TrivialOpenGL {
     //--------------------------------------------------------------------------
 
     inline Window::Window() {
-        SingletonCheck();
-
         m_data                      = {};
 
         m_instance_handle           = NULL;
@@ -760,7 +761,7 @@ namespace TrivialOpenGL {
     }
 
     inline Window& Window::To() {
-        return Static<Window>::To();
+        return Global<Window>::To();
     }
 
     //--------------------------------------------------------------------------

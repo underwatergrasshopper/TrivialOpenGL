@@ -332,11 +332,11 @@ namespace TrivialOpenGL {
     }
 
     //--------------------------------------------------------------------------
-    // Static
+    // Global
     //--------------------------------------------------------------------------
 
     template <typename Type>
-    class Static {
+    class Global {
     public:
         static Type& To() { return sm_object; }
     private:
@@ -344,7 +344,7 @@ namespace TrivialOpenGL {
     };
 
     template <typename Type>
-    Type Static<Type>::sm_object;
+    Type Global<Type>::sm_object;
 
     //--------------------------------------------------------------------------
     // CountStack
@@ -643,7 +643,7 @@ namespace TrivialOpenGL {
     //--------------------------------------------------------------------------
 
     inline void Log(LogMessageType message_type, const char* message) {
-        auto& custom_log = Static<CustomLogFnP_T>::To();
+        auto& custom_log = Global<CustomLogFnP_T>::To();
 
         if (custom_log) {
             custom_log(message_type, message);
@@ -681,7 +681,7 @@ namespace TrivialOpenGL {
     }
 
     inline void SetCustomLogFunction(CustomLogFnP_T custom_log) {
-        Static<CustomLogFnP_T>::To() = custom_log;
+        Global<CustomLogFnP_T>::To() = custom_log;
     }
 } // namespace TrivialOpenGL 
 
