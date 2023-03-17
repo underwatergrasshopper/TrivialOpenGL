@@ -97,8 +97,10 @@ namespace TrivialOpenGL {
         // LOG_LEVEL_ERROR         - error messages only
         // LOG_LEVEL_INFO          - info and error messages
         // LOG_LEVEL_DEBUG         - debug, info and error messages
-        uint32_t        log_level          = LOG_LEVEL_INFO;
-        SpecialDebug    special_debug      = {}; // Warning!!! Can slowdown application significantly.   
+        uint32_t        log_level           = LOG_LEVEL_INFO;
+
+        // To enable special debugging messages.
+        SpecialDebug    special_debug       = {}; // Warning!!! Can slowdown application significantly.   
 
         // Is called right after window is created.
         void (*do_on_create)()                                          = nullptr;
@@ -112,9 +114,16 @@ namespace TrivialOpenGL {
         void (*do_on_key_down_raw)(WPARAM w_param, LPARAM l_param)      = nullptr;
         void (*do_on_key_up_raw)(WPARAM w_param, LPARAM l_param)        = nullptr;
  
-        void (*do_on_resize)(uint32_t width, uint32_t height)             = nullptr;
+        void (*do_on_resize)(uint32_t width, uint32_t height)           = nullptr;
 
     };
+
+    // Get access to window singleton.
+    class Window;
+    Window& ToWindow();
+
+    // Creates and runs window.
+    int Run(const Data& data);
 
     // It's a singleton.
     class Window {
@@ -287,6 +296,14 @@ namespace TrivialOpenGL {
 //==========================================================================
 
 namespace TrivialOpenGL {
+
+    inline Window& ToWindow() {
+        return Window::To();
+    }
+
+    inline int Run(const Data& data) {
+        return ToWindow().Run(data);
+    }
 
     //--------------------------------------------------------------------------
     // Constructor, Destructor
