@@ -56,9 +56,11 @@ namespace TrivialOpenGL {
         virtual ~Point() {}
     };
 
+    using PointI16  = Point<int16_t>;
     using PointI    = Point<int32_t>;
     using PointI64  = Point<int64_t>;
 
+    using PointU16  = Point<uint16_t>;
     using PointU    = Point<uint32_t>;
     using PointU64  = Point<uint64_t>;
 
@@ -162,10 +164,12 @@ namespace TrivialOpenGL {
         virtual ~Size() {}
     };
 
+    using SizeI16  = Size<int16_t>;
     using SizeI    = Size<int32_t>;
     using SizeI64  = Size<int64_t>;
 
-    using SizeU    = Size<uint32_t>;
+    using SizeI16  = Size<int16_t>;
+    using SizeI    = Size<int32_t>;
     using SizeU64  = Size<uint64_t>;
 
     using SizeF    = Size<float>;
@@ -300,6 +304,7 @@ namespace TrivialOpenGL {
     using AreaD    = Area<float>;
 
     using AreaIU   = Area<int32_t, uint32_t>;
+    using AreaIU16 = Area<int32_t, uint16_t>;
 
     template <typename Type>
     inline bool operator==(const Area<Type>& l, const Area<Type>& r) {
@@ -334,6 +339,15 @@ namespace TrivialOpenGL {
         );
     }
 
+    inline AreaIU16 MakeAreaIU16(const RECT& r) {
+        return AreaIU16(
+            r.left,
+            r.top,
+            uint16_t(r.right - r.left),
+            uint16_t(r.bottom - r.top)
+        );
+    }
+
     //--------------------------------------------------------------------------
     // Global
     //--------------------------------------------------------------------------
@@ -355,31 +369,28 @@ namespace TrivialOpenGL {
 
     class CountStack {
     public:
-        CountStack() {
-            count = 0;
-        }
-
+        CountStack() : m_count(0) {}
         virtual ~CountStack() {}
 
         bool Push() {
-            if (count == -1) return false;
+            if (m_count == UINT_MAX) return false;
 
-            count += 1;
+            m_count += 1;
             return true;
         }
 
         bool Pop() {
-            if (count == 0) return false;
+            if (m_count == 0) return false;
 
-            count -= 1;
+            m_count -= 1;
             return true;
         }
 
         bool Is() const {
-            return count > 0;
+            return m_count > 0;
         }
     private:
-        uint32_t count;
+        uint32_t m_count;
     };
 
     //--------------------------------------------------------------------------
