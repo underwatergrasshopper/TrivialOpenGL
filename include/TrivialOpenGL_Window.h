@@ -36,11 +36,11 @@ namespace TrivialOpenGL {
         };
     };
 
-    enum WindowState {
-        WINDOW_STATE_NORMAL,
-        WINDOW_STATE_MAXIMIZED,
-        WINDOW_STATE_MINIMIZED,
-        WINDOW_STATE_WINDOWED_FULL_SCREENED,
+    enum class WindowState {
+        NORMAL,
+        MAXIMIZED,
+        MINIMIZED,
+        WINDOWED_FULL_SCREENED,
     };
 
     enum {
@@ -305,7 +305,7 @@ namespace TrivialOpenGL {
 
         m_is_active                 = false;
         m_is_visible                = false;
-        m_state                     = WINDOW_STATE_NORMAL;
+        m_state                     = WindowState::NORMAL;
         m_prev_state                = m_state;
 
         m_is_save_last_restored_area = true;
@@ -517,7 +517,7 @@ namespace TrivialOpenGL {
     inline void Window::ChangeStateTo(WindowState state) {
         m_prev_state = m_state;
 
-        if (m_state == WINDOW_STATE_WINDOWED_FULL_SCREENED && state != m_state) {
+        if (m_state == WindowState::WINDOWED_FULL_SCREENED && state != m_state) {
             m_disable_do_on_resize_count_stack.Push();
             SetWindowLongPtrW(m_window_handle, GWL_STYLE,   m_window_style);
             SetWindowLongPtrW(m_window_handle, GWL_EXSTYLE, m_window_extended_style);
@@ -527,8 +527,8 @@ namespace TrivialOpenGL {
 
 
         switch (state) {
-        case WINDOW_STATE_NORMAL: {
-            if (m_state == WINDOW_STATE_MINIMIZED || m_state == WINDOW_STATE_MAXIMIZED) {
+        case WindowState::NORMAL: {
+            if (m_state == WindowState::MINIMIZED || m_state == WindowState::MAXIMIZED) {
                 ShowWindow(m_window_handle, SW_RESTORE);
             }
 
@@ -537,11 +537,11 @@ namespace TrivialOpenGL {
             }
             break;
         }
-        case WINDOW_STATE_MINIMIZED: {
+        case WindowState::MINIMIZED: {
             ShowWindow(m_window_handle, SW_MINIMIZE);
             break;
         }
-        case WINDOW_STATE_MAXIMIZED: {
+        case WindowState::MAXIMIZED: {
             ShowWindow(m_window_handle, SW_MAXIMIZE);
 
             if (m_data.style & StyleBit::DRAW_AREA_ONLY) {
@@ -549,14 +549,14 @@ namespace TrivialOpenGL {
 
                 SetWindowPos(m_window_handle, HWND_TOP, 0, 0, work_area_size.width, work_area_size.height, SWP_SHOWWINDOW);
 
-                m_state = WINDOW_STATE_MAXIMIZED;
+                m_state = WindowState::MAXIMIZED;
             } else {
                 ShowWindow(m_window_handle, SW_MAXIMIZE);
             }
             break;
         }
 
-        case WINDOW_STATE_WINDOWED_FULL_SCREENED: 
+        case WindowState::WINDOWED_FULL_SCREENED: 
             m_disable_do_on_resize_count_stack.Push();
             SetWindowLongPtrW(m_window_handle, GWL_STYLE, GetWindowStyle_DrawAreaOnly());
             SetWindowLongPtrW(m_window_handle, GWL_EXSTYLE, GetWindowExtendedStyle_DrawAreaOnly());
@@ -579,7 +579,7 @@ namespace TrivialOpenGL {
 
             // ---
 
-            m_state = WINDOW_STATE_WINDOWED_FULL_SCREENED;
+            m_state = WindowState::WINDOWED_FULL_SCREENED;
 
             break;
 
@@ -601,19 +601,19 @@ namespace TrivialOpenGL {
 
 
     inline void Window::Restore() {
-        ChangeStateTo(WINDOW_STATE_NORMAL);
+        ChangeStateTo(WindowState::NORMAL);
     }
 
     inline void Window::Minimize() {
-        ChangeStateTo(WINDOW_STATE_MINIMIZED);
+        ChangeStateTo(WindowState::MINIMIZED);
     }
 
     inline void Window::Maximize() {
-        ChangeStateTo(WINDOW_STATE_MAXIMIZED);
+        ChangeStateTo(WindowState::MAXIMIZED);
     }
 
     inline void Window::GoWindowedFullScreen() {
-        ChangeStateTo(WINDOW_STATE_WINDOWED_FULL_SCREENED);
+        ChangeStateTo(WindowState::WINDOWED_FULL_SCREENED);
     }
 
     inline WindowState Window::GetState() const {
@@ -621,19 +621,19 @@ namespace TrivialOpenGL {
     }
 
     inline bool Window::IsNormal() const {
-        return GetState() == WINDOW_STATE_NORMAL;
+        return GetState() == WindowState::NORMAL;
     }
 
     inline bool Window::IsMinimized() const {
-        return GetState() == WINDOW_STATE_MINIMIZED;
+        return GetState() == WindowState::MINIMIZED;
     }
 
     inline bool Window::IsMaximized() const {
-        return GetState() == WINDOW_STATE_MAXIMIZED;
+        return GetState() == WindowState::MAXIMIZED;
     }
 
     inline bool Window::IsWindowedFullScreen() const {
-        return GetState() == WINDOW_STATE_WINDOWED_FULL_SCREENED;
+        return GetState() == WindowState::WINDOWED_FULL_SCREENED;
     }
 
     //--------------------------------------------------------------------------
@@ -1154,9 +1154,9 @@ namespace TrivialOpenGL {
             m_is_visible = true;
 
             switch (w_param) {
-            case SIZE_MAXIMIZED:    m_state = WINDOW_STATE_MAXIMIZED; break;
-            case SIZE_MINIMIZED:    m_state = WINDOW_STATE_MINIMIZED; break;
-            case SIZE_RESTORED:     m_state = WINDOW_STATE_NORMAL; break;
+            case SIZE_MAXIMIZED:    m_state = WindowState::MAXIMIZED; break;
+            case SIZE_MINIMIZED:    m_state = WindowState::MINIMIZED; break;
+            case SIZE_RESTORED:     m_state = WindowState::NORMAL; break;
             }
 
             return 0;
