@@ -61,11 +61,11 @@ public:
 
     }
 
-    void Initialize(int width, int height) {
+    void Initialize(uint16_t width, uint16_t height) {
         Initialize({width, height});
     }
 
-    void Initialize(const TOGL::SizeI& size) {
+    void Initialize(const TOGL::SizeU16& size) {
         m_size = size;
 
         glMatrixMode(GL_PROJECTION);
@@ -109,7 +109,7 @@ public:
         Draw((float)m_angle);
     }
 
-    void Resize(int width, int height) {
+    void Resize(uint16_t width, uint16_t height) {
         glViewport(0, 0, width,  height ? height : 1);
 
         glMatrixMode(GL_PROJECTION);
@@ -122,7 +122,7 @@ public:
     }
 
 private:
-    TOGL::SizeI     m_size;
+    TOGL::SizeU16     m_size;
 
     double          m_interval;         // in seconds
     double          m_speed;            // in degrees per second
@@ -145,6 +145,13 @@ void PrintWindowStates() {
 }
 
 void DisplayWindowInfo() {
+    togl_print_i32(GetSystemMetrics(SM_CXMINTRACK));
+    togl_print_i32(GetSystemMetrics(SM_CYMINTRACK));
+    togl_print_i32(GetSystemMetrics(SM_CXMAXTRACK));
+    togl_print_i32(GetSystemMetrics(SM_CYMAXTRACK));
+
+    puts("---");
+
     RECT client, window, border;
 
     HWND window_handle = GetForegroundWindow();
@@ -158,7 +165,7 @@ void DisplayWindowInfo() {
     border.right    = window.right - client.right;
     border.bottom   = window.bottom - client.bottom;
 
-    puts("---");
+    
 
     togl_print_i32(client.left);
     togl_print_i32(client.top);
@@ -176,23 +183,23 @@ void DisplayWindowInfo() {
     togl_print_i32(border.bottom);
     puts("");
 
-    const TOGL::SizeI screen_size = TOGL::GetScreenSize();
+    const TOGL::SizeU16 screen_size = TOGL::GetScreenSize();
     togl_print_i32(screen_size.width);
     togl_print_i32(screen_size.height);
 
-    const TOGL::SizeI work_area_size = TOGL::GetDesktopAreaSizeNoTaskBar();
+    const TOGL::SizeU16 work_area_size = TOGL::GetDesktopAreaSizeNoTaskBar();
     togl_print_i32(work_area_size.width);
     togl_print_i32(work_area_size.height);
     puts("");
 
-    const TOGL::AreaI window_area = TOGL::ToWindow().GetArea();
+    const TOGL::AreaIU16 window_area = TOGL::ToWindow().GetArea();
     togl_print_i32(window_area.x);
     togl_print_i32(window_area.y);
     togl_print_i32(window_area.width);
     togl_print_i32(window_area.height);
     puts("");
 
-    const TOGL::AreaI window_draw_area = TOGL::ToWindow().GetDrawArea();
+    const TOGL::AreaIU16 window_draw_area = TOGL::ToWindow().GetDrawArea();
     togl_print_i32(window_draw_area.x);
     togl_print_i32(window_draw_area.y);
     togl_print_i32(window_draw_area.width);
@@ -210,7 +217,7 @@ void DisplayWindowInfo() {
 
 //------------------------------------------------------------------------------
 
-static TOGL::SizeI  s_resolution;
+static TOGL::SizeU16  s_resolution;
 static bool         s_is_client;
 static TestImage    s_test_image;
 
@@ -394,7 +401,7 @@ int main(int argc, char *argv[]) {
             s_test_image.Animate();
         };
 
-        data.do_on_resize = [](uint32_t width, uint32_t height) {
+        data.do_on_resize = [](uint16_t width, uint16_t height) {
             s_test_image.Resize(width, height);
         };
 
@@ -457,7 +464,7 @@ int main(int argc, char *argv[]) {
     } else if (IsFlag("WINDOW_STATE")) {
         s_resolution = {600, 300};
 
-        const TOGL::SizeI screen_size = TOGL::GetScreenSize();
+        const TOGL::SizeU16 screen_size = TOGL::GetScreenSize();
 
         TOGL::Data data = {};
 
@@ -482,7 +489,7 @@ int main(int argc, char *argv[]) {
             s_test_image.Animate();
         };
 
-        data.do_on_resize = [](uint32_t width, uint32_t height) {
+        data.do_on_resize = [](uint16_t width, uint16_t height) {
             s_test_image.Resize(width, height);
         };
 

@@ -168,8 +168,8 @@ namespace TrivialOpenGL {
     using SizeI    = Size<int32_t>;
     using SizeI64  = Size<int64_t>;
 
-    using SizeI16  = Size<int16_t>;
-    using SizeI    = Size<int32_t>;
+    using SizeU16  = Size<uint16_t>;
+    using SizeU    = Size<uint32_t>;
     using SizeU64  = Size<uint64_t>;
 
     using SizeF    = Size<float>;
@@ -467,8 +467,8 @@ namespace TrivialOpenGL {
             DwmEnableComposition(TOGL_DWM_EC_DISABLECOMPOSITION);
         }
 
-        AreaI Get(HWND window_handle) const {
-            AreaI area = {};
+        AreaIU16 Get(HWND window_handle) const {
+            AreaIU16 area = {};
 
             if (m_dwm_get_window_attribute) {
                 RECT window_rect;
@@ -487,35 +487,35 @@ namespace TrivialOpenGL {
                 frame.right     = window_rect.right         - actual_window_rect.right;
                 frame.bottom    = window_rect.bottom        - actual_window_rect.bottom;
 
-                area = {-frame.left, -frame.top, frame.left + frame.right, frame.top + frame.bottom};
+                area = AreaIU16(- frame.left, -frame.top, uint16_t(frame.left + frame.right), uint16_t(frame.top + frame.bottom));
             }
 
             return area;
         }
 
         // area         - Window area without invisible frame.
-        AreaI AddInvisibleFrameTo(const AreaI& area, HWND window_hangle) const {
-            const AreaI correction = Get(window_hangle);
-            return {
+        AreaIU16 AddInvisibleFrameTo(const AreaIU16& area, HWND window_hangle) const {
+            const AreaIU16 correction = Get(window_hangle);
+            return AreaIU16(
                 area.x      + correction.x,
                 area.y      + correction.y,
                 area.width  + correction.width,
                 area.height + correction.height
-            };
+            );
         }
 
         // size         - Window size without invisible frame.
-        SizeI AddInvisibleFrameTo(const SizeI& size, HWND window_hangle) const {
-            const AreaI correction = Get(window_hangle);
-            return {
+        SizeU16 AddInvisibleFrameTo(const SizeU16& size, HWND window_hangle) const {
+            const AreaIU16 correction = Get(window_hangle);
+            return SizeU16(
                 size.width  + correction.width,
                 size.height + correction.height
-            };
+            );
         }
 
         // pos          - Window position without invisible frame.
         PointI AddInvisibleFrameTo(const PointI& pos, HWND window_hangle) const {
-            const AreaI correction = Get(window_hangle);
+            const AreaIU16 correction = Get(window_hangle);
             return {
                 pos.x + correction.x,
                 pos.y + correction.y,
@@ -523,28 +523,28 @@ namespace TrivialOpenGL {
         }
 
         // area         - Window area with invisible frame.
-        AreaI RemoveInvisibleFrameFrom(const AreaI& area, HWND window_hangle) const {
-            const AreaI correction = Get(window_hangle);
-            return {
+        AreaIU16 RemoveInvisibleFrameFrom(const AreaIU16& area, HWND window_hangle) const {
+            const AreaIU16 correction = Get(window_hangle);
+            return AreaIU16(
                 area.x      - correction.x,
                 area.y      - correction.y,
                 area.width  - correction.width,
                 area.height - correction.height
-            };
+            );
         }
 
         // size         - Window size with invisible frame.
-        SizeI RemoveInvisibleFrameFrom(const SizeI& size, HWND window_hangle) const {
-            const AreaI correction = Get(window_hangle);
-            return {
+        SizeU16 RemoveInvisibleFrameFrom(const SizeU16& size, HWND window_hangle) const {
+            const AreaIU16 correction = Get(window_hangle);
+            return SizeU16(
                 size.width  - correction.width,
                 size.height - correction.height
-            };
+            );
         }
 
         // pos          - Window position with invisible frame.
         PointI RemoveInvisibleFrameFrom(const PointI& pos, HWND window_hangle) const {
-            const AreaI correction = Get(window_hangle);
+            const AreaIU16 correction = Get(window_hangle);
             return {
                 pos.x - correction.x,
                 pos.y - correction.y,
@@ -566,18 +566,18 @@ namespace TrivialOpenGL {
 
     //--------------------------------------------------------------------------
 
-    inline AreaI GetDesktopAreaNoTaskBar() {
+    inline AreaIU16 GetDesktopAreaNoTaskBar() {
         RECT rc;
         SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, 0);
-        return MakeArea(rc);
+        return MakeAreaIU16(rc);
     }
 
-    inline SizeI GetDesktopAreaSizeNoTaskBar() {
+    inline SizeU16 GetDesktopAreaSizeNoTaskBar() {
         return GetDesktopAreaNoTaskBar().GetSize();
     }
 
-    inline SizeI GetScreenSize() {
-        return { GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN) };
+    inline SizeU16 GetScreenSize() {
+        return SizeU16(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
     }
 
 } // namespace TrivialOpenGL

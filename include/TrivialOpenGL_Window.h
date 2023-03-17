@@ -62,7 +62,10 @@ namespace TrivialOpenGL {
         // If x is DEF then created window will be centered on X axis.
         // If y is DEF then created window will be centered on Y axis.
         // If width is DEF then created window will have with equal to half width of working area (desktop area excluding task bar area).
+        // If with is not DEF end less than 0 then it's considered as 0.
         // If height is DEF then created window will have with equal to half height of working area (desktop area excluding task bar area).
+        // If height is not DEF end less than 1 then it's considered as 1. 
+        // Actual window width or height might be higher, depends on operating system minimal window size.
         AreaI           area                = {DEF, DEF, DEF, DEF};
 
         // NO_RESIZE                      - Window wont have resize frame.
@@ -114,7 +117,7 @@ namespace TrivialOpenGL {
         void (*do_on_key_down_raw)(WPARAM w_param, LPARAM l_param)      = nullptr;
         void (*do_on_key_up_raw)(WPARAM w_param, LPARAM l_param)        = nullptr;
  
-        void (*do_on_resize)(uint32_t width, uint32_t height)           = nullptr;
+        void (*do_on_resize)(uint16_t width, uint16_t height)           = nullptr;
 
     };
 
@@ -154,17 +157,17 @@ namespace TrivialOpenGL {
         void MoveBy(const PointI& offset);
 
         // Resizes window and keeps current window position.
-        void SetSize(int width, int height, bool is_draw_area = false);
-        void SetSize(const SizeI& size, bool is_draw_area = false);
+        void SetSize(uint16_t width, uint16_t height, bool is_draw_area = false);
+        void SetSize(const SizeU16& size, bool is_draw_area = false);
 
         // Moves and resizes window area.
-        void SetArea(int x, int y, int width, int height, bool is_draw_area = false);
-        void SetArea(const AreaI& area, bool is_draw_area = false);
+        void SetArea(int x, int y, uint16_t width, uint16_t height, bool is_draw_area = false);
+        void SetArea(const AreaIU16& area, bool is_draw_area = false);
 
         // Puts window in center of desktop area excluding task bar area.
         // void Center();
-        void Center(int width, int height, bool is_draw_area_size = false);
-        void Center(const SizeI& size, bool is_draw_area_size = false);
+        void Center(uint16_t width, uint16_t height, bool is_draw_area_size = false);
+        void Center(const SizeU16& size, bool is_draw_area_size = false);
 
         // ---
         
@@ -172,19 +175,19 @@ namespace TrivialOpenGL {
         PointI GetPos() const;
         
         // Returns window size.
-        SizeI GetSize() const;
+        SizeU16 GetSize() const;
         
         // Returns window area in screen coordinates.
-        AreaI GetArea() const;
+        AreaIU16 GetArea() const;
         
         // Returns draw area top-left corner position in screen coordinates.
         PointI GetDrawAreaPos() const;
         
         // Returns draw area size.
-        SizeI GetDrawAreaSize() const;
+        SizeU16 GetDrawAreaSize() const;
         
         // Returns draw area in screen coordinates.
-        AreaI GetDrawArea() const;
+        AreaIU16 GetDrawArea() const;
 
         // ---
 
@@ -242,8 +245,8 @@ namespace TrivialOpenGL {
 
         void Display();
 
-        AreaI GenerateWindowArea(const AreaI& area);
-        void SetArea(const AreaI& area, AreaPartId area_part_id, bool is_client_area);
+        AreaIU16 GenerateWindowArea(const AreaI& area);
+        void SetArea(const AreaIU16& area, AreaPartId area_part_id, bool is_client_area);
 
         void Create(HWND window_handle);
         void Destroy();
@@ -253,8 +256,8 @@ namespace TrivialOpenGL {
         static DWORD GetWindowStyle_DrawAreaOnly();
         static DWORD GetWindowExtendedStyle_DrawAreaOnly();
 
-        static AreaI GetWindowArea(HWND window_handle);
-        static AreaI GetWindowAreaFromDrawArea(const AreaI& draw_area, DWORD window_style);
+        static AreaIU16 GetWindowArea(HWND window_handle);
+        static AreaIU16 GetWindowAreaFromDrawArea(const AreaIU16& draw_area, DWORD window_style);
 
 
         LRESULT InnerWindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
@@ -270,15 +273,11 @@ namespace TrivialOpenGL {
         DWORD       m_window_style;
         DWORD       m_window_extended_style;
 
-        AreaI       m_last_restored_raw_area;
-        bool        m_is_save_last_restored_area;
-
         bool        m_is_active;
         bool        m_is_visible;
+
         WindowState m_state;
         WindowState m_prev_state;
-
-        bool        m_force_undock;
 
         bool        m_is_win7;
 
@@ -325,10 +324,6 @@ namespace TrivialOpenGL {
         m_state                     = WindowState::NORMAL;
         m_prev_state                = m_state;
 
-        m_is_save_last_restored_area = true;
-
-        m_force_undock              = false;
-
         m_is_win7                   = IsWindows7OrGreater() && !IsWindows8OrGreater();
 
         m_is_apply_fake_width       = false;
@@ -354,7 +349,7 @@ namespace TrivialOpenGL {
         if (!m_data.do_on_key_down_raw) m_data.do_on_key_down_raw   = [](WPARAM w_param, LPARAM l_param) {};
         if (!m_data.do_on_key_up_raw)   m_data.do_on_key_up_raw     = [](WPARAM w_param, LPARAM l_param) {};
 
-        if (!m_data.do_on_resize)         m_data.do_on_resize           = [](uint32_t width, uint32_t height) {};
+        if (!m_data.do_on_resize)       m_data.do_on_resize         = [](uint16_t width, uint16_t height) {};
 
         m_instance_handle = GetModuleHandleW(NULL);
 
@@ -444,26 +439,26 @@ namespace TrivialOpenGL {
         MoveBy(offset.x, offset.y);
     }
 
-    inline void Window::SetSize(int width, int height, bool is_draw_area) {
+    inline void Window::SetSize(uint16_t width, uint16_t height, bool is_draw_area) {
         SetArea({0, 0, width, height}, AreaPartId::SIZE, is_draw_area);
     }
-    inline void Window::SetSize(const SizeI& size, bool is_draw_area) {
+    inline void Window::SetSize(const SizeU16& size, bool is_draw_area) {
         SetSize(size.width, size.height, is_draw_area);
     }
 
-    inline void Window::SetArea(int x, int y, int width, int height, bool is_draw_area) {
+    inline void Window::SetArea(int x, int y, uint16_t width, uint16_t height, bool is_draw_area) {
         SetArea({x, y, width, height}, AreaPartId::ALL, is_draw_area);
     }
-    inline void Window::SetArea(const AreaI& area, bool is_draw_area) {
+    inline void Window::SetArea(const AreaIU16& area, bool is_draw_area) {
         SetArea(area.x, area.y, area.width, area.height, is_draw_area);
     }
 
     //--------------------------------------------------------------------------
 
-    inline void Window::Center(const SizeI& size, bool is_draw_area_size) {
-        const AreaI desktop_area = GetDesktopAreaNoTaskBar();
+    inline void Window::Center(const SizeU16& size, bool is_draw_area_size) {
+        const AreaIU16 desktop_area = GetDesktopAreaNoTaskBar();
 
-        AreaI window_area = AreaI({}, size);
+        AreaIU16 window_area = AreaIU16({}, size);
 
         Restore();
 
@@ -478,8 +473,8 @@ namespace TrivialOpenGL {
         SetArea(window_area);
     }
 
-    inline void Window::Center(int width, int height, bool is_draw_area_size) {
-        Center(SizeI(width, height), is_draw_area_size);
+    inline void Window::Center(uint16_t width, uint16_t height, bool is_draw_area_size) {
+        Center(SizeU16(width, height), is_draw_area_size);
     }
 
 
@@ -493,12 +488,12 @@ namespace TrivialOpenGL {
         return GetArea().GetPos();
     }
     
-    inline SizeI Window::GetSize() const {
+    inline SizeU16 Window::GetSize() const {
         return GetArea().GetSize();
     }
     
-    inline AreaI Window::GetArea() const {
-        AreaI area = GetWindowArea(m_window_handle);
+    inline AreaIU16 Window::GetArea() const {
+        AreaIU16 area = GetWindowArea(m_window_handle);
     
         // Workaround.
         if (IsWindowedFullScreen()) area.width -= WIDTH_EXTENTION;
@@ -510,21 +505,21 @@ namespace TrivialOpenGL {
         return GetDrawArea().GetPos();
     }
     
-    inline SizeI Window::GetDrawAreaSize() const {
+    inline SizeU16 Window::GetDrawAreaSize() const {
         return GetDrawArea().GetSize();
     }
     
-    inline AreaI Window::GetDrawArea() const {
+    inline AreaIU16 Window::GetDrawArea() const {
         RECT r;
         if (GetClientRect(m_window_handle, &r) && ClientToScreen(m_window_handle, (POINT*)&r) && ClientToScreen(m_window_handle, (POINT*)&r.right)) {
-            AreaI area = MakeArea(r);
+            AreaIU16 area = MakeAreaIU16(r);
     
             // Workaround.
             if (IsWindowedFullScreen()) area.width -= WIDTH_EXTENTION;
     
             return area;
         }
-        return AreaI(0, 0, 0, 0);
+        return AreaIU16(0, 0, 0, 0);
     }
 
     //--------------------------------------------------------------------------
@@ -562,7 +557,7 @@ namespace TrivialOpenGL {
             ShowWindow(m_window_handle, SW_MAXIMIZE);
 
             if (m_data.style & StyleBit::DRAW_AREA_ONLY) {
-                const SizeI work_area_size = GetDesktopAreaSizeNoTaskBar();
+                const SizeU16 work_area_size = GetDesktopAreaSizeNoTaskBar();
 
                 SetWindowPos(m_window_handle, HWND_TOP, 0, 0, work_area_size.width, work_area_size.height, SWP_SHOWWINDOW);
 
@@ -585,10 +580,10 @@ namespace TrivialOpenGL {
             // To omit that, size of window is extended beyond borders of screen, internally.
             // Library provides size of window without this internal adjustment.
 
-            RECT screen_rectangle = MakeRECT(AreaI({}, GetScreenSize()));
+            RECT screen_rectangle = MakeRECT(AreaIU16({}, GetScreenSize()));
             AdjustWindowRectEx(&screen_rectangle, GetWindowStyle_DrawAreaOnly(), FALSE, GetWindowExtendedStyle_DrawAreaOnly());
 
-            const AreaI screen_area = MakeArea(screen_rectangle);
+            const AreaIU16 screen_area = MakeAreaIU16(screen_rectangle);
 
             m_is_apply_fake_width = true;
             SetWindowPos(m_window_handle, HWND_TOP, screen_area.x, screen_area.y, screen_area.width + WIDTH_EXTENTION, screen_area.height, SWP_SHOWWINDOW);
@@ -740,12 +735,12 @@ namespace TrivialOpenGL {
         SwapBuffers(m_device_context_handle);
     }
 
-    inline AreaI Window::GenerateWindowArea(const AreaI& area) {
-        AreaI window_area;
+    inline AreaIU16 Window::GenerateWindowArea(const AreaI& area) {
+        AreaIU16 window_area;
 
         // --- Size --- //
 
-        const AreaI desktop_area = GetDesktopAreaNoTaskBar();
+        const AreaIU16 desktop_area = GetDesktopAreaNoTaskBar();
 
         window_area.width   = (area.width != DEF)   ? area.width    : (desktop_area.width / 2);
         window_area.height  = (area.height != DEF)  ? area.height   : (desktop_area.height / 2);
@@ -755,7 +750,7 @@ namespace TrivialOpenGL {
         if (window_area.height < 1)   window_area.height = 1;
 
         if ((m_data.style & StyleBit::DRAW_AREA_SIZE) && !(m_data.style & StyleBit::DRAW_AREA_ONLY)) {
-            const AreaI window_area_with_invisible_frame = GetWindowAreaFromDrawArea(window_area, m_window_style);
+            const AreaIU16 window_area_with_invisible_frame = GetWindowAreaFromDrawArea(window_area, m_window_style);
 
             window_area = m_window_area_corrector.RemoveInvisibleFrameFrom(window_area_with_invisible_frame, m_window_handle);
         }
@@ -778,7 +773,7 @@ namespace TrivialOpenGL {
         return window_area;
     }
     
-    inline void Window::SetArea(const AreaI& area, AreaPartId area_part_id, bool is_draw_area) {
+    inline void Window::SetArea(const AreaIU16& area, AreaPartId area_part_id, bool is_draw_area) {
         auto GetFlags = [](AreaPartId area_part_id) -> UINT {
             switch (area_part_id) {
             case AreaPartId::POSITION:          return SWP_NOSIZE;
@@ -786,11 +781,12 @@ namespace TrivialOpenGL {
             case AreaPartId::SIZE:              return SWP_NOMOVE;
             case AreaPartId::ALL:               return 0;
             }
+            return 0;
         };
 
         Restore();
 
-        AreaI raw_area;
+        AreaIU16 raw_area;
 
         if (area_part_id == AreaPartId::POSITION_OFFSET) {
             raw_area = GetWindowArea(m_window_handle);
@@ -825,18 +821,18 @@ namespace TrivialOpenGL {
         return WS_EX_APPWINDOW; 
     }
     
-    inline AreaI Window::GetWindowArea(HWND window_handle) {
+    inline AreaIU16 Window::GetWindowArea(HWND window_handle) {
         RECT r;
         if (GetWindowRect(window_handle, &r)) {
-            return MakeArea(r);
+            return MakeAreaIU16(r);
         }
-        return AreaI(0, 0, 0, 0);
+        return AreaIU16(0, 0, 0, 0);
     }
 
-    inline AreaI Window::GetWindowAreaFromDrawArea(const AreaI& draw_area, DWORD window_style) {
+    inline AreaIU16 Window::GetWindowAreaFromDrawArea(const AreaIU16& draw_area, DWORD window_style) {
         RECT rect = MakeRECT(draw_area);
         AdjustWindowRect(&rect, window_style, FALSE);
-        return MakeArea(rect);
+        return MakeAreaIU16(rect);
     }
     
     //--------------------------------------------------------------------------
@@ -1135,8 +1131,8 @@ namespace TrivialOpenGL {
             if (m_data.log_level >= LOG_LEVEL_DEBUG) {
                 std::string dbg_msg = "WM_SIZE";
 
-                const int width     = LOWORD(l_param);
-                const int height    = HIWORD(l_param);
+                const uint16_t width    = LOWORD(l_param);
+                const uint16_t height        = HIWORD(l_param);
 
                 dbg_msg += std::string() + " " + std::to_string(width) + " " + std::to_string(height);
 
@@ -1261,7 +1257,7 @@ namespace TrivialOpenGL {
                     NCCALCSIZE_PARAMS& params = *((NCCALCSIZE_PARAMS*)l_param);
 
 
-                    auto AreaToStr = [](const AreaI& area) {
+                    auto AreaToStr = [](const AreaIU16& area) {
                         return std::to_string(area.x) + "," 
                             + std::to_string(area.y) + ","
                             + std::to_string(area.width) + ","
