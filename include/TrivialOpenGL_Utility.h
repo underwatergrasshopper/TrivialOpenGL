@@ -11,15 +11,18 @@
 
 #define WIN32_LEAN_AND_MEAN 
 #include <windows.h>
+#include <windowsx.h>
 #undef WIN32_LEAN_AND_MEAN 
+
+// Name collisions.
+#undef IsMaximized 
+#undef IsMinimized
 
 #include <string>
 
 //==============================================================================
 // Declarations
 //==============================================================================
-
-#define togl_print_i32(variable) { printf(#variable"=%d\n", int(variable)); fflush(stdout); } (void)0
 
 namespace TrivialOpenGL {
 

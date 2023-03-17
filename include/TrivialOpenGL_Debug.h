@@ -9,6 +9,8 @@
 #include <windows.h>
 #include <string>
 
+#define togl_print_i32(variable) { printf(#variable"=%d\n", int(variable)); fflush(stdout); } (void)0
+
 #ifdef TOGL_INNER_CASE_STR
 #error TOGL_INNER_CASE_STR is already defined.
 #endif
