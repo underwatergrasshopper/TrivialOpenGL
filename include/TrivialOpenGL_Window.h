@@ -232,6 +232,8 @@ namespace TrivialOpenGL {
         };
 
         Window();
+        Window(const Window&) = delete;
+        Window& operator=(const Window&) = delete;
 
         // Changes area by applying style from data parameter which was provided to Run function.
         void ChangeArea(const AreaI& area);
