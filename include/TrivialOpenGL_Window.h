@@ -12,6 +12,7 @@
 #include <VersionHelpers.h>
 
 #include "TrivialOpenGL_Utility.h"
+#include "TrivialOpenGL_Key.h"
 #include "TrivialOpenGL_Debug.h"
 
 //==========================================================================
