@@ -138,8 +138,8 @@ void PrintWindowStates() {
     printf("%s%s%s%s%s%s\n", 
         TOGL::ToWindow().IsNormal() ? "+" : " ",
         TOGL::ToWindow().IsVisible() == false ? "+" : " ",
-        TOGL::ToWindow().IsMaximized() ? "+" : " ",
-        TOGL::ToWindow().IsMinimized() ? "+" : " ",
+        TOGL::ToWindow().IsWindowMaximized() ? "+" : " ",
+        TOGL::ToWindow().IsWindowMinimized() ? "+" : " ",
         " ",
         TOGL::ToWindow().IsWindowedFullScreen() ? "+" : " ");
 }

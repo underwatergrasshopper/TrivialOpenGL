@@ -14,10 +14,6 @@
 #include <windowsx.h>
 #undef WIN32_LEAN_AND_MEAN 
 
-// Name collisions.
-#undef IsMaximized 
-#undef IsMinimized
-
 #include <string>
 
 //==============================================================================

@@ -204,8 +204,8 @@ namespace TrivialOpenGL {
         WindowState GetState() const;
 
         bool IsNormal() const;
-        bool IsMinimized() const;
-        bool IsMaximized() const;
+        bool IsWindowMinimized() const;
+        bool IsWindowMaximized() const;
         bool IsWindowedFullScreen() const;
 
         // ---
@@ -638,11 +638,11 @@ namespace TrivialOpenGL {
         return GetState() == WindowState::NORMAL;
     }
 
-    inline bool Window::IsMinimized() const {
+    inline bool Window::IsWindowMinimized() const {
         return GetState() == WindowState::MINIMIZED;
     }
 
-    inline bool Window::IsMaximized() const {
+    inline bool Window::IsWindowMaximized() const {
         return GetState() == WindowState::MAXIMIZED;
     }
 
