@@ -226,7 +226,7 @@ static TestImage    s_test_image;
 int main(int argc, char *argv[]) {
     std::set<std::string> flags;
 
-    for (size_t index = 0; index < argc; ++index) {
+    for (size_t index = 1; index < argc; ++index) {
         flags.insert(argv[index]);
     }
 
@@ -238,9 +238,11 @@ int main(int argc, char *argv[]) {
         flags.insert(flag);
     };
 
-    //ForceFlag("MOVE_AND_RESIZE");
-    ForceFlag("WINDOW_STATE");
-    //ForceFlag("OPENGL_VERSION");
+    if (flags.size() == 0) {
+        //ForceFlag("MOVE_AND_RESIZE");
+        ForceFlag("WINDOW_STATE");
+        //ForceFlag("OPENGL_VERSION");
+    }
 
     if (IsFlag("ICON")) {
         TOGL::Data data = {};
