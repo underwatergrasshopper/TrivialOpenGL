@@ -135,6 +135,13 @@ namespace TrivialOpenGL {
         KEY_ID_NUMLOCK,
         KEY_ID_SCROLL_LOCK,
 
+        KEY_ID_LEFT_MOUSE_BUTTON,
+        KEY_ID_MIDDLE_MOUSE_BUTTON,
+        KEY_ID_RIGHT_MOUSE_BUTTON,
+        KEY_ID_X1_MOUSE_BUTTON,
+        KEY_ID_X2_MOUSE_BUTTON,
+
+
 #if 0
         // Experimental. For tests only.
         KEY_ID_LEFT_SHIFT, 
@@ -157,42 +164,58 @@ namespace TrivialOpenGL {
                     trans_state     : 1;
     };
 
-    KeyId VK_CodeToKeyId(int vk_code, const VirtualKeyData& data);
+    enum KeyboardSide {
+        KEYBOARD_SIDE_NONE       = 0,
+        KEYBOARD_SIDE_LEFT       = 1,
+        KEYBOARD_SIDE_RIGHT      = 2,
+    };
+
+    struct Extra {
+        // Repeat count of key stroke.
+        uint32_t        count           = 0;
+
+        // Cursor position in window draw area.
+        int             x               = 0;
+        int             y               = 0;
+
+        // Stores information if pressed key was from left or right side of keyboard.
+        // If side of keyboard doesn't matter or when key exists only on one side, then contains KEYBOARD_SIDE_NONE. 
+        // Note: Used for shift, control, alt keys. For ids: KEY_ID_SHIFT, KEY_ID_CONTROL, KEY_ID_ALT.
+        KeyboardSide    keyboard_side   = KEYBOARD_SIDE_NONE;
+    };
+
+
+    KeyboardSide GetKeyboardSide(KeyId key_id, const VirtualKeyData& virtual_key_data);
+
+    std::string KeyboardSideToStr(KeyboardSide side);
     std::string KeyIdToStr(KeyId key_id);
     std::string VK_CodeToStr(int vk_code); 
-    std::string WinApiKeyDataToStr(WPARAM w_param, LPARAM l_param);
+    std::string ExtraToStr(const Extra& extra);
 
-    inline KeyId VK_CodeToKeyId(int vk_code, const VirtualKeyData& data) {
-        switch (vk_code) {
+
+    //--------------------------------------------------------------------------
+
+
+    class InnerKeySupport {
+    public:
+        friend class Window;
+    private:
+        static KeyId GetKeyId(WPARAM w_param);
+        static KeyId GetMouseKeyId(UINT message, WPARAM w_param);
+        static std::string WinApiKeyDataToStr(WPARAM w_param, LPARAM l_param);
+        static std::string WinApiMouseButtonToStr(WPARAM w_param, LPARAM l_param);
+        static bool IsMouseButtonDown(UINT message);
+    };
+
+    inline KeyId InnerKeySupport::GetKeyId(WPARAM w_param) {
+        switch (w_param) {
         case VK_CANCEL:         return KEY_ID_BREAK;                  
         case VK_BACK:           return KEY_ID_BACKSPACE;              
         case VK_TAB:            return KEY_ID_TAB;                    
         case VK_RETURN:         return KEY_ID_ENTER; 
-
-#if 0
-        // Experimental. For tests only.
-        // Detection if shift, control, alt key was left or right.
-        case VK_SHIFT: {
-            const int vk_code_ext = MapVirtualKeyA(data.scan_code, MAPVK_VSC_TO_VK_EX);
-
-            if (vk_code_ext == VK_LSHIFT) return KEY_ID_LEFT_SHIFT;
-            return KEY_ID_RIGHT_SHIFT;  
-        }
-                            
-        case VK_CONTROL: {
-            if (data.is_ext == 0) return KEY_ID_LEFT_CONTROL;
-            return KEY_ID_RIGHT_CONTROL;   
-        }
-
-        case VK_MENU: {
-            if (data.is_ext == 0) return KEY_ID_LEFT_ALT;
-            return KEY_ID_RIGHT_ALT;   
-        }          
-#endif
         case VK_SHIFT:          return KEY_ID_SHIFT; 
         case VK_CONTROL:        return KEY_ID_CONTROL; 
         case VK_MENU:           return KEY_ID_ALT; 
-
 
         case VK_PAUSE:          return KEY_ID_PAUSE;                  
         case VK_CAPITAL:        return KEY_ID_CAPS_LOCK;              
@@ -304,6 +327,61 @@ namespace TrivialOpenGL {
         }
         return KEY_ID_UNKNOWN;
     }
+
+    inline KeyId InnerKeySupport::GetMouseKeyId(UINT message, WPARAM w_param) {
+        switch (message) {
+        case WM_LBUTTONDOWN:    
+        case WM_LBUTTONUP:      
+            return KEY_ID_LEFT_MOUSE_BUTTON;
+
+        case WM_RBUTTONDOWN:    
+        case WM_RBUTTONUP:      
+            return KEY_ID_RIGHT_MOUSE_BUTTON;
+
+        case WM_MBUTTONDOWN:    
+        case WM_MBUTTONUP:      
+            return KEY_ID_MIDDLE_MOUSE_BUTTON;
+
+        case WM_XBUTTONUP:
+        case WM_XBUTTONDOWN:   
+            if (HIWORD(w_param) == XBUTTON1) return KEY_ID_X1_MOUSE_BUTTON;
+            if (HIWORD(w_param) == XBUTTON2) return KEY_ID_X2_MOUSE_BUTTON;
+            return KEY_ID_UNKNOWN;
+        } // switch
+
+        return KEY_ID_UNKNOWN;
+    }
+
+    inline bool InnerKeySupport::IsMouseButtonDown(UINT message) {
+        switch (message) {
+        case WM_LBUTTONDOWN:    
+        case WM_RBUTTONDOWN:    
+        case WM_MBUTTONDOWN:    
+        case WM_XBUTTONUP:
+            return true;
+        } // switch
+
+        return false;
+    }
+
+    inline KeyboardSide GetKeyboardSide(KeyId key_id, const VirtualKeyData& virtual_key_data) {
+        switch(key_id) {
+        case KEY_ID_SHIFT: {
+            const int vk_code_ext = MapVirtualKeyA(virtual_key_data.scan_code, MAPVK_VSC_TO_VK_EX);
+            if (vk_code_ext == VK_LSHIFT) return KEYBOARD_SIDE_LEFT; 
+            if (vk_code_ext == VK_RSHIFT) return KEYBOARD_SIDE_RIGHT; 
+            return KEYBOARD_SIDE_NONE;
+        } 
+        case KEY_ID_CONTROL: 
+            if (virtual_key_data.is_ext) return KEYBOARD_SIDE_RIGHT; 
+            return KEYBOARD_SIDE_LEFT; 
+
+        case KEY_ID_ALT: 
+            if (virtual_key_data.is_ext) return KEYBOARD_SIDE_RIGHT; 
+            return KEYBOARD_SIDE_LEFT; 
+        } // switch
+        return KEYBOARD_SIDE_NONE;
+    };
 
 #ifdef TOGL_INNER_CASE_STR
 #error TOGL_INNER_CASE_STR is already defined.
@@ -519,23 +597,28 @@ namespace TrivialOpenGL {
 
         TOGL_INNER_CASE_STR(KEY_ID_NUMLOCK);                
         TOGL_INNER_CASE_STR(KEY_ID_SCROLL_LOCK);   
-#if 0
-        // Experimental. For tests only.
-        TOGL_INNER_CASE_STR(KEY_ID_LEFT_SHIFT);             
-        TOGL_INNER_CASE_STR(KEY_ID_RIGHT_SHIFT);            
-        TOGL_INNER_CASE_STR(KEY_ID_LEFT_CONTROL);           
-        TOGL_INNER_CASE_STR(KEY_ID_RIGHT_CONTROL);          
-        TOGL_INNER_CASE_STR(KEY_ID_LEFT_ALT);               
-        TOGL_INNER_CASE_STR(KEY_ID_RIGHT_ALT);   
-#endif
+              
+        TOGL_INNER_CASE_STR(KEY_ID_LEFT_MOUSE_BUTTON);   
+        TOGL_INNER_CASE_STR(KEY_ID_MIDDLE_MOUSE_BUTTON);   
+        TOGL_INNER_CASE_STR(KEY_ID_RIGHT_MOUSE_BUTTON);   
+        TOGL_INNER_CASE_STR(KEY_ID_X1_MOUSE_BUTTON);   
+        TOGL_INNER_CASE_STR(KEY_ID_X2_MOUSE_BUTTON);   
         }
         return std::string() + "(" + std::to_string(key_id) + ")";
     }
 
+    inline std::string KeyboardSideToStr(KeyboardSide side) {
+        switch(side) {
+        TOGL_INNER_CASE_STR(KEYBOARD_SIDE_NONE);
+        TOGL_INNER_CASE_STR(KEYBOARD_SIDE_LEFT);
+        TOGL_INNER_CASE_STR(KEYBOARD_SIDE_RIGHT);
+        }
+        return "?";
+    }
 
 #undef TOGL_INNER_CASE_STR
 
-    inline std::string WinApiKeyDataToStr(WPARAM w_param, LPARAM l_param) {
+    inline std::string InnerKeySupport::WinApiKeyDataToStr(WPARAM w_param, LPARAM l_param) {
         const VirtualKeyData& virtual_key_data = *((const VirtualKeyData*)(&l_param));
 
         auto PadWithSpaces = [](const std::string& text, uint32_t num_of_spaces) {
@@ -548,7 +631,7 @@ namespace TrivialOpenGL {
 
         std::string text = std::string()
             + " vk_code="          + PadWithSpaces(VK_CodeToStr((int)w_param), MAX_LENGTH_OF_NAME)
-            + " key_id="           + PadWithSpaces(KeyIdToStr(VK_CodeToKeyId((int)w_param, virtual_key_data)), MAX_LENGTH_OF_NAME)
+            + " key_id="           + PadWithSpaces(KeyIdToStr(GetKeyId(w_param)), MAX_LENGTH_OF_NAME)
             + ", count="           + std::to_string(virtual_key_data.count)
             + ", scan_code="       + std::to_string(virtual_key_data.scan_code)
             + ", is_ext="          + std::to_string(virtual_key_data.is_ext)
@@ -560,7 +643,7 @@ namespace TrivialOpenGL {
         return text;
     }
 
-    inline std::string WinApiMouseButtonToStr(WPARAM w_param, LPARAM l_param) {
+    inline std::string InnerKeySupport::WinApiMouseButtonToStr(WPARAM w_param, LPARAM l_param) {
         const int x = GET_X_LPARAM(l_param);
         const int y = GET_Y_LPARAM(l_param);
 
@@ -580,6 +663,17 @@ namespace TrivialOpenGL {
 
         return text;
     }
+
+    inline std::string ExtraToStr(const Extra& extra) {
+        std::string text;
+
+        text += " count=" + std::to_string(extra.count);
+        text += " x=" + std::to_string(extra.x);
+        text += " y=" + std::to_string(extra.y);
+        text += " side=" + KeyboardSideToStr(extra.keyboard_side);
+
+        return text;
+    };
 
 } // namespace TrivialOpenGL
 

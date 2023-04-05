@@ -715,13 +715,16 @@ int main(int argc, char *argv[]) {
             s_test_image.Resize(width, height);
         };
 
-        data.do_on_key_up_raw = [](WPARAM w_param, LPARAM l_param) {
+        data.do_on_key = [](TOGL::KeyId key_id, bool is_down, const TOGL::Extra& extra) {
+            std::string message = "Key: ";
 
+            message += TOGL::KeyIdToStr(key_id);
+            message += is_down ? " down" : " up";
+            message += TOGL::ExtraToStr(extra);
+
+            puts(message.c_str());
         };
 
-        data.do_on_key_down_raw = [](WPARAM w_param, LPARAM l_param) {
-
-        };
 
         return TOGL::Run(data);
 
