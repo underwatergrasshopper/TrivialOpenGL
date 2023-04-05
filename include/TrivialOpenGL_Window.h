@@ -1009,14 +1009,6 @@ namespace TrivialOpenGL {
 
             return 0;
 
-        case WM_KEYDOWN:
-            m_data.do_on_key_down_raw(w_param, l_param);
-            return 0;
-
-        case WM_KEYUP:
-           m_data.do_on_key_up_raw(w_param, l_param);
-            return 0;
-
         // Used for debugging.
 #if 0
         case WM_MOVING: {
@@ -1297,7 +1289,56 @@ namespace TrivialOpenGL {
                 return 0;						
             }
             break;								
-        }
+ 
+
+        //////////////
+        // Keyboard //
+        //////////////
+
+        case WM_KEYDOWN:
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+                std::string dbg_msg = "WM_KEYDOWN   ";
+
+                dbg_msg += WinApiKeyDataToStr(w_param, l_param);
+
+                LogDebug(dbg_msg);
+            }
+            m_data.do_on_key_down_raw(w_param, l_param);
+            return 0;
+
+        case WM_KEYUP:
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+                std::string dbg_msg = "WM_KEYUP     ";
+
+                dbg_msg += WinApiKeyDataToStr(w_param, l_param);
+
+                LogDebug(dbg_msg);
+            }
+            m_data.do_on_key_up_raw(w_param, l_param);
+            return 0;
+
+        case WM_SYSKEYDOWN:
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+                std::string dbg_msg = "WM_SYSKEYDOWN";
+
+                dbg_msg += WinApiKeyDataToStr(w_param, l_param);
+
+                LogDebug(dbg_msg);
+            }
+            return 0;
+
+        case WM_SYSKEYUP:
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+                std::string dbg_msg = "WM_SYSKEYUP  ";
+
+                dbg_msg += WinApiKeyDataToStr(w_param, l_param);
+
+                LogDebug(dbg_msg);
+            }
+            return 0;
+            
+            
+        } // switch
 
         return DefWindowProcW(window_handle, message, w_param, l_param);
     }
