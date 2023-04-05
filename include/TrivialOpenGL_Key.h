@@ -560,6 +560,27 @@ namespace TrivialOpenGL {
         return text;
     }
 
+    inline std::string WinApiMouseButtonToStr(WPARAM w_param, LPARAM l_param) {
+        const int x = GET_X_LPARAM(l_param);
+        const int y = GET_Y_LPARAM(l_param);
+
+        std::string text;
+        text += " x=" + std::to_string(x);
+        text += " y=" + std::to_string(y);
+
+        WORD other_button_down_field = LOWORD(w_param);
+
+        if (other_button_down_field & MK_CONTROL)   text += " MK_CONTROL";
+        if (other_button_down_field & MK_LBUTTON)   text += " MK_LBUTTON";
+        if (other_button_down_field & MK_MBUTTON)   text += " MK_MBUTTON";
+        if (other_button_down_field & MK_RBUTTON)   text += " MK_RBUTTON";
+        if (other_button_down_field & MK_SHIFT)     text += " MK_SHIFT";
+        if (other_button_down_field & MK_XBUTTON1)  text += " MK_XBUTTON1";
+        if (other_button_down_field & MK_XBUTTON2)  text += " MK_XBUTTON2";
+
+        return text;
+    }
+
 } // namespace TrivialOpenGL
 
 #endif // TRIVIALOPENGL_KEY_H_

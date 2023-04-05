@@ -117,6 +117,9 @@ namespace TrivialOpenGL {
 
         void (*do_on_key_down_raw)(WPARAM w_param, LPARAM l_param)      = nullptr;
         void (*do_on_key_up_raw)(WPARAM w_param, LPARAM l_param)        = nullptr;
+
+        void (*do_on_mouse_button_down_raw)(WPARAM w_param, LPARAM l_param)      = nullptr;
+        void (*do_on_mouse_button_up_raw)(WPARAM w_param, LPARAM l_param)        = nullptr;
  
         void (*do_on_resize)(uint16_t width, uint16_t height)           = nullptr;
 
@@ -351,6 +354,9 @@ namespace TrivialOpenGL {
 
         if (!m_data.do_on_key_down_raw) m_data.do_on_key_down_raw   = [](WPARAM w_param, LPARAM l_param) {};
         if (!m_data.do_on_key_up_raw)   m_data.do_on_key_up_raw     = [](WPARAM w_param, LPARAM l_param) {};
+
+        if (!m_data.do_on_mouse_button_down_raw) m_data.do_on_mouse_button_down_raw   = [](WPARAM w_param, LPARAM l_param) {};
+        if (!m_data.do_on_mouse_button_up_raw)   m_data.do_on_mouse_button_up_raw     = [](WPARAM w_param, LPARAM l_param) {};
 
         if (!m_data.do_on_resize)       m_data.do_on_resize         = [](uint16_t width, uint16_t height) {};
 
@@ -1338,8 +1344,106 @@ namespace TrivialOpenGL {
             }
             m_data.do_on_key_up_raw(w_param, l_param);
             return 0;
-            
-            
+
+
+        ///////////
+        // Mouse //
+        ///////////
+
+        case WM_LBUTTONDOWN:
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+                std::string dbg_msg = "WM_LBUTTONDOWN";
+
+                dbg_msg += WinApiMouseButtonToStr(w_param, l_param);
+
+                LogDebug(dbg_msg);
+            }
+            m_data.do_on_mouse_button_down_raw(w_param, l_param);
+            return 0;
+
+        case WM_LBUTTONUP:
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+                std::string dbg_msg = "WM_LBUTTONUP";
+
+                dbg_msg += WinApiMouseButtonToStr(w_param, l_param);
+
+                LogDebug(dbg_msg);
+            }
+            m_data.do_on_mouse_button_down_raw(w_param, l_param);
+            return 0;
+
+        case WM_RBUTTONDOWN:   
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+                std::string dbg_msg = "WM_RBUTTONDOWN";
+
+                dbg_msg += WinApiMouseButtonToStr(w_param, l_param);
+
+                LogDebug(dbg_msg);
+            }
+            m_data.do_on_mouse_button_down_raw(w_param, l_param);
+            return 0;
+
+        case WM_RBUTTONUP: 
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+                std::string dbg_msg = "WM_RBUTTONUP";
+
+                dbg_msg += WinApiMouseButtonToStr(w_param, l_param);
+
+                LogDebug(dbg_msg);
+            }
+            m_data.do_on_mouse_button_down_raw(w_param, l_param);
+            return 0;
+
+        case WM_MBUTTONDOWN:   
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+                std::string dbg_msg = "WM_MBUTTONDOWN";
+
+                dbg_msg += WinApiMouseButtonToStr(w_param, l_param);
+
+                LogDebug(dbg_msg);
+            }
+            m_data.do_on_mouse_button_down_raw(w_param, l_param);
+            return 0;
+
+        case WM_MBUTTONUP: 
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+                std::string dbg_msg = "WM_MBUTTONUP";
+
+                dbg_msg += WinApiMouseButtonToStr(w_param, l_param);
+
+                LogDebug(dbg_msg);
+            }
+            m_data.do_on_mouse_button_down_raw(w_param, l_param);
+            return 0;
+
+        case WM_XBUTTONDOWN:
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+                std::string dbg_msg = "WM_XBUTTONDOWN";
+
+                if (HIWORD(w_param) == XBUTTON1) dbg_msg += " X1";
+                if (HIWORD(w_param) == XBUTTON2) dbg_msg += " X2";
+
+                dbg_msg += WinApiMouseButtonToStr(w_param, l_param);
+
+                LogDebug(dbg_msg);
+            }
+            m_data.do_on_mouse_button_down_raw(w_param, l_param);
+            return 0;
+
+        case WM_XBUTTONUP:
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+                std::string dbg_msg = "WM_XBUTTONUP";
+
+                if (HIWORD(w_param) == XBUTTON1) dbg_msg += " X1";
+                if (HIWORD(w_param) == XBUTTON2) dbg_msg += " X2";
+
+                dbg_msg += WinApiMouseButtonToStr(w_param, l_param);
+
+                LogDebug(dbg_msg);
+            }
+            m_data.do_on_mouse_button_down_raw(w_param, l_param);
+            return 0;
+
         } // switch
 
         return DefWindowProcW(window_handle, message, w_param, l_param);
