@@ -1325,6 +1325,7 @@ namespace TrivialOpenGL {
 
                 LogDebug(dbg_msg);
             }
+            m_data.do_on_key_down_raw(w_param, l_param);
             return 0;
 
         case WM_SYSKEYUP:
@@ -1335,6 +1336,7 @@ namespace TrivialOpenGL {
 
                 LogDebug(dbg_msg);
             }
+            m_data.do_on_key_up_raw(w_param, l_param);
             return 0;
             
             

@@ -95,6 +95,18 @@ namespace TrivialOpenGL {
         KEY_ID_Y,
         KEY_ID_Z,
 
+        KEY_ID_SEMICOLON, 
+        KEY_ID_FORWARD_SLASH,
+        KEY_ID_ACUTE,
+        KEY_ID_OPEN_BRACKET,
+        KEY_ID_BACK_SLASH,
+        KEY_ID_CLOSE_BRACKET,
+        KEY_ID_APOSTROPHE,
+        KEY_ID_COMMA,
+        KEY_ID_DOT,
+        KEY_ID_DASH,
+        KEY_ID_EQUAL,
+
         KEY_ID_F1,
         KEY_ID_F2,
         KEY_ID_F3,
@@ -123,12 +135,15 @@ namespace TrivialOpenGL {
         KEY_ID_NUMLOCK,
         KEY_ID_SCROLL_LOCK,
 
+#if 0
+        // Experimental. For tests only.
         KEY_ID_LEFT_SHIFT, 
         KEY_ID_RIGHT_SHIFT,
         KEY_ID_LEFT_CONTROL, 
         KEY_ID_RIGHT_CONTROL,
         KEY_ID_LEFT_ALT,
         KEY_ID_RIGHT_ALT,
+#endif
     };
 
     struct VirtualKeyData {
@@ -154,6 +169,9 @@ namespace TrivialOpenGL {
         case VK_TAB:            return KEY_ID_TAB;                    
         case VK_RETURN:         return KEY_ID_ENTER; 
 
+#if 0
+        // Experimental. For tests only.
+        // Detection if shift, control, alt key was left or right.
         case VK_SHIFT: {
             const int vk_code_ext = MapVirtualKeyA(data.scan_code, MAPVK_VSC_TO_VK_EX);
 
@@ -170,6 +188,11 @@ namespace TrivialOpenGL {
             if (data.is_ext == 0) return KEY_ID_LEFT_ALT;
             return KEY_ID_RIGHT_ALT;   
         }          
+#endif
+        case VK_SHIFT:          return KEY_ID_SHIFT; 
+        case VK_CONTROL:        return KEY_ID_CONTROL; 
+        case VK_MENU:           return KEY_ID_ALT; 
+
 
         case VK_PAUSE:          return KEY_ID_PAUSE;                  
         case VK_CAPITAL:        return KEY_ID_CAPS_LOCK;              
@@ -263,15 +286,21 @@ namespace TrivialOpenGL {
         case 'X':               return KEY_ID_X;	
         case 'Y':               return KEY_ID_Y;	
         case 'Z':               return KEY_ID_Z;
-        case VK_NUMLOCK:        return KEY_ID_NUMLOCK;                
-        case VK_SCROLL:         return KEY_ID_SCROLL_LOCK;    
 
-        case VK_LSHIFT:         return KEY_ID_LEFT_SHIFT;             
-        case VK_RSHIFT:         return KEY_ID_RIGHT_SHIFT;            
-        case VK_LCONTROL:       return KEY_ID_LEFT_CONTROL;           
-        case VK_RCONTROL:       return KEY_ID_RIGHT_CONTROL;          
-        case VK_LMENU:          return KEY_ID_LEFT_ALT;               
-        case VK_RMENU:          return KEY_ID_RIGHT_ALT;    
+        case VK_OEM_1:          return KEY_ID_SEMICOLON;        // ;
+        case VK_OEM_2:          return KEY_ID_FORWARD_SLASH;    // /
+        case VK_OEM_3:          return KEY_ID_ACUTE;            // `
+        case VK_OEM_4:          return KEY_ID_OPEN_BRACKET;     // [
+        case VK_OEM_5:          return KEY_ID_BACK_SLASH;       
+        case VK_OEM_6:          return KEY_ID_CLOSE_BRACKET;    // ]
+        case VK_OEM_7:          return KEY_ID_APOSTROPHE;       // '
+        case VK_OEM_COMMA:	    return KEY_ID_COMMA;            // ,
+        case VK_OEM_PERIOD:	    return KEY_ID_DOT;              // .
+        case VK_OEM_MINUS:	    return KEY_ID_DASH;             // -
+        case VK_OEM_PLUS:	    return KEY_ID_EQUAL;            // =
+
+        case VK_NUMLOCK:        return KEY_ID_NUMLOCK;                
+        case VK_SCROLL:         return KEY_ID_SCROLL_LOCK;      
         }
         return KEY_ID_UNKNOWN;
     }
@@ -346,7 +375,20 @@ namespace TrivialOpenGL {
         TOGL_INNER_CASE_STR(VK_F21);           
         TOGL_INNER_CASE_STR(VK_F22);           
         TOGL_INNER_CASE_STR(VK_F23);           
-        TOGL_INNER_CASE_STR(VK_F24);           
+        TOGL_INNER_CASE_STR(VK_F24);   
+
+        TOGL_INNER_CASE_STR(VK_OEM_1); 
+        TOGL_INNER_CASE_STR(VK_OEM_2); 
+        TOGL_INNER_CASE_STR(VK_OEM_3); 
+        TOGL_INNER_CASE_STR(VK_OEM_4); 
+        TOGL_INNER_CASE_STR(VK_OEM_5); 
+        TOGL_INNER_CASE_STR(VK_OEM_6); 
+        TOGL_INNER_CASE_STR(VK_OEM_7); 
+        TOGL_INNER_CASE_STR(VK_OEM_COMMA); 
+        TOGL_INNER_CASE_STR(VK_OEM_PERIOD); 
+        TOGL_INNER_CASE_STR(VK_OEM_MINUS); 
+        TOGL_INNER_CASE_STR(VK_OEM_PLUS); 
+
         TOGL_INNER_CASE_STR(VK_NUMLOCK);       
         TOGL_INNER_CASE_STR(VK_SCROLL);        
         TOGL_INNER_CASE_STR(VK_LSHIFT);        
@@ -462,16 +504,32 @@ namespace TrivialOpenGL {
         TOGL_INNER_CASE_STR(KEY_ID_X);	
         TOGL_INNER_CASE_STR(KEY_ID_Y);	
         TOGL_INNER_CASE_STR(KEY_ID_Z);
+
+        TOGL_INNER_CASE_STR(KEY_ID_SEMICOLON);
+        TOGL_INNER_CASE_STR(KEY_ID_FORWARD_SLASH);
+        TOGL_INNER_CASE_STR(KEY_ID_ACUTE);
+        TOGL_INNER_CASE_STR(KEY_ID_OPEN_BRACKET);
+        TOGL_INNER_CASE_STR(KEY_ID_BACK_SLASH);
+        TOGL_INNER_CASE_STR(KEY_ID_CLOSE_BRACKET);
+        TOGL_INNER_CASE_STR(KEY_ID_APOSTROPHE);
+        TOGL_INNER_CASE_STR(KEY_ID_COMMA);
+        TOGL_INNER_CASE_STR(KEY_ID_DOT);
+        TOGL_INNER_CASE_STR(KEY_ID_DASH);
+        TOGL_INNER_CASE_STR(KEY_ID_EQUAL);
+
         TOGL_INNER_CASE_STR(KEY_ID_NUMLOCK);                
-        TOGL_INNER_CASE_STR(KEY_ID_SCROLL_LOCK);            
+        TOGL_INNER_CASE_STR(KEY_ID_SCROLL_LOCK);   
+#if 0
+        // Experimental. For tests only.
         TOGL_INNER_CASE_STR(KEY_ID_LEFT_SHIFT);             
         TOGL_INNER_CASE_STR(KEY_ID_RIGHT_SHIFT);            
         TOGL_INNER_CASE_STR(KEY_ID_LEFT_CONTROL);           
         TOGL_INNER_CASE_STR(KEY_ID_RIGHT_CONTROL);          
         TOGL_INNER_CASE_STR(KEY_ID_LEFT_ALT);               
-        TOGL_INNER_CASE_STR(KEY_ID_RIGHT_ALT);    
+        TOGL_INNER_CASE_STR(KEY_ID_RIGHT_ALT);   
+#endif
         }
-        return "?";
+        return std::string() + "(" + std::to_string(key_id) + ")";
     }
 
 
@@ -486,9 +544,11 @@ namespace TrivialOpenGL {
 
         };
 
+        enum { MAX_LENGTH_OF_NAME = 16 };
+
         std::string text = std::string()
-            + " vk_code="          + PadWithSpaces(VK_CodeToStr((int)w_param), 16)
-            + " key_id="           + PadWithSpaces(KeyIdToStr(VK_CodeToKeyId((int)w_param, virtual_key_data)), 16)
+            + " vk_code="          + PadWithSpaces(VK_CodeToStr((int)w_param), MAX_LENGTH_OF_NAME)
+            + " key_id="           + PadWithSpaces(KeyIdToStr(VK_CodeToKeyId((int)w_param, virtual_key_data)), MAX_LENGTH_OF_NAME)
             + ", count="           + std::to_string(virtual_key_data.count)
             + ", scan_code="       + std::to_string(virtual_key_data.scan_code)
             + ", is_ext="          + std::to_string(virtual_key_data.is_ext)

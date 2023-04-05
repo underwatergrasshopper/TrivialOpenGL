@@ -240,8 +240,10 @@ int main(int argc, char *argv[]) {
 
     if (flags.size() == 0) {
         //ForceFlag("MOVE_AND_RESIZE");
-        ForceFlag("WINDOW_STATE");
+        //ForceFlag("WINDOW_STATE");
         //ForceFlag("OPENGL_VERSION");
+
+        ForceFlag("KEYBOARD");
     }
 
     if (IsFlag("ICON")) {
@@ -677,6 +679,48 @@ int main(int argc, char *argv[]) {
             glVertex2f(0, 0.5);
 
             glEnd();
+        };
+
+        return TOGL::Run(data);
+
+    } else if (IsFlag("KEYBOARD")) {
+        s_resolution = {600, 300};
+
+        const TOGL::SizeU16 screen_size = TOGL::GetScreenSize();
+
+        TOGL::Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example WINDOW_STATE";
+        //data.style              |= TOGL::StyleBit::DRAW_AREA_SIZE;
+        //data.style              |= TOGL::StyleBit::DRAW_AREA_ONLY;
+        //data.style              |= TOGL::StyleBit::REDRAW_ON_CHANGE_OR_REQUEST;
+        //data.style              |= TOGL::StyleBit::NO_RESIZE;
+        //data.style              |= TOGL::StyleBit::NO_MAXIMIZE;
+        data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
+        //data.area               = {TOGL::DEF, TOGL::DEF, screen_size.width, screen_size.height};
+        data.icon_resource_id   = ICON_ID;
+        data.log_level          = TOGL::LOG_LEVEL_DEBUG;
+
+        data.do_on_create = []() {
+            s_test_image.Initialize(s_resolution);
+
+            // TOGL::ToWindow().GoWindowedFullScreen();
+        };
+
+        data.display = []() {
+            s_test_image.Animate();
+        };
+
+        data.do_on_resize = [](uint16_t width, uint16_t height) {
+            s_test_image.Resize(width, height);
+        };
+
+        data.do_on_key_up_raw = [](WPARAM w_param, LPARAM l_param) {
+
+        };
+
+        data.do_on_key_down_raw = [](WPARAM w_param, LPARAM l_param) {
+
         };
 
         return TOGL::Run(data);
