@@ -1273,7 +1273,7 @@ namespace TrivialOpenGL {
 
             return 0;
 
-        case WM_SHOWWINDOW:
+        case WM_SHOWWINDOW: {
             if (m_data.log_level >= LOG_LEVEL_DEBUG) {
                 std::string dbg_msg = "WM_SHOWWINDOW";
 
@@ -1296,9 +1296,20 @@ namespace TrivialOpenGL {
                 LogDebug(dbg_msg);
             }
 
-            m_is_visible = (w_param == TRUE);
+            const bool is_visible = (w_param == TRUE);
+
+            if (is_visible != m_is_visible) {
+                m_is_visible = is_visible;
+
+                if (m_is_visible && m_data.do_on_show) {
+                    m_data.do_on_show();
+                } else if (!m_is_visible && m_data.do_on_hide) {
+                    m_data.do_on_hide();
+                }
+            }
 
             return 0;
+        }
 
         case WM_ERASEBKGND:
             // Tells DefWindowProc to not erase background. It's unnecessary since background is handled by OpenGL.

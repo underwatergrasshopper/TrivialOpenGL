@@ -515,6 +515,14 @@ int main(int argc, char *argv[]) {
             puts(message.c_str());
         };
 
+        data.do_on_show = []() {
+            puts("On Show");
+        };
+
+        data.do_on_hide = []() {
+            puts("On Hide");
+        };
+
         data.do_on_key = [](TOGL::KeyId key_id, bool is_down, const TOGL::Extra& extra) {
             if (!is_down) {
 
