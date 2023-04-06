@@ -175,17 +175,22 @@ namespace TrivialOpenGL {
         KeyboardSide    keyboard_side   = KEYBOARD_SIDE_NONE;
     };
 
+    bool IsKeyToggled(KeyId key_id);
 
     KeyboardSide GetKeyboardSide(KeyId key_id, const VirtualKeyData& virtual_key_data);
+    int GetVirtualKeyCode(KeyId key_id);
 
     std::string KeyboardSideToStr(KeyboardSide side);
     std::string KeyIdToStr(KeyId key_id);
     std::string VK_CodeToStr(int vk_code); 
     std::string ExtraToStr(const Extra& extra);
 
-
     //--------------------------------------------------------------------------
 
+    inline bool IsKeyToggled(KeyId key_id) {
+        enum { TOGGLE_BIT = 0x0001 };
+        return GetKeyState(GetVirtualKeyCode(key_id)) & TOGGLE_BIT;
+    }
 
     class InnerKeySupport {
     public:
@@ -317,6 +322,129 @@ namespace TrivialOpenGL {
         case VK_SCROLL:         return KEY_ID_SCROLL_LOCK;      
         }
         return KEY_ID_UNKNOWN;
+    }
+
+    inline int GetVirtualKeyCode(KeyId key_id) {
+        switch (key_id) {
+        case KEY_ID_BREAK:                  return VK_CANCEL;                           
+        case KEY_ID_BACKSPACE:              return VK_BACK;           
+        case KEY_ID_TAB:                    return VK_TAB;            
+        case KEY_ID_ENTER:                  return VK_RETURN;         
+        case KEY_ID_SHIFT:                  return VK_SHIFT;          
+        case KEY_ID_CONTROL:                return VK_CONTROL;        
+        case KEY_ID_ALT:                    return VK_MENU;           
+
+        case KEY_ID_PAUSE:                  return VK_PAUSE;          
+        case KEY_ID_CAPS_LOCK:              return VK_CAPITAL;        
+        case KEY_ID_ESCAPE:                 return VK_ESCAPE;         
+        case KEY_ID_SPACE:                  return VK_SPACE;          
+        case KEY_ID_PAGE_UP:                return VK_PRIOR;          
+        case KEY_ID_PAGE_DOWN:              return VK_NEXT;           
+        case KEY_ID_END:                    return VK_END;            
+        case KEY_ID_HOME:                   return VK_HOME;           
+        case KEY_ID_ARROW_LEFT:             return VK_LEFT;           
+        case KEY_ID_ARROW_UP:               return VK_UP;             
+        case KEY_ID_ARROW_RIGHT:            return VK_RIGHT;          
+        case KEY_ID_ARROW_DOWN:             return VK_DOWN;           
+        case KEY_ID_PRINT:                  return VK_PRINT;          
+        case KEY_ID_PRINT_SCREEN:           return VK_SNAPSHOT;       
+        case KEY_ID_INSERT:                 return VK_INSERT;         
+        case KEY_ID_DELETE:                 return VK_DELETE;         
+        case KEY_ID_NUMPAD_0:               return VK_NUMPAD0;        
+        case KEY_ID_NUMPAD_1:               return VK_NUMPAD1;        
+        case KEY_ID_NUMPAD_2:               return VK_NUMPAD2;        
+        case KEY_ID_NUMPAD_3:               return VK_NUMPAD3;        
+        case KEY_ID_NUMPAD_4:               return VK_NUMPAD4;        
+        case KEY_ID_NUMPAD_5:               return VK_NUMPAD5;        
+        case KEY_ID_NUMPAD_6:               return VK_NUMPAD6;        
+        case KEY_ID_NUMPAD_7:               return VK_NUMPAD7;        
+        case KEY_ID_NUMPAD_8:               return VK_NUMPAD8;        
+        case KEY_ID_NUMPAD_9:               return VK_NUMPAD9;        
+        case KEY_ID_NUMPAD_MULTIPLY:        return VK_MULTIPLY;       
+        case KEY_ID_NUMPAD_ADD:             return VK_ADD;            
+        case KEY_ID_NUMPAD_SEPARATOR:       return VK_SEPARATOR;      
+        case KEY_ID_NUMPAD_SUBTRACT:        return VK_SUBTRACT;       
+        case KEY_ID_NUMPAD_DECIMAL:         return VK_DECIMAL;        
+        case KEY_ID_NUMPAD_DIVIDE:          return VK_DIVIDE;         
+        case KEY_ID_F1:                     return VK_F1;             
+        case KEY_ID_F2:                     return VK_F2;             
+        case KEY_ID_F3:                     return VK_F3;             
+        case KEY_ID_F4:                     return VK_F4;             
+        case KEY_ID_F5:                     return VK_F5;             
+        case KEY_ID_F6:                     return VK_F6;             
+        case KEY_ID_F7:                     return VK_F7;             
+        case KEY_ID_F8:                     return VK_F8;             
+        case KEY_ID_F9:                     return VK_F9;             
+        case KEY_ID_F10:                    return VK_F10;            
+        case KEY_ID_F11:                    return VK_F11;            
+        case KEY_ID_F12:                    return VK_F12;            
+        case KEY_ID_F13:                    return VK_F13;            
+        case KEY_ID_F14:                    return VK_F14;            
+        case KEY_ID_F15:                    return VK_F15;            
+        case KEY_ID_F16:                    return VK_F16;            
+        case KEY_ID_F17:                    return VK_F17;            
+        case KEY_ID_F18:                    return VK_F18;            
+        case KEY_ID_F19:                    return VK_F19;            
+        case KEY_ID_F20:                    return VK_F20;            
+        case KEY_ID_F21:                    return VK_F21;            
+        case KEY_ID_F22:                    return VK_F22;            
+        case KEY_ID_F23:                    return VK_F23;            
+        case KEY_ID_F24:                    return VK_F24;            
+        case KEY_ID_0:	                    return '0';               
+        case KEY_ID_1:	                    return '1';               
+        case KEY_ID_2:	                    return '2';               
+        case KEY_ID_3:	                    return '3';               
+        case KEY_ID_4:	                    return '4';               
+        case KEY_ID_5:	                    return '5';               
+        case KEY_ID_6:	                    return '6';               
+        case KEY_ID_7:	                    return '7';               
+        case KEY_ID_8:	                    return '8';               
+        case KEY_ID_9:	                    return '9';               
+        case KEY_ID_A:	                    return 'A';               
+        case KEY_ID_B:	                    return 'B';               
+        case KEY_ID_C:	                    return 'C';               
+        case KEY_ID_D:	                    return 'D';               
+        case KEY_ID_E:	                    return 'E';               
+        case KEY_ID_F:	                    return 'F';               
+        case KEY_ID_G:	                    return 'G';               
+        case KEY_ID_H:	                    return 'H';               
+        case KEY_ID_I:	                    return 'I';               
+        case KEY_ID_J:	                    return 'J';               
+        case KEY_ID_K:	                    return 'K';               
+        case KEY_ID_L:	                    return 'L';               
+        case KEY_ID_M:	                    return 'M';               
+        case KEY_ID_N:	                    return 'N';               
+        case KEY_ID_O:	                    return 'O';               
+        case KEY_ID_P:	                    return 'P';               
+        case KEY_ID_Q:	                    return 'Q';               
+        case KEY_ID_R:	                    return 'R';               
+        case KEY_ID_S:	                    return 'S';               
+        case KEY_ID_T:	                    return 'T';               
+        case KEY_ID_U:	                    return 'U';               
+        case KEY_ID_V:	                    return 'V';               
+        case KEY_ID_W:	                    return 'W';               
+        case KEY_ID_X:	                    return 'X';               
+        case KEY_ID_Y:	                    return 'Y';               
+        case KEY_ID_Z:                      return 'Z';               
+
+        case KEY_ID_SEMICOLON:              return VK_OEM_1;          
+        case KEY_ID_FORWARD_SLASH:          return VK_OEM_2;          
+        case KEY_ID_ACUTE:                  return VK_OEM_3;          
+        case KEY_ID_OPEN_BRACKET:           return VK_OEM_4;          
+        case KEY_ID_BACK_SLASH:             return VK_OEM_5;          
+        case KEY_ID_CLOSE_BRACKET:          return VK_OEM_6;          
+        case KEY_ID_APOSTROPHE:             return VK_OEM_7;          
+        case KEY_ID_COMMA:                  return VK_OEM_COMMA;	    
+        case KEY_ID_DOT:                    return VK_OEM_PERIOD;	    
+        case KEY_ID_DASH:                   return VK_OEM_MINUS;	    
+        case KEY_ID_EQUAL:                  return VK_OEM_PLUS;	    
+
+        case KEY_ID_NUMLOCK:                return VK_NUMLOCK;        
+        case KEY_ID_SCROLL_LOCK:            return VK_SCROLL;   
+
+        case KEY_ID_UNKNOWN:
+        default:                            return 0;
+        }
     }
 
     inline KeyId InnerKeySupport::GetMouseKeyId(UINT message, WPARAM w_param) {

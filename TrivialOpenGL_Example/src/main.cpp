@@ -731,6 +731,12 @@ int main(int argc, char *argv[]) {
             message += TOGL::ExtraToStr(extra);
 
             puts(message.c_str());
+
+            if (is_down && key_id == 'I') {
+                togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_CAPS_LOCK));
+                togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_INSERT));
+                togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_NUMLOCK));
+            }
         };
 
 
