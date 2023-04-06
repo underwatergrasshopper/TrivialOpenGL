@@ -133,6 +133,9 @@ namespace TrivialOpenGL {
         // Called when cursor change position in draw area.
         // x, y             - Cursor position in draw area.
         void (*do_on_mouse_move)(int x, int y)                               = nullptr;
+
+
+        void (*do_on_state_change)(WindowState window_state)                 = nullptr;
     };
 
     // Get access to window singleton.
@@ -228,7 +231,9 @@ namespace TrivialOpenGL {
 
         // ---
 
-        uint32_t GetDebugLevel() const;
+        void SetLogLevel(uint32_t log_level);
+
+        uint32_t GetLogLevel() const;
         Version GetOpenGL_Version() const;
 
         // ---
@@ -252,6 +257,12 @@ namespace TrivialOpenGL {
         Window();
         Window(const Window&) = delete;
         Window& operator=(const Window&) = delete;
+
+        void SetState(WindowState state) {
+            m_prev_state = m_state;
+            m_state = state;
+            if (m_state != m_prev_state && m_data.do_on_state_change) m_data.do_on_state_change(m_state);
+        }
 
         // Changes area by applying style from data parameter which was provided to Run function.
         void ChangeArea(const AreaI& area);
@@ -540,8 +551,6 @@ namespace TrivialOpenGL {
     //--------------------------------------------------------------------------
 
     inline void Window::ChangeStateTo(WindowState state) {
-        m_prev_state = m_state;
-
         if (m_state == WindowState::WINDOWED_FULL_SCREENED && state != m_state) {
             m_disable_do_on_resize_count_stack.Push();
             SetWindowLongPtrW(m_window_handle, GWL_STYLE,   m_window_style);
@@ -549,7 +558,6 @@ namespace TrivialOpenGL {
             ShowWindow(m_window_handle, SW_RESTORE);
             m_disable_do_on_resize_count_stack.Pop();
         }
-
 
         switch (state) {
         case WindowState::NORMAL: {
@@ -574,7 +582,7 @@ namespace TrivialOpenGL {
 
                 SetWindowPos(m_window_handle, HWND_TOP, 0, 0, work_area_size.width, work_area_size.height, SWP_SHOWWINDOW);
 
-                m_state = WindowState::MAXIMIZED;
+                SetState(WindowState::MAXIMIZED);
             } else {
                 ShowWindow(m_window_handle, SW_MAXIMIZE);
             }
@@ -604,7 +612,7 @@ namespace TrivialOpenGL {
 
             // ---
 
-            m_state = WindowState::WINDOWED_FULL_SCREENED;
+            SetState(WindowState::WINDOWED_FULL_SCREENED);
 
             break;
 
@@ -673,7 +681,11 @@ namespace TrivialOpenGL {
     // Get Generic
     //--------------------------------------------------------------------------
 
-    inline uint32_t Window::GetDebugLevel() const { 
+    inline void Window::SetLogLevel(uint32_t log_level) {
+        m_data.log_level = log_level;
+    }
+
+    inline uint32_t Window::GetLogLevel() const { 
         return m_data.log_level; 
     }
 
@@ -1220,10 +1232,18 @@ namespace TrivialOpenGL {
 
             m_is_visible = true;
 
-            switch (w_param) {
-            case SIZE_MAXIMIZED:    m_state = WindowState::MAXIMIZED; break;
-            case SIZE_MINIMIZED:    m_state = WindowState::MINIMIZED; break;
-            case SIZE_RESTORED:     m_state = WindowState::NORMAL; break;
+            if (!m_disable_do_on_resize_count_stack.Is()) {
+                switch (w_param) {
+                case SIZE_MAXIMIZED:  
+                    SetState(WindowState::MAXIMIZED);
+                    break;
+                case SIZE_MINIMIZED:    
+                    SetState(WindowState::MINIMIZED);
+                    break;
+                case SIZE_RESTORED:    
+                    SetState(WindowState::NORMAL);
+                    break;
+                }
             }
 
             return 0;

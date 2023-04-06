@@ -122,7 +122,7 @@ public:
     }
 
 private:
-    TOGL::SizeU16     m_size;
+    TOGL::SizeU16   m_size;
 
     double          m_interval;         // in seconds
     double          m_speed;            // in degrees per second
@@ -241,10 +241,10 @@ int main(int argc, char *argv[]) {
 
     if (flags.size() == 0) {
         //ForceFlag("MOVE_AND_RESIZE");
-        //ForceFlag("WINDOW_STATE");
+        ForceFlag("WINDOW_STATE");
         //ForceFlag("OPENGL_VERSION");
 
-        ForceFlag("KEYBOARD");
+        //ForceFlag("KEYBOARD");
     }
 
     if (IsFlag("ICON")) {
@@ -502,6 +502,19 @@ int main(int argc, char *argv[]) {
             s_test_image.Resize(width, height);
         };
 
+        data.do_on_state_change = [](TOGL::WindowState window_state) {
+            std::string message = "Changed Window State to: ";
+
+            switch (window_state) {
+            case TOGL::WindowState::NORMAL: message += "NORMAL"; break;
+            case TOGL::WindowState::MAXIMIZED: message += "MAXIMIZED"; break;
+            case TOGL::WindowState::MINIMIZED: message += "MINIMIZED"; break;
+            case TOGL::WindowState::WINDOWED_FULL_SCREENED: message += "WINDOWED_FULL_SCREENED"; break;
+            }
+
+            puts(message.c_str());
+        };
+
         data.do_on_key = [](TOGL::KeyId key_id, bool is_down, const TOGL::Extra& extra) {
             if (!is_down) {
 
@@ -567,6 +580,11 @@ int main(int argc, char *argv[]) {
                     TOGL::ToWindow().Hide();
                     PrintWindowStates();
 
+                    togl_print_i32(TOGL::ToWindow().GetArea().x);
+                    togl_print_i32(TOGL::ToWindow().GetArea().y);
+                    togl_print_i32(TOGL::ToWindow().GetArea().width);
+                    togl_print_i32(TOGL::ToWindow().GetArea().height);
+
                     Sleep(1000);
 
                     puts("---");
@@ -580,6 +598,11 @@ int main(int argc, char *argv[]) {
                     puts("---");
                     TOGL::ToWindow().Minimize();
                     PrintWindowStates();
+
+                    togl_print_i32(TOGL::ToWindow().GetArea().x);
+                    togl_print_i32(TOGL::ToWindow().GetArea().y);
+                    togl_print_i32(TOGL::ToWindow().GetArea().width);
+                    togl_print_i32(TOGL::ToWindow().GetArea().height);
 
                     Sleep(1000);
 
@@ -651,6 +674,14 @@ int main(int argc, char *argv[]) {
 
                 case TOGL::KEY_ID_I: 
                     DisplayWindowInfo(); 
+                    break;
+
+                case TOGL::KEY_ID_D: 
+                    if (TOGL::ToWindow().GetLogLevel() == TOGL::LOG_LEVEL_DEBUG) {
+                        TOGL::ToWindow().SetLogLevel(TOGL::LOG_LEVEL_ERROR);
+                    } else {
+                        TOGL::ToWindow().SetLogLevel(TOGL::LOG_LEVEL_DEBUG);
+                    }
                     break;
                 default: break;
                 }
