@@ -353,13 +353,13 @@ namespace TrivialOpenGL {
     inline int Window::Run(const Data& data) {
         m_data = data;
 
-        if (!m_data.do_on_create)       m_data.do_on_create         = []() {};
-        if (!m_data.do_on_destroy)      m_data.do_on_destroy        = []() {};
-        if (!m_data.draw)               m_data.draw                 = []() {};
+        if (!m_data.do_on_create)           m_data.do_on_create             = []() {};
+        if (!m_data.do_on_destroy)          m_data.do_on_destroy            = []() {};
+        if (!m_data.draw)                   m_data.draw                     = []() {};
   
-        if (!m_data.do_on_key)          m_data.do_on_key            = [](KeyId key_id, bool is_down, const Extra& extra) {};
-        if (!m_data.do_on_resize)       m_data.do_on_resize         = [](uint16_t width, uint16_t height) {};
-        if (!m_data.do_on_mouse_wheel)  m_data.do_on_mouse_wheel    = [](int step_count, int x, int y) {};
+        if (!m_data.do_on_key)              m_data.do_on_key                = [](KeyId key_id, bool is_down, const Extra& extra) {};
+        if (!m_data.do_on_resize)           m_data.do_on_resize             = [](uint16_t width, uint16_t height) {};
+        if (!m_data.do_on_mouse_wheel_roll) m_data.do_on_mouse_wheel_roll   = [](int step_count, int x, int y) {};
 
         m_instance_handle = GetModuleHandleW(NULL);
 
