@@ -736,7 +736,25 @@ int main(int argc, char *argv[]) {
                 togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_CAPS_LOCK));
                 togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_INSERT));
                 togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_NUMLOCK));
+
+                const TOGL::PointI cursor_pos_in_screen = TOGL::GetCursorPosInScreen();
+                togl_print_i32(cursor_pos_in_screen.x);
+                togl_print_i32(cursor_pos_in_screen.y);
+
+                const TOGL::PointI cursor_pos_in_draw_area = TOGL::ToWindow().GetCursorPosInDrawArea();
+                togl_print_i32(cursor_pos_in_draw_area.x);
+                togl_print_i32(cursor_pos_in_draw_area.y);
             }
+        };
+
+        data.do_on_mouse_wheel = [](int step_count, int x, int y) {
+            std::string message = "Mouse Wheel:";
+
+            message += " step_count=" + std::to_string(step_count);
+            message += " x=" + std::to_string(x);
+            message += " y=" + std::to_string(y);
+
+            puts(message.c_str());
         };
 
 

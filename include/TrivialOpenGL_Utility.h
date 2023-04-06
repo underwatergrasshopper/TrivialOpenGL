@@ -576,6 +576,14 @@ namespace TrivialOpenGL {
         return SizeU16(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
     }
 
+    inline PointI GetCursorPosInScreen() {
+        POINT pos;
+        if (GetCursorPos(&pos)) {
+            return {pos.x, pos.y};
+        }
+        return {};
+    }
+
 } // namespace TrivialOpenGL
 
 namespace TOGL = TrivialOpenGL;
