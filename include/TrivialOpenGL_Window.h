@@ -120,7 +120,7 @@ namespace TrivialOpenGL {
 
         // step_count   - Number of wheel rotation steps away from user.
         // x, y         - Cursor position in draw area.
-        void (*do_on_mouse_wheel)(int step_count, int x, int y)             = nullptr;
+        void (*do_on_mouse_wheel_roll)(int step_count, int x, int y)             = nullptr;
 
     };
 
@@ -1517,7 +1517,7 @@ namespace TrivialOpenGL {
                 LogDebug(dbg_msg);
             }
 
-            m_data.do_on_mouse_wheel(delta / WHEEL_DELTA, pos.x, pos.y);
+            m_data.do_on_mouse_wheel_roll(delta / WHEEL_DELTA, pos.x, pos.y);
             return 0;
         }
 

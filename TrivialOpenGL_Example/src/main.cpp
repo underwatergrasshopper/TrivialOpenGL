@@ -747,7 +747,7 @@ int main(int argc, char *argv[]) {
             }
         };
 
-        data.do_on_mouse_wheel = [](int step_count, int x, int y) {
+        data.do_on_mouse_wheel_roll = [](int step_count, int x, int y) {
             std::string message = "Mouse Wheel:";
 
             message += " step_count=" + std::to_string(step_count);
