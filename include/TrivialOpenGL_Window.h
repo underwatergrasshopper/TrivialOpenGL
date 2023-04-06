@@ -128,14 +128,21 @@ namespace TrivialOpenGL {
 
         // step_count       - Number of wheel rotation steps away from user.
         // x, y             - Cursor position in draw area.
-        void (*do_on_mouse_wheel_roll)(int step_count, int x, int y)         = nullptr;
+        void (*do_on_mouse_wheel_roll)(int step_count, int x, int y)        = nullptr;
 
         // Called when cursor change position in draw area.
         // x, y             - Cursor position in draw area.
-        void (*do_on_mouse_move)(int x, int y)                               = nullptr;
+        void (*do_on_mouse_move)(int x, int y)                              = nullptr;
 
+        // Called each time when window state change between:
+        // NORMAL       - when restored from any other state by using Window::SetArea, Window::SetSize, Window::Center,
+        // MAXIMIZED,
+        // MINIMIZED,
+        // WINDOWED_FULL_SCREENED.
+        void (*do_on_state_change)(WindowState window_state)                = nullptr;
 
-        void (*do_on_state_change)(WindowState window_state)                 = nullptr;
+        void (*do_on_show)()                                                = nullptr;
+        void (*do_on_hide)()                                                = nullptr;
     };
 
     // Get access to window singleton.
@@ -316,6 +323,7 @@ namespace TrivialOpenGL {
 
         bool        m_is_apply_fake_width;
         CountStack  m_disable_do_on_resize_count_stack;
+        CountStack  m_disable_change_state_at_resize;
         uint64_t    m_dbg_message_id;
 
         WindowAreaCorrector m_window_area_corrector;
@@ -484,7 +492,14 @@ namespace TrivialOpenGL {
 
         AreaIU16 window_area = AreaIU16({}, size);
 
-        Restore();
+        // Workaround to not call do_on_state_change for temporal restore to maximized window.
+        if (m_prev_state == WindowState::MAXIMIZED) {
+            m_disable_change_state_at_resize.Push();
+            Restore();
+            m_disable_change_state_at_resize.Pop();
+        } else {
+            Restore();
+        }
 
         if (is_draw_area_size) {
             window_area = GetWindowAreaFromDrawArea(window_area, m_window_style);
@@ -553,9 +568,13 @@ namespace TrivialOpenGL {
     inline void Window::ChangeStateTo(WindowState state) {
         if (m_state == WindowState::WINDOWED_FULL_SCREENED && state != m_state) {
             m_disable_do_on_resize_count_stack.Push();
+            m_disable_change_state_at_resize.Push();
+
             SetWindowLongPtrW(m_window_handle, GWL_STYLE,   m_window_style);
             SetWindowLongPtrW(m_window_handle, GWL_EXSTYLE, m_window_extended_style);
             ShowWindow(m_window_handle, SW_RESTORE);
+
+            m_disable_change_state_at_resize.Pop();
             m_disable_do_on_resize_count_stack.Pop();
         }
 
@@ -591,8 +610,12 @@ namespace TrivialOpenGL {
 
         case WindowState::WINDOWED_FULL_SCREENED: 
             m_disable_do_on_resize_count_stack.Push();
+            m_disable_change_state_at_resize.Push();
+
             SetWindowLongPtrW(m_window_handle, GWL_STYLE, GetWindowStyle_DrawAreaOnly());
             SetWindowLongPtrW(m_window_handle, GWL_EXSTYLE, GetWindowExtendedStyle_DrawAreaOnly());
+
+            m_disable_change_state_at_resize.Pop();
             m_disable_do_on_resize_count_stack.Pop();
 
             // ---
@@ -600,20 +623,22 @@ namespace TrivialOpenGL {
             // In Windows 7, if window is borderless and covers exactly whole screen then alt+tab is not working. 
             // To omit that, size of window is extended beyond borders of screen, internally.
             // Library provides size of window without this internal adjustment.
-
             RECT screen_rectangle = MakeRECT(AreaIU16({}, GetScreenSize()));
             AdjustWindowRectEx(&screen_rectangle, GetWindowStyle_DrawAreaOnly(), FALSE, GetWindowExtendedStyle_DrawAreaOnly());
 
             const AreaIU16 screen_area = MakeAreaIU16(screen_rectangle);
 
+            m_disable_change_state_at_resize.Push();
             m_is_apply_fake_width = true;
+
             SetWindowPos(m_window_handle, HWND_TOP, screen_area.x, screen_area.y, screen_area.width + WIDTH_EXTENTION, screen_area.height, SWP_SHOWWINDOW);
+
             m_is_apply_fake_width = false;
+            m_disable_change_state_at_resize.Pop();
 
             // ---
 
             SetState(WindowState::WINDOWED_FULL_SCREENED);
-
             break;
 
         } // switch end
@@ -1232,7 +1257,7 @@ namespace TrivialOpenGL {
 
             m_is_visible = true;
 
-            if (!m_disable_do_on_resize_count_stack.Is()) {
+            if (!m_disable_change_state_at_resize.Is()) {
                 switch (w_param) {
                 case SIZE_MAXIMIZED:  
                     SetState(WindowState::MAXIMIZED);
