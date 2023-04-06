@@ -11,9 +11,48 @@
 namespace TrivialOpenGL {
 
     enum KeyId {
-        KEY_ID_UNKNOWN,
+        KEY_ID_UNKNOWN              = 0,
 
-        KEY_ID_ESCAPE,
+        // Same id as ascii. Literals can be used instead of key id. For example: '0', '1', ..., '0', 'A', 'B', ..., 'Z'.
+        KEY_ID_0                    = '0',
+        KEY_ID_1,
+        KEY_ID_2,
+        KEY_ID_3,
+        KEY_ID_4,
+        KEY_ID_5,
+        KEY_ID_6,
+        KEY_ID_7,
+        KEY_ID_8,
+        KEY_ID_9,
+
+        KEY_ID_A                    = 'A',
+        KEY_ID_B,
+        KEY_ID_C,
+        KEY_ID_D,
+        KEY_ID_E,
+        KEY_ID_F,
+        KEY_ID_G,
+        KEY_ID_H,
+        KEY_ID_I,
+        KEY_ID_J,
+        KEY_ID_K,
+        KEY_ID_L,
+        KEY_ID_M,
+        KEY_ID_N,
+        KEY_ID_O,
+        KEY_ID_P,
+        KEY_ID_Q,
+        KEY_ID_R,
+        KEY_ID_S,
+        KEY_ID_T,
+        KEY_ID_U,
+        KEY_ID_V,
+        KEY_ID_W,
+        KEY_ID_X,
+        KEY_ID_Y,
+        KEY_ID_Z,
+
+        KEY_ID_ESCAPE               = 256, // out of ascii scope, so no id collision
         KEY_ID_ENTER,  
         KEY_ID_CAPS_LOCK,   
         KEY_ID_TAB,    
@@ -57,43 +96,6 @@ namespace TrivialOpenGL {
         KEY_ID_NUMPAD_SUBTRACT,
         KEY_ID_NUMPAD_DECIMAL,
         KEY_ID_NUMPAD_DIVIDE,
-
-        KEY_ID_0,
-        KEY_ID_1,
-        KEY_ID_2,
-        KEY_ID_3,
-        KEY_ID_4,
-        KEY_ID_5,
-        KEY_ID_6,
-        KEY_ID_7,
-        KEY_ID_8,
-        KEY_ID_9,
-        KEY_ID_A,
-        KEY_ID_B,
-        KEY_ID_C,
-        KEY_ID_D,
-        KEY_ID_E,
-        KEY_ID_F,
-        KEY_ID_G,
-        KEY_ID_H,
-        KEY_ID_I,
-        KEY_ID_J,
-        KEY_ID_K,
-        KEY_ID_L,
-        KEY_ID_M,
-        KEY_ID_N,
-        KEY_ID_O,
-        KEY_ID_P,
-        KEY_ID_Q,
-        KEY_ID_R,
-        KEY_ID_S,
-        KEY_ID_T,
-        KEY_ID_U,
-        KEY_ID_V,
-        KEY_ID_W,
-        KEY_ID_X,
-        KEY_ID_Y,
-        KEY_ID_Z,
 
         KEY_ID_SEMICOLON, 
         KEY_ID_FORWARD_SLASH,
@@ -140,17 +142,6 @@ namespace TrivialOpenGL {
         KEY_ID_RIGHT_MOUSE_BUTTON,
         KEY_ID_X1_MOUSE_BUTTON,
         KEY_ID_X2_MOUSE_BUTTON,
-
-
-#if 0
-        // Experimental. For tests only.
-        KEY_ID_LEFT_SHIFT, 
-        KEY_ID_RIGHT_SHIFT,
-        KEY_ID_LEFT_CONTROL, 
-        KEY_ID_RIGHT_CONTROL,
-        KEY_ID_LEFT_ALT,
-        KEY_ID_RIGHT_ALT,
-#endif
     };
 
     struct VirtualKeyData {
@@ -379,8 +370,9 @@ namespace TrivialOpenGL {
         case KEY_ID_ALT: 
             if (virtual_key_data.is_ext) return KEYBOARD_SIDE_RIGHT; 
             return KEYBOARD_SIDE_LEFT; 
+        default: 
+            return KEYBOARD_SIDE_NONE;
         } // switch
-        return KEYBOARD_SIDE_NONE;
     };
 
 #ifdef TOGL_INNER_CASE_STR

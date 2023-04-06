@@ -409,56 +409,60 @@ int main(int argc, char *argv[]) {
             s_test_image.Resize(width, height);
         };
 
-        data.do_on_key_up_raw = [](WPARAM w_param, LPARAM l_param) {
+        data.do_on_key = [](TOGL::KeyId key_id, bool is_down, const TOGL::Extra& extra) {
             auto& window = TOGL::ToWindow();
 
-            if (!s_is_client) {
-                switch (w_param) {
-                case '1':       window.MoveTo(0, 0); break;
-                case '2':       window.MoveTo(10, 100); break;
+            if (!is_down) {
+                if (!s_is_client) {
+                    switch (key_id) {
+                    case TOGL::KEY_ID_1:            window.MoveTo(0, 0); break;
+                    case TOGL::KEY_ID_2:            window.MoveTo(10, 100); break;
 
-                case '3':       window.SetSize(400, 200); break;
-                case '4':       window.SetSize(800, 400); break;
+                    case TOGL::KEY_ID_3:            window.SetSize(400, 200); break;
+                    case TOGL::KEY_ID_4:            window.SetSize(800, 400); break;
                      
-                case '5':       window.SetArea(100, 10, 800, 400); break;
-                case '6':       window.SetArea(window.GetArea()); break;
-                case '7':       window.SetArea(TOGL::GetDesktopAreaNoTaskBar()); break;
-                case '8':       window.SetArea({{}, TOGL::GetScreenSize()}); break;
+                    case TOGL::KEY_ID_5:            window.SetArea(100, 10, 800, 400); break;
+                    case TOGL::KEY_ID_6:            window.SetArea(window.GetArea()); break;
+                    case TOGL::KEY_ID_7:            window.SetArea(TOGL::GetDesktopAreaNoTaskBar()); break;
+                    case TOGL::KEY_ID_8:            window.SetArea({{}, TOGL::GetScreenSize()}); break;
 
-                case 'C':       window.Center(s_resolution); break;
+                    case TOGL::KEY_ID_C:            window.Center(s_resolution); break;
 
-                case VK_LEFT:   window.MoveBy(-30, 0); break;
-                case VK_RIGHT:  window.MoveBy(30, 0); break;
+                    case TOGL::KEY_ID_ARROW_LEFT:   window.MoveBy(-30, 0); break;
+                    case TOGL::KEY_ID_ARROW_RIGHT:  window.MoveBy(30, 0); break;
 
-                case 'X':       window.RequestClose(); break;
+                    case TOGL::KEY_ID_X:            window.RequestClose(); break;
 
-                case 'I':       DisplayWindowInfo(); break;
+                    case TOGL::KEY_ID_I:            DisplayWindowInfo(); break;
 
-                case 'T':       s_is_client = !s_is_client; break;
-                }
-            } else {
-                switch (w_param) {
-                case '1':       window.MoveTo(0, 0, true); break;
-                case '2':       window.MoveTo(10, 100, true); break;
-                                
-                case '3':       window.SetSize(400, 200, true); break;
-                case '4':       window.SetSize(800, 400, true); break;
-                                
-                case '5':       window.SetArea(100, 10, 800, 400, false); break;
-                case '6':       window.SetArea(window.GetDrawArea(), false); break;
-                case '7':       window.SetArea(TOGL::GetDesktopAreaNoTaskBar(), false); break;
-                case '8':       window.SetArea({{}, TOGL::GetScreenSize()}, false); break;
-                                
-                case 'C':       window.Center(s_resolution); break;
+                    case TOGL::KEY_ID_T:            s_is_client = !s_is_client; break;
+                    default: break;
+                    }
+                } else {
+                    switch (key_id) {
+                    case TOGL::KEY_ID_1:            window.MoveTo(0, 0, true); break;
+                    case TOGL::KEY_ID_2:            window.MoveTo(10, 100, true); break;
 
-                case VK_LEFT:   window.MoveBy(-30, 0); break;
-                case VK_RIGHT:  window.MoveBy(30, 0); break;
+                    case TOGL::KEY_ID_3:            window.SetSize(400, 200, true); break;
+                    case TOGL::KEY_ID_4:            window.SetSize(800, 400, true); break;
 
-                case 'X':       window.RequestClose(); break;
+                    case TOGL::KEY_ID_5:            window.SetArea(100, 10, 800, 400, false); break;
+                    case TOGL::KEY_ID_6:            window.SetArea(window.GetDrawArea(), false); break;
+                    case TOGL::KEY_ID_7:            window.SetArea(TOGL::GetDesktopAreaNoTaskBar(), false); break;
+                    case TOGL::KEY_ID_8:            window.SetArea({{}, TOGL::GetScreenSize()}, false); break;
 
-                case 'I':       DisplayWindowInfo(); break;
+                    case TOGL::KEY_ID_C:            window.Center(s_resolution); break;
 
-                case 'T':       s_is_client = !s_is_client; break;
+                    case TOGL::KEY_ID_ARROW_LEFT:   window.MoveBy(-30, 0); break;
+                    case TOGL::KEY_ID_ARROW_RIGHT:  window.MoveBy(30, 0); break;
+
+                    case TOGL::KEY_ID_X:            window.RequestClose(); break;
+
+                    case TOGL::KEY_ID_I:            DisplayWindowInfo(); break;
+
+                    case TOGL::KEY_ID_T:            s_is_client = !s_is_client; break;
+                    default: break;
+                    }
                 }
             }
         };
@@ -497,154 +501,158 @@ int main(int argc, char *argv[]) {
             s_test_image.Resize(width, height);
         };
 
-        data.do_on_key_up_raw = [](WPARAM w_param, LPARAM l_param) {
-            switch (w_param) {
+        data.do_on_key = [](TOGL::KeyId key_id, bool is_down, const TOGL::Extra& extra) {
+            if (!is_down) {
 
-            case 'X': TOGL::ToWindow().RequestClose(); break;
-            case 'R': TOGL::ToWindow().RequestRedraw(); break;
-            case 'C': TOGL::ToWindow().Center(s_resolution); break;
-            case 'V': TOGL::ToWindow().Center(s_resolution, true); break;
+                switch (key_id) {
 
-            case '0': 
-                puts("--- Show --");
-                TOGL::ToWindow().Hide();
-                PrintWindowStates();
-                
-                Sleep(1000);
-                
-                puts("---");
-                TOGL::ToWindow().Show(); 
-                PrintWindowStates();
-                
-                Sleep(1000);
-                
-                puts("--- Restore ---");
-                TOGL::ToWindow().Hide();
-                PrintWindowStates();
-                
-                Sleep(1000);
-                
-                puts("---");
-                TOGL::ToWindow().SetSize(s_resolution); 
-                PrintWindowStates();
-                
-                Sleep(1000);
-                
-                puts("--- Minimize ---");
-                TOGL::ToWindow().Hide();
-                PrintWindowStates();
-                
-                Sleep(1000);
-                
-                puts("---");
-                TOGL::ToWindow().Minimize(); 
-                PrintWindowStates();
-                
-                Sleep(1000);
-                
-                puts("--- Maximize ---");
-                TOGL::ToWindow().Hide();
-                PrintWindowStates();
-                
-                Sleep(1000);
-                
-                puts("---");
-                TOGL::ToWindow().Maximize(); 
-                PrintWindowStates();
+                case 'X':               TOGL::ToWindow().RequestClose(); break;
+                case TOGL::KEY_ID_R:    TOGL::ToWindow().RequestRedraw(); break;
+                case TOGL::KEY_ID_C:    TOGL::ToWindow().Center(s_resolution); break;
+                case TOGL::KEY_ID_V:    TOGL::ToWindow().Center(s_resolution, true); break;
 
-                break;
+                case TOGL::KEY_ID_0: 
+                    puts("--- Show --");
+                    TOGL::ToWindow().Hide();
+                    PrintWindowStates();
+                
+                    Sleep(1000);
+                
+                    puts("---");
+                    TOGL::ToWindow().Show(); 
+                    PrintWindowStates();
+                
+                    Sleep(1000);
+                
+                    puts("--- Restore ---");
+                    TOGL::ToWindow().Hide();
+                    PrintWindowStates();
+                
+                    Sleep(1000);
+                
+                    puts("---");
+                    TOGL::ToWindow().SetSize(s_resolution); 
+                    PrintWindowStates();
+                
+                    Sleep(1000);
+                
+                    puts("--- Minimize ---");
+                    TOGL::ToWindow().Hide();
+                    PrintWindowStates();
+                
+                    Sleep(1000);
+                
+                    puts("---");
+                    TOGL::ToWindow().Minimize(); 
+                    PrintWindowStates();
+                
+                    Sleep(1000);
+                
+                    puts("--- Maximize ---");
+                    TOGL::ToWindow().Hide();
+                    PrintWindowStates();
+                
+                    Sleep(1000);
+                
+                    puts("---");
+                    TOGL::ToWindow().Maximize(); 
+                    PrintWindowStates();
+
+                    break;
         
                 
-            case '1': 
-                puts("---");
-                TOGL::ToWindow().Hide();
-                PrintWindowStates();
+                case '1':
+                    puts("---");
+                    TOGL::ToWindow().Hide();
+                    PrintWindowStates();
 
-                Sleep(1000);
+                    Sleep(1000);
 
-                puts("---");
-                TOGL::ToWindow().Show(); 
-                //TOGL::ToWindow().Center(s_resolution);
+                    puts("---");
+                    TOGL::ToWindow().Show(); 
+                    //TOGL::ToWindow().Center(s_resolution);
                 
-                PrintWindowStates();
-                break;
+                    PrintWindowStates();
+                    break;
 
-            case '2': 
-                puts("---");
-                TOGL::ToWindow().Minimize();
-                PrintWindowStates();
+                case TOGL::KEY_ID_2: 
+                    puts("---");
+                    TOGL::ToWindow().Minimize();
+                    PrintWindowStates();
 
-                Sleep(1000);
+                    Sleep(1000);
 
-                puts("---");
+                    puts("---");
   
-                TOGL::ToWindow().Center(s_resolution);
-                PrintWindowStates();
-                break;
+                    TOGL::ToWindow().Center(s_resolution);
+                    PrintWindowStates();
+                    break;
 
-            case '3':
-                puts("---");
-                TOGL::ToWindow().Center(s_resolution);
-                PrintWindowStates();
-                break;
+                case TOGL::KEY_ID_3:
+                    puts("---");
+                    TOGL::ToWindow().Center(s_resolution);
+                    PrintWindowStates();
+                    break;
 
-            case '4':
-                puts("---");
-                TOGL::ToWindow().Maximize(); 
-                PrintWindowStates();
-                break;
+                case TOGL::KEY_ID_4:
+                    puts("---");
+                    TOGL::ToWindow().Maximize(); 
+                    PrintWindowStates();
+                    break;
 
-            case '5':
-                puts("---");
-                TOGL::ToWindow().GoWindowedFullScreen(); 
-                PrintWindowStates();
-                break;
+                case TOGL::KEY_ID_5:
+                    puts("---");
+                    TOGL::ToWindow().GoWindowedFullScreen(); 
+                    PrintWindowStates();
+                    break;
 
-            case '6':
-                puts("---");
-                TOGL::ToWindow().Hide();
-                PrintWindowStates();
+                case TOGL::KEY_ID_6:
+                    puts("---");
+                    TOGL::ToWindow().Hide();
+                    PrintWindowStates();
 
-                Sleep(1000);
+                    Sleep(1000);
 
-                TOGL::ToWindow().GoWindowedFullScreen(); 
-                PrintWindowStates();
-                break;
+                    TOGL::ToWindow().GoWindowedFullScreen(); 
+                    PrintWindowStates();
+                    break;
 
-            case '7':
-                puts("---");
-                TOGL::ToWindow().SetArea(100, 50, 300, 600);
-                PrintWindowStates();
-                break;
+                case TOGL::KEY_ID_7:
+                    puts("---");
+                    TOGL::ToWindow().SetArea(100, 50, 300, 600);
+                    PrintWindowStates();
+                    break;
 
-            case '8': {
-                DEVMODEW dev_mode = {};
-                dev_mode.dmSize = sizeof(DEVMODEW);
+                case TOGL::KEY_ID_8: {
+                    DEVMODEW dev_mode = {};
+                    dev_mode.dmSize = sizeof(DEVMODEW);
 
-                dev_mode.dmDisplayFixedOutput   = DMDFO_DEFAULT; // DMDFO_CENTER, DMDFO_STRETCH, DMDFO_DEFAULT
-                dev_mode.dmPelsWidth            = 640; 
-                dev_mode.dmPelsHeight           = 480; 
-                // only specific resolutions will work
-                //dev_mode.dmPelsWidth            = 1280; 
-                //dev_mode.dmPelsHeight           = 720; 
-                dev_mode.dmFields               = DM_DISPLAYFIXEDOUTPUT | DM_PELSWIDTH | DM_PELSHEIGHT;
+                    dev_mode.dmDisplayFixedOutput   = DMDFO_DEFAULT; // DMDFO_CENTER, DMDFO_STRETCH, DMDFO_DEFAULT
+                    dev_mode.dmPelsWidth            = 640; 
+                    dev_mode.dmPelsHeight           = 480; 
+                    // only specific resolutions will work
+                    //dev_mode.dmPelsWidth            = 1280; 
+                    //dev_mode.dmPelsHeight           = 720; 
+                    dev_mode.dmFields               = DM_DISPLAYFIXEDOUTPUT | DM_PELSWIDTH | DM_PELSHEIGHT;
 
-                // ... or ...
-                //if (!EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &dev_mode)) puts("Can not get Display Settings.");
+                    // ... or ...
+                    //if (!EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &dev_mode)) puts("Can not get Display Settings.");
 
-                LONG result = ChangeDisplaySettingsW(&dev_mode, CDS_FULLSCREEN);
-                togl_print_i32(result);
+                    LONG result = ChangeDisplaySettingsW(&dev_mode, CDS_FULLSCREEN);
+                    togl_print_i32(result);
 
-                break;
-            }
+                    break;
+                }
 
-            case '9':
-                ChangeDisplaySettingsW(NULL, CDS_RESET);
-                break;
+                case TOGL::KEY_ID_9:
+                    ChangeDisplaySettingsW(NULL, CDS_RESET);
+                    break;
 
-            case 'I': 
-                DisplayWindowInfo(); 
-                break;
+                case TOGL::KEY_ID_I: 
+                    DisplayWindowInfo(); 
+                    break;
+                default: break;
+                }
             }
         };
 

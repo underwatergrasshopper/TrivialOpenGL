@@ -116,15 +116,7 @@ namespace TrivialOpenGL {
         void (*display)()                                                   = nullptr;
 
         void (*do_on_key)(KeyId key_id, bool is_down, const Extra& extra)   = nullptr;
-
-        void (*do_on_key_down_raw)(WPARAM w_param, LPARAM l_param)          = nullptr;
-        void (*do_on_key_up_raw)(WPARAM w_param, LPARAM l_param)            = nullptr;
-
-        void (*do_on_mouse_button_down_raw)(UINT message, WPARAM w_param, LPARAM l_param) = nullptr;
-        void (*do_on_mouse_button_up_raw)(UINT message, WPARAM w_param, LPARAM l_param)   = nullptr;
-
         void (*do_on_resize)(uint16_t width, uint16_t height)               = nullptr;
-
     };
 
     // Get access to window singleton.
@@ -349,40 +341,6 @@ namespace TrivialOpenGL {
     // Run
     //--------------------------------------------------------------------------
 
-    inline void Window::HandleDoOnKeyboardKey(WPARAM w_param, LPARAM l_param) {
-        const VirtualKeyData& virtual_key_data = *((const VirtualKeyData*)(&l_param));
-
-        const KeyId key_id = InnerKeySupport::GetKeyId(w_param);
-        const bool is_down = virtual_key_data.trans_state;
-
-        Extra extra = {};
-        extra.count = virtual_key_data.count;
-
-        POINT pos;
-        if (GetCursorPos(&pos) && ScreenToClient(m_window_handle, &pos)) {
-            extra.x = pos.x;
-            extra.y = pos.y;
-        }
-
-        extra.keyboard_side = GetKeyboardSide(key_id, virtual_key_data);
-
-        m_data.do_on_key(key_id, is_down, extra);
-    }
-
-
-    inline void Window::HandleDoOnMouseKey(UINT message, WPARAM w_param, LPARAM l_param) {
-        const KeyId key_id = InnerKeySupport::GetMouseKeyId(message, w_param);
-        const bool is_down = InnerKeySupport::IsMouseButtonDown(message);
-
-        Extra extra = {};
-        extra.count         = 1;
-        extra.x             = GET_X_LPARAM(l_param);
-        extra.y             = GET_Y_LPARAM(l_param);
-        extra.keyboard_side = KEYBOARD_SIDE_NONE;
-        
-        m_data.do_on_key(key_id, is_down, extra);
-    }
-
     inline int Window::Run(const Data& data) {
         m_data = data;
 
@@ -391,22 +349,6 @@ namespace TrivialOpenGL {
         if (!m_data.display)            m_data.display              = []() {};
   
         if (!m_data.do_on_key) m_data.do_on_key   = [](KeyId key_id, bool is_down, const Extra& extra) {};
-
-        if (!m_data.do_on_key_down_raw) m_data.do_on_key_down_raw   = [](WPARAM w_param, LPARAM l_param) {
-            To().HandleDoOnKeyboardKey(w_param, l_param);
-        };
-
-        if (!m_data.do_on_key_up_raw)   m_data.do_on_key_up_raw     = [](WPARAM w_param, LPARAM l_param) {
-            To().HandleDoOnKeyboardKey(w_param, l_param);
-        };
-
-        if (!m_data.do_on_mouse_button_down_raw) m_data.do_on_mouse_button_down_raw   = [](UINT message, WPARAM w_param, LPARAM l_param) {
-            To().HandleDoOnMouseKey(message, w_param, l_param);
-        };
-
-        if (!m_data.do_on_mouse_button_up_raw)   m_data.do_on_mouse_button_up_raw     = [](UINT message, WPARAM w_param, LPARAM l_param) {
-            To().HandleDoOnMouseKey(message, w_param, l_param);
-        };
 
         if (!m_data.do_on_resize)       m_data.do_on_resize         = [](uint16_t width, uint16_t height) {};
 
@@ -1024,6 +966,42 @@ namespace TrivialOpenGL {
 
     //--------------------------------------------------------------------------
 
+    inline void Window::HandleDoOnKeyboardKey(WPARAM w_param, LPARAM l_param) {
+        const VirtualKeyData& virtual_key_data = *((const VirtualKeyData*)(&l_param));
+
+        const KeyId key_id = InnerKeySupport::GetKeyId(w_param);
+        const bool is_down = virtual_key_data.trans_state == 0;
+
+        Extra extra = {};
+        extra.count = virtual_key_data.count;
+
+        POINT pos;
+        if (GetCursorPos(&pos) && ScreenToClient(m_window_handle, &pos)) {
+            extra.x = pos.x;
+            extra.y = pos.y;
+        }
+
+        extra.keyboard_side = GetKeyboardSide(key_id, virtual_key_data);
+
+        m_data.do_on_key(key_id, is_down, extra);
+    }
+
+
+    inline void Window::HandleDoOnMouseKey(UINT message, WPARAM w_param, LPARAM l_param) {
+        const KeyId key_id = InnerKeySupport::GetMouseKeyId(message, w_param);
+        const bool is_down = InnerKeySupport::IsMouseButtonDown(message);
+
+        Extra extra = {};
+        extra.count         = 1;
+        extra.x             = GET_X_LPARAM(l_param);
+        extra.y             = GET_Y_LPARAM(l_param);
+        extra.keyboard_side = KEYBOARD_SIDE_NONE;
+
+        m_data.do_on_key(key_id, is_down, extra);
+    }
+
+    //--------------------------------------------------------------------------
+
     inline LRESULT Window::InnerWindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param) {
         if (m_data.special_debug.is_notify_each_window_message) {
             LogDebug(std::string() + "[" + WM_ToStr(message) + "] " + std::to_string(m_dbg_message_id++));
@@ -1359,7 +1337,7 @@ namespace TrivialOpenGL {
 
                 LogDebug(dbg_msg);
             }
-            m_data.do_on_key_down_raw(w_param, l_param);
+            HandleDoOnKeyboardKey(w_param, l_param);
             return 0;
 
         case WM_KEYUP:
@@ -1370,7 +1348,7 @@ namespace TrivialOpenGL {
 
                 LogDebug(dbg_msg);
             }
-            m_data.do_on_key_up_raw(w_param, l_param);
+            HandleDoOnKeyboardKey(w_param, l_param);
             return 0;
 
         case WM_SYSKEYDOWN:
@@ -1381,7 +1359,7 @@ namespace TrivialOpenGL {
 
                 LogDebug(dbg_msg);
             }
-            m_data.do_on_key_down_raw(w_param, l_param);
+            HandleDoOnKeyboardKey(w_param, l_param);
             return 0;
 
         case WM_SYSKEYUP:
@@ -1392,7 +1370,7 @@ namespace TrivialOpenGL {
 
                 LogDebug(dbg_msg);
             }
-            m_data.do_on_key_up_raw(w_param, l_param);
+            HandleDoOnKeyboardKey(w_param, l_param);
             return 0;
 
 
@@ -1408,7 +1386,7 @@ namespace TrivialOpenGL {
 
                 LogDebug(dbg_msg);
             }
-            m_data.do_on_mouse_button_down_raw(message, w_param, l_param);
+            HandleDoOnMouseKey(message, w_param, l_param);
             return 0;
 
         case WM_LBUTTONUP:
@@ -1419,7 +1397,7 @@ namespace TrivialOpenGL {
 
                 LogDebug(dbg_msg);
             }
-            m_data.do_on_mouse_button_down_raw(message, w_param, l_param);
+            HandleDoOnMouseKey(message, w_param, l_param);
             return 0;
 
         case WM_RBUTTONDOWN:   
@@ -1430,7 +1408,7 @@ namespace TrivialOpenGL {
 
                 LogDebug(dbg_msg);
             }
-            m_data.do_on_mouse_button_down_raw(message, w_param, l_param);
+            HandleDoOnMouseKey(message, w_param, l_param);
             return 0;
 
         case WM_RBUTTONUP: 
@@ -1441,7 +1419,7 @@ namespace TrivialOpenGL {
 
                 LogDebug(dbg_msg);
             }
-            m_data.do_on_mouse_button_down_raw(message, w_param, l_param);
+            HandleDoOnMouseKey(message, w_param, l_param);
             return 0;
 
         case WM_MBUTTONDOWN:   
@@ -1452,7 +1430,7 @@ namespace TrivialOpenGL {
 
                 LogDebug(dbg_msg);
             }
-            m_data.do_on_mouse_button_down_raw(message, w_param, l_param);
+            HandleDoOnMouseKey(message, w_param, l_param);
             return 0;
 
         case WM_MBUTTONUP: 
@@ -1463,7 +1441,7 @@ namespace TrivialOpenGL {
 
                 LogDebug(dbg_msg);
             }
-            m_data.do_on_mouse_button_down_raw(message, w_param, l_param);
+            HandleDoOnMouseKey(message, w_param, l_param);
             return 0;
 
         case WM_XBUTTONDOWN:
@@ -1477,7 +1455,7 @@ namespace TrivialOpenGL {
 
                 LogDebug(dbg_msg);
             }
-            m_data.do_on_mouse_button_down_raw(message, w_param, l_param);
+            HandleDoOnMouseKey(message, w_param, l_param);
             return 0;
 
         case WM_XBUTTONUP:
@@ -1491,7 +1469,7 @@ namespace TrivialOpenGL {
 
                 LogDebug(dbg_msg);
             }
-            m_data.do_on_mouse_button_down_raw(message, w_param, l_param);
+            HandleDoOnMouseKey(message, w_param, l_param);
             return 0;
 
         } // switch
