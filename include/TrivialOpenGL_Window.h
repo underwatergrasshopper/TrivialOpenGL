@@ -53,6 +53,7 @@ namespace TrivialOpenGL {
     struct SpecialDebug {
         bool is_notify_each_window_message  = false;
         bool is_notify_each_draw_call       = false;
+        bool is_notify_each_mouse_move      = false;
     };
 
     struct Data {
@@ -106,22 +107,32 @@ namespace TrivialOpenGL {
         // To enable special debugging messages.
         SpecialDebug    special_debug       = {}; // Warning!!! Can slowdown application significantly.   
 
-        // Is called right after window is created.
+        // Called right after window is created.
         void (*do_on_create)()                                              = nullptr;
 
-        // Is called right before window is closed.
+        // Called right before window is closed.
         void (*do_on_destroy)()                                             = nullptr;
 
-        // Is called each time when window content needs to be redrawn.
+        // Called each time when window content needs to be redrawn.
         void (*draw)()                                                      = nullptr;
 
+        // Called when window receive keyboard key or mouse button message.
+        // is_down          - true when key is down, false when key is down.
+        // extra            - Contains additional informations, like: 
+        //                    cursor position in draw area (extra.x, extra.y), 
+        //                    indicator if pressed key is left right or doesn't matter (extra.keyboard_side).
         void (*do_on_key)(KeyId key_id, bool is_down, const Extra& extra)   = nullptr;
+
+        // Called each time window resize.
         void (*do_on_resize)(uint16_t width, uint16_t height)               = nullptr;
 
-        // step_count   - Number of wheel rotation steps away from user.
-        // x, y         - Cursor position in draw area.
-        void (*do_on_mouse_wheel_roll)(int step_count, int x, int y)             = nullptr;
+        // step_count       - Number of wheel rotation steps away from user.
+        // x, y             - Cursor position in draw area.
+        void (*do_on_mouse_wheel_roll)(int step_count, int x, int y)         = nullptr;
 
+        // Called when cursor change position in draw area.
+        // x, y             - Cursor position in draw area.
+        void (*do_on_mouse_move)(int x, int y)                               = nullptr;
     };
 
     // Get access to window singleton.
@@ -353,14 +364,6 @@ namespace TrivialOpenGL {
     inline int Window::Run(const Data& data) {
         m_data = data;
 
-        if (!m_data.do_on_create)           m_data.do_on_create             = []() {};
-        if (!m_data.do_on_destroy)          m_data.do_on_destroy            = []() {};
-        if (!m_data.draw)                   m_data.draw                     = []() {};
-  
-        if (!m_data.do_on_key)              m_data.do_on_key                = [](KeyId key_id, bool is_down, const Extra& extra) {};
-        if (!m_data.do_on_resize)           m_data.do_on_resize             = [](uint16_t width, uint16_t height) {};
-        if (!m_data.do_on_mouse_wheel_roll) m_data.do_on_mouse_wheel_roll   = [](int step_count, int x, int y) {};
-
         m_instance_handle = GetModuleHandleW(NULL);
 
         constexpr wchar_t WINDOW_CLASS_NAME[] = L"TrivialOpenGL_WindowClass";
@@ -416,7 +419,7 @@ namespace TrivialOpenGL {
         // Here because, actual window area can be fetched by DwmGetWindowAttribute only after SW_SHOW.
         ChangeArea(m_data.area);
 
-        m_data.do_on_create();
+        if (m_data.do_on_create) m_data.do_on_create();
 
         UpdateWindow(m_window_handle);
 
@@ -748,7 +751,7 @@ namespace TrivialOpenGL {
             LogDebug("Window::Draw"); 
         }
 
-        m_data.draw();
+        if (m_data.draw) m_data.draw();
 
         SwapBuffers(m_device_context_handle);
     }
@@ -973,7 +976,7 @@ namespace TrivialOpenGL {
             LogDebug("Window::Destroy");
         }
 
-        m_data.do_on_destroy();
+        if (m_data.do_on_destroy) m_data.do_on_destroy();
 
         wglMakeCurrent(NULL, NULL); 
         wglDeleteContext(m_rendering_context_handle);
@@ -984,35 +987,39 @@ namespace TrivialOpenGL {
     //--------------------------------------------------------------------------
 
     inline void Window::HandleDoOnKeyboardKey(WPARAM w_param, LPARAM l_param) {
-        const VirtualKeyData& virtual_key_data = *((const VirtualKeyData*)(&l_param));
+        if (m_data.do_on_key) {
+            const VirtualKeyData& virtual_key_data = *((const VirtualKeyData*)(&l_param));
 
-        const KeyId key_id = InnerKeySupport::GetKeyId(w_param);
-        const bool is_down = virtual_key_data.trans_state == 0;
+            const KeyId key_id = InnerKeySupport::GetKeyId(w_param);
+            const bool is_down = virtual_key_data.trans_state == 0;
 
-        Extra extra = {};
-        extra.count = virtual_key_data.count;
+            Extra extra = {};
+            extra.count = virtual_key_data.count;
 
-        const PointI pos = GetCursorPosInDrawArea();
-        extra.x = pos.x;
-        extra.y = pos.y;
+            const PointI pos = GetCursorPosInDrawArea();
+            extra.x = pos.x;
+            extra.y = pos.y;
 
-        extra.keyboard_side = GetKeyboardSide(key_id, virtual_key_data);
+            extra.keyboard_side = GetKeyboardSide(key_id, virtual_key_data);
 
-        m_data.do_on_key(key_id, is_down, extra);
+            m_data.do_on_key(key_id, is_down, extra);
+        }
     }
 
 
     inline void Window::HandleDoOnMouseKey(UINT message, WPARAM w_param, LPARAM l_param) {
-        const KeyId key_id = InnerKeySupport::GetMouseKeyId(message, w_param);
-        const bool is_down = InnerKeySupport::IsMouseButtonDown(message);
+        if (m_data.do_on_key) {
+            const KeyId key_id = InnerKeySupport::GetMouseKeyId(message, w_param);
+            const bool is_down = InnerKeySupport::IsMouseButtonDown(message);
 
-        Extra extra = {};
-        extra.count         = 1;
-        extra.x             = GET_X_LPARAM(l_param);
-        extra.y             = GET_Y_LPARAM(l_param);
-        extra.keyboard_side = KEYBOARD_SIDE_NONE;
+            Extra extra = {};
+            extra.count         = 1;
+            extra.x             = GET_X_LPARAM(l_param);
+            extra.y             = GET_Y_LPARAM(l_param);
+            extra.keyboard_side = KEYBOARD_SIDE_NONE;
 
-        m_data.do_on_key(key_id, is_down, extra);
+            m_data.do_on_key(key_id, is_down, extra);
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -1201,11 +1208,13 @@ namespace TrivialOpenGL {
                 LogDebug(dbg_msg);
             }
 
-            if (!m_disable_do_on_resize_count_stack.Is()) {
-                if (m_is_apply_fake_width) {
-                    m_data.do_on_resize(LOWORD(l_param) - WIDTH_EXTENTION, HIWORD(l_param));
-                } else {
-                    m_data.do_on_resize(LOWORD(l_param), HIWORD(l_param));
+            if (m_data.do_on_resize) {
+                if (!m_disable_do_on_resize_count_stack.Is()) {
+                    if (m_is_apply_fake_width) {
+                        m_data.do_on_resize(LOWORD(l_param) - WIDTH_EXTENTION, HIWORD(l_param));
+                    } else {
+                        m_data.do_on_resize(LOWORD(l_param), HIWORD(l_param));
+                    }
                 }
             }
 
@@ -1489,18 +1498,18 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_MOUSEWHEEL: {
-            const int   delta   = GET_WHEEL_DELTA_WPARAM(w_param);
-
-            POINT pos = {
-                GET_X_LPARAM(l_param),
-                GET_Y_LPARAM(l_param)
-            };
-            ScreenToClient(m_window_handle, &pos);
-
             if (m_data.log_level >= LOG_LEVEL_DEBUG) {
                 std::string dbg_msg = "WM_MOUSEWHEEL";
 
+                const int   delta   = GET_WHEEL_DELTA_WPARAM(w_param);
                 const WORD  keys    = GET_KEYSTATE_WPARAM(w_param);
+
+                POINT pos = {
+                    GET_X_LPARAM(l_param),
+                    GET_Y_LPARAM(l_param)
+                };
+                ScreenToClient(m_window_handle, &pos);
+
 
                 dbg_msg += " delta=" + std::to_string(delta);
                 dbg_msg += " x=" + std::to_string(pos.x);
@@ -1517,7 +1526,46 @@ namespace TrivialOpenGL {
                 LogDebug(dbg_msg);
             }
 
-            m_data.do_on_mouse_wheel_roll(delta / WHEEL_DELTA, pos.x, pos.y);
+            if (m_data.do_on_mouse_wheel_roll) {
+                const int   delta   = GET_WHEEL_DELTA_WPARAM(w_param);
+
+                POINT pos = {
+                    GET_X_LPARAM(l_param),
+                    GET_Y_LPARAM(l_param)
+                };
+                ScreenToClient(m_window_handle, &pos);
+
+                m_data.do_on_mouse_wheel_roll(delta / WHEEL_DELTA, pos.x, pos.y);
+            }
+            return 0;
+        }
+
+        case WM_MOUSEMOVE: {
+            if (m_data.special_debug.is_notify_each_mouse_move) {
+                std::string dbg_msg = "WM_MOUSEMOVE";
+
+                const int   x       = GET_X_LPARAM(l_param);
+                const int   y       = GET_Y_LPARAM(l_param);
+                const WORD  keys    = GET_KEYSTATE_WPARAM(w_param);
+
+                dbg_msg += " x=" + std::to_string(x);
+                dbg_msg += " y=" + std::to_string(y);
+
+                if (keys & MK_CONTROL)   dbg_msg += " MK_CONTROL";
+                if (keys & MK_LBUTTON)   dbg_msg += " MK_LBUTTON";
+                if (keys & MK_MBUTTON)   dbg_msg += " MK_MBUTTON";
+                if (keys & MK_RBUTTON)   dbg_msg += " MK_RBUTTON";
+                if (keys & MK_SHIFT)     dbg_msg += " MK_SHIFT";
+                if (keys & MK_XBUTTON1)  dbg_msg += " MK_XBUTTON1";
+                if (keys & MK_XBUTTON2)  dbg_msg += " MK_XBUTTON2";
+
+                LogDebug(dbg_msg);
+            }
+
+            if (m_data.do_on_mouse_move) {
+                m_data.do_on_mouse_move(GET_X_LPARAM(l_param), GET_Y_LPARAM(l_param));
+            }
+
             return 0;
         }
 

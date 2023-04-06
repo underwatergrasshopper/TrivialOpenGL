@@ -217,9 +217,10 @@ void DisplayWindowInfo() {
 
 //------------------------------------------------------------------------------
 
-static TOGL::SizeU16  s_resolution;
-static bool         s_is_client;
-static TestImage    s_test_image;
+static TOGL::SizeU16    s_resolution;
+static bool             s_is_client;
+static TestImage        s_test_image;
+static bool             s_is_display_mose_move_data;
 
 //------------------------------------------------------------------------------
 
@@ -732,18 +733,30 @@ int main(int argc, char *argv[]) {
 
             puts(message.c_str());
 
-            if (is_down && key_id == 'I') {
-                togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_CAPS_LOCK));
-                togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_INSERT));
-                togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_NUMLOCK));
+            if (is_down) {
+                switch (key_id) {
+                case 'I': {
+                    togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_CAPS_LOCK));
+                    togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_INSERT));
+                    togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_NUMLOCK));
 
-                const TOGL::PointI cursor_pos_in_screen = TOGL::GetCursorPosInScreen();
-                togl_print_i32(cursor_pos_in_screen.x);
-                togl_print_i32(cursor_pos_in_screen.y);
+                    const TOGL::PointI cursor_pos_in_screen = TOGL::GetCursorPosInScreen();
+                    togl_print_i32(cursor_pos_in_screen.x);
+                    togl_print_i32(cursor_pos_in_screen.y);
 
-                const TOGL::PointI cursor_pos_in_draw_area = TOGL::ToWindow().GetCursorPosInDrawArea();
-                togl_print_i32(cursor_pos_in_draw_area.x);
-                togl_print_i32(cursor_pos_in_draw_area.y);
+                    const TOGL::PointI cursor_pos_in_draw_area = TOGL::ToWindow().GetCursorPosInDrawArea();
+                    togl_print_i32(cursor_pos_in_draw_area.x);
+                    togl_print_i32(cursor_pos_in_draw_area.y);
+                    break;
+                }
+
+                case 'S':
+                    s_is_display_mose_move_data = !s_is_display_mose_move_data;
+                    if (s_is_display_mose_move_data)    puts("enabled display mouse move data");
+                    if (!s_is_display_mose_move_data)   puts("disabled display mouse move data");
+                    break;
+
+                } // switch
             }
         };
 
@@ -757,6 +770,16 @@ int main(int argc, char *argv[]) {
             puts(message.c_str());
         };
 
+        data.do_on_mouse_move = [](int x, int y) {
+            if (s_is_display_mose_move_data) {
+                std::string message = "Mouse Move:";
+
+                message += " x=" + std::to_string(x);
+                message += " y=" + std::to_string(y);
+
+                puts(message.c_str());
+            }
+        };
 
         return TOGL::Run(data);
 
