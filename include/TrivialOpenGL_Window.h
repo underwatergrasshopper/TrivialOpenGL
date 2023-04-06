@@ -113,7 +113,7 @@ namespace TrivialOpenGL {
         void (*do_on_destroy)()                                             = nullptr;
 
         // Is called each time when window content needs to be redrawn.
-        void (*display)()                                                   = nullptr;
+        void (*draw)()                                                      = nullptr;
 
         void (*do_on_key)(KeyId key_id, bool is_down, const Extra& extra)   = nullptr;
         void (*do_on_resize)(uint16_t width, uint16_t height)               = nullptr;
@@ -243,7 +243,7 @@ namespace TrivialOpenGL {
         HICON TryLoadIcon();
         int ExecuteMainLoop();
 
-        void Display();
+        void Draw();
 
         AreaIU16 GenerateWindowArea(const AreaI& area);
         void SetArea(const AreaIU16& area, AreaPartId area_part_id, bool is_client_area);
@@ -346,7 +346,7 @@ namespace TrivialOpenGL {
 
         if (!m_data.do_on_create)       m_data.do_on_create         = []() {};
         if (!m_data.do_on_destroy)      m_data.do_on_destroy        = []() {};
-        if (!m_data.display)            m_data.display              = []() {};
+        if (!m_data.draw)            m_data.draw              = []() {};
   
         if (!m_data.do_on_key) m_data.do_on_key   = [](KeyId key_id, bool is_down, const Extra& extra) {};
 
@@ -717,7 +717,7 @@ namespace TrivialOpenGL {
                     TranslateMessage(&msg);
                     DispatchMessageW(&msg);
                 } else {
-                    Display();
+                    Draw();
                 }
             }
 
@@ -726,12 +726,12 @@ namespace TrivialOpenGL {
         return EXIT_FAILURE;
     }
     
-    inline void Window::Display() {
+    inline void Window::Draw() {
         if (m_data.special_debug.is_notify_each_draw_call) {
-            LogDebug("Window::Display"); 
+            LogDebug("Window::Draw"); 
         }
 
-        m_data.display();
+        m_data.draw();
 
         SwapBuffers(m_device_context_handle);
     }
@@ -1037,7 +1037,7 @@ namespace TrivialOpenGL {
                 LogDebug("WM_PAINT"); 
             }
 
-            Display();
+            Draw();
 
             ValidateRect(m_window_handle, NULL); // to decrease number of WM_PAINT messages
 

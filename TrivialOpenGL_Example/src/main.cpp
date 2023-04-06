@@ -361,7 +361,7 @@ int main(int argc, char *argv[]) {
             glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
         };
 
-        data.display = []() {
+        data.draw = []() {
             glClear(GL_COLOR_BUFFER_BIT);
 
             glBegin(GL_TRIANGLES);
@@ -401,7 +401,7 @@ int main(int argc, char *argv[]) {
             s_test_image.Initialize(s_resolution);
         };
 
-        data.display = []() {
+        data.draw = []() {
             s_test_image.Animate();
         };
 
@@ -493,7 +493,7 @@ int main(int argc, char *argv[]) {
             // TOGL::ToWindow().GoWindowedFullScreen();
         };
 
-        data.display = []() {
+        data.draw = []() {
             s_test_image.Animate();
         };
 
@@ -672,7 +672,7 @@ int main(int argc, char *argv[]) {
             glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
         };
 
-        data.display = []() {
+        data.draw = []() {
             glClear(GL_COLOR_BUFFER_BIT);
 
             glBegin(GL_TRIANGLES);
@@ -715,7 +715,7 @@ int main(int argc, char *argv[]) {
             // TOGL::ToWindow().GoWindowedFullScreen();
         };
 
-        data.display = []() {
+        data.draw = []() {
             s_test_image.Animate();
         };
 
