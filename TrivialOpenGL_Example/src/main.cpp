@@ -500,6 +500,10 @@ int main(int argc, char *argv[]) {
 
         data.do_on_resize = [](uint16_t width, uint16_t height) {
             s_test_image.Resize(width, height);
+
+            std::string message = "Resize: ";
+            message += std::to_string(width) + " " + std::to_string(height);
+            puts(message.c_str());
         };
 
         data.do_on_state_change = [](TOGL::WindowState window_state) {
@@ -530,8 +534,24 @@ int main(int argc, char *argv[]) {
 
                 case 'X':               TOGL::ToWindow().RequestClose(); break;
                 case TOGL::KEY_ID_R:    TOGL::ToWindow().RequestRedraw(); break;
-                case TOGL::KEY_ID_C:    TOGL::ToWindow().Center(s_resolution); break;
+                case TOGL::KEY_ID_C:    TOGL::ToWindow().Center(s_resolution, false); break;
                 case TOGL::KEY_ID_V:    TOGL::ToWindow().Center(s_resolution, true); break;
+
+                case TOGL::KEY_ID_ARROW_LEFT:
+                    TOGL::ToWindow().MoveBy(-30, 0);
+                    break;
+
+                case TOGL::KEY_ID_ARROW_RIGHT:
+                    TOGL::ToWindow().MoveBy(30, 0);
+                    break;
+
+                case TOGL::KEY_ID_ARROW_UP:
+                    TOGL::ToWindow().MoveBy(0, -30);
+                    break;
+
+                case TOGL::KEY_ID_ARROW_DOWN:
+                    TOGL::ToWindow().MoveBy(0, 30);
+                    break;
 
                 case TOGL::KEY_ID_0: 
                     puts("--- Show --");
@@ -617,6 +637,24 @@ int main(int argc, char *argv[]) {
                     puts("---");
   
                     TOGL::ToWindow().Center(s_resolution);
+                    PrintWindowStates();
+                    break;
+
+                case TOGL::KEY_ID_W: 
+                    puts("---");
+                    TOGL::ToWindow().Minimize();
+                    PrintWindowStates();
+
+                    togl_print_i32(TOGL::ToWindow().GetArea().x);
+                    togl_print_i32(TOGL::ToWindow().GetArea().y);
+                    togl_print_i32(TOGL::ToWindow().GetArea().width);
+                    togl_print_i32(TOGL::ToWindow().GetArea().height);
+
+                    Sleep(1000);
+
+                    puts("---");
+
+                    TOGL::ToWindow().MoveBy(30, 0);
                     PrintWindowStates();
                     break;
 

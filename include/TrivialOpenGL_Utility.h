@@ -304,13 +304,13 @@ namespace TrivialOpenGL {
     using AreaIU   = Area<int32_t, uint32_t>;
     using AreaIU16 = Area<int32_t, uint16_t>;
 
-    template <typename Type>
-    inline bool operator==(const Area<Type>& l, const Area<Type>& r) {
+    template <typename PointType, typename SizeType = PointType>
+    inline bool operator==(const Area<PointType, SizeType>& l, const Area<PointType, SizeType>& r) {
         return l.x == r.x && l.y == r.y && l.width == r.width && l.height == r.height;
     }
 
-    template <typename Type>
-    inline bool operator!=(const Area<Type>& l, const Area<Type>& r) {
+    template <typename PointType, typename SizeType = PointType>
+    inline bool operator!=(const Area<PointType, SizeType>& l, const Area<PointType, SizeType>& r) {
         return l.x != r.x || l.y != r.y || l.width != r.width || l.height != r.height;
     }
 
