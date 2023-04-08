@@ -9,9 +9,6 @@
 #include <GL\GL.h>
 #include <VersionHelpers.h>
 
-#include <map>
-#include <stack>
-
 #include "TrivialOpenGL_Utility.h"
 #include "TrivialOpenGL_Key.h"
 #include "TrivialOpenGL_Debug.h"

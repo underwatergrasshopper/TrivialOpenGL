@@ -15,6 +15,8 @@
 #undef WIN32_LEAN_AND_MEAN 
 
 #include <string>
+#include <map>
+#include <stack>
 
 //==============================================================================
 // Declarations
@@ -358,36 +360,6 @@ namespace TrivialOpenGL {
 
     template <typename Type>
     Type Global<Type>::sm_object;
-
-    //--------------------------------------------------------------------------
-    // CountStack
-    //--------------------------------------------------------------------------
-
-    class CountStack {
-    public:
-        CountStack() : m_count(0) {}
-        virtual ~CountStack() {}
-
-        bool Push() {
-            if (m_count == UINT_MAX) return false;
-
-            m_count += 1;
-            return true;
-        }
-
-        bool Pop() {
-            if (m_count == 0) return false;
-
-            m_count -= 1;
-            return true;
-        }
-
-        bool Is() const {
-            return m_count > 0;
-        }
-    private:
-        uint32_t m_count;
-    };
 
     //--------------------------------------------------------------------------
     // Conversion
