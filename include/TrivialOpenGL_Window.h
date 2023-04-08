@@ -7,9 +7,10 @@
 #define TRIVIALOPENGL_WINDOW_H_
 
 #include <GL\GL.h>
-#include <string>
-
 #include <VersionHelpers.h>
+
+#include <map>
+#include <stack>
 
 #include "TrivialOpenGL_Utility.h"
 #include "TrivialOpenGL_Key.h"
@@ -271,6 +272,19 @@ namespace TrivialOpenGL {
             if (m_state != m_prev_state && m_data.do_on_state_change) m_data.do_on_state_change(m_state);
         }
 
+        void Push(bool& value, bool new_value_after_push) {
+            m_on_off_stack_map[&value].push(value);
+            value = new_value_after_push;
+        }
+
+        void Pop(bool& value) {
+            auto stack = m_on_off_stack_map[&value];
+            if (!stack.empty()) {
+                value = stack.top();
+                stack.pop();
+            }
+        }
+
         // Changes area by applying style from data parameter which was provided to Run function.
         void ChangeArea(const AreaI& area);
 
@@ -322,11 +336,13 @@ namespace TrivialOpenGL {
         bool        m_is_win7;
 
         bool        m_is_apply_fake_width;
-        CountStack  m_disable_do_on_resize_count_stack;
-        CountStack  m_disable_change_state_at_resize_stack;
+        bool        m_is_enable_do_on_resize;
+        bool        m_is_enable_change_state_at_resize;
         uint64_t    m_dbg_message_id;
 
         WindowAreaCorrector m_window_area_corrector;
+
+        std::map<bool*, std::stack<bool>> m_on_off_stack_map;
     };
 
 } // namespace TrivialOpenGL
@@ -367,7 +383,9 @@ namespace TrivialOpenGL {
 
         m_is_win7                   = IsWindows7OrGreater() && !IsWindows8OrGreater();
 
-        m_is_apply_fake_width       = false;
+        m_is_apply_fake_width               = false;
+        m_is_enable_do_on_resize            = true;
+        m_is_enable_change_state_at_resize  = true;
 
         m_dbg_message_id            = 0;
     }
@@ -494,11 +512,13 @@ namespace TrivialOpenGL {
 
         // Workaround to not call do_on_state_change for temporal restore to maximized window.
         if (m_prev_state == WindowState::MAXIMIZED) {
-            m_disable_change_state_at_resize_stack.Push();
-            m_disable_do_on_resize_count_stack.Push();
+            Push(m_is_enable_do_on_resize, false);
+            Push(m_is_enable_change_state_at_resize, false);
+            
             Restore();
-            m_disable_do_on_resize_count_stack.Pop();
-            m_disable_change_state_at_resize_stack.Pop();
+
+            Pop(m_is_enable_change_state_at_resize);
+            Pop(m_is_enable_do_on_resize);
         } else {
             Restore();
         }
@@ -569,15 +589,15 @@ namespace TrivialOpenGL {
 
     inline void Window::ChangeStateTo(WindowState state) {
         if (m_state == WindowState::WINDOWED_FULL_SCREENED && state != m_state) {
-            m_disable_do_on_resize_count_stack.Push();
-            m_disable_change_state_at_resize_stack.Push();
+            Push(m_is_enable_do_on_resize, false);
+            Push(m_is_enable_change_state_at_resize, false);
 
             SetWindowLongPtrW(m_window_handle, GWL_STYLE,   m_window_style);
             SetWindowLongPtrW(m_window_handle, GWL_EXSTYLE, m_window_extended_style);
             ShowWindow(m_window_handle, SW_RESTORE);
 
-            m_disable_change_state_at_resize_stack.Pop();
-            m_disable_do_on_resize_count_stack.Pop();
+            Pop(m_is_enable_change_state_at_resize);
+            Pop(m_is_enable_do_on_resize);
         }
 
         switch (state) {
@@ -611,14 +631,15 @@ namespace TrivialOpenGL {
         }
 
         case WindowState::WINDOWED_FULL_SCREENED: 
-            m_disable_do_on_resize_count_stack.Push();
-            m_disable_change_state_at_resize_stack.Push();
+            Push(m_is_enable_do_on_resize, false);
+            Push(m_is_enable_change_state_at_resize, false);
+            
 
             SetWindowLongPtrW(m_window_handle, GWL_STYLE, GetWindowStyle_DrawAreaOnly());
             SetWindowLongPtrW(m_window_handle, GWL_EXSTYLE, GetWindowExtendedStyle_DrawAreaOnly());
 
-            m_disable_change_state_at_resize_stack.Pop();
-            m_disable_do_on_resize_count_stack.Pop();
+            Pop(m_is_enable_change_state_at_resize);
+            Pop(m_is_enable_do_on_resize);
 
             // ---
             // Workaround.
@@ -630,13 +651,13 @@ namespace TrivialOpenGL {
 
             const AreaIU16 screen_area = MakeAreaIU16(screen_rectangle);
 
-            m_disable_change_state_at_resize_stack.Push();
+            Push(m_is_enable_change_state_at_resize, false);
             m_is_apply_fake_width = true;
 
             SetWindowPos(m_window_handle, HWND_TOP, screen_area.x, screen_area.y, screen_area.width + WIDTH_EXTENTION, screen_area.height, SWP_SHOWWINDOW);
 
             m_is_apply_fake_width = false;
-            m_disable_change_state_at_resize_stack.Pop();
+            Pop(m_is_enable_change_state_at_resize);
 
             // ---
 
@@ -1242,13 +1263,13 @@ namespace TrivialOpenGL {
 
                 if (m_is_apply_fake_width) dbg_msg += " fake_width=" + std::to_string(width - WIDTH_EXTENTION);
 
-                if (m_disable_do_on_resize_count_stack.Is()) dbg_msg += " without:do_on_resize";
+                if (!m_is_enable_do_on_resize) dbg_msg += " without:do_on_resize";
 
                 LogDebug(dbg_msg);
             }
 
             if (m_data.do_on_resize) {
-                if (!m_disable_do_on_resize_count_stack.Is()) {
+                if (m_is_enable_do_on_resize) {
                     if (m_is_apply_fake_width) {
                         m_data.do_on_resize(LOWORD(l_param) - WIDTH_EXTENTION, HIWORD(l_param));
                     } else {
@@ -1259,7 +1280,7 @@ namespace TrivialOpenGL {
 
             m_is_visible = true;
 
-            if (!m_disable_change_state_at_resize_stack.Is()) {
+            if (m_is_enable_change_state_at_resize) {
                 switch (w_param) {
                 case SIZE_MAXIMIZED:  
                     SetState(WindowState::MAXIMIZED);
