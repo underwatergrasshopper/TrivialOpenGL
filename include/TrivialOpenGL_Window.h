@@ -55,6 +55,10 @@ namespace TrivialOpenGL {
         bool is_notify_key_message      = false;
     };
 
+    enum WindowOption {
+        WINDOW_OPTION_AUTO_SLEEP_MODE,
+    };
+
     struct Data {
         // Encoding: ASCII or UTF8.
         std::string     window_name         = "Window";
@@ -101,6 +105,8 @@ namespace TrivialOpenGL {
         // If not zero then this is a time interval for which do_on_time(elapsed_time) callback function will be called. 
         uint32_t        timer_time_interval = 0; // in milliseconds
 
+        // true - disables auto entering to screen save mode and to any power save mode.
+        bool            is_auto_sleep_blocked   = false;
 
         // LOG_LEVEL_ERROR         - error messages only
         // LOG_LEVEL_INFO          - info and error messages
@@ -177,6 +183,13 @@ namespace TrivialOpenGL {
 
         // If called from inside of do_on_{...} function, then redraws window after exiting from current do_on_{...} function.
         void RequestRedraw();
+
+        // ---
+        
+        // WINDOW_OPTION_AUTO_SLEEP_MODE     - true - if window at foreground then can automatically enter screen saver mode or any sleep mode,
+        //                                     false - if window at foreground then can not automatically enter screen saver mode or any sleep mode.
+        void SetOption(WindowOption window_option, bool is_enabled);
+        bool IsEnabled(WindowOption window_option) const;
 
         // ---
 
@@ -490,6 +503,24 @@ namespace TrivialOpenGL {
 
     inline void Window::RequestRedraw() {
         InvalidateRect(m_window_handle, NULL, FALSE);
+    }
+
+    //--------------------------------------------------------------------------
+    // Option
+    //--------------------------------------------------------------------------
+
+    void Window::SetOption(WindowOption window_option, bool is_enabled) {
+        switch (window_option) {
+        case WINDOW_OPTION_AUTO_SLEEP_MODE:
+            m_data.is_auto_sleep_blocked = !is_enabled;
+            break;
+        }
+    }
+
+    bool Window::IsEnabled(WindowOption window_option) const {
+        switch (window_option) {
+        case WINDOW_OPTION_AUTO_SLEEP_MODE: return !m_data.is_auto_sleep_blocked;
+        }
     }
 
     //--------------------------------------------------------------------------
@@ -1473,10 +1504,12 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_SYSCOMMAND:
-            switch (w_param) {
-            case SC_SCREENSAVE:					// No screen saver.
-            case SC_MONITORPOWER:				// No entering to power save mode.
-                return 0;						
+            if (m_data.is_auto_sleep_blocked) {
+                switch (w_param) {
+                case SC_SCREENSAVE:	    // Blocks screen saver.
+                case SC_MONITORPOWER:   // Blocks entering to power save mode.
+                    return 0;						
+                }
             }
             break;								
  
