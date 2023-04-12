@@ -1196,7 +1196,7 @@ namespace TrivialOpenGL {
             m_data.do_on_key(key_id, is_down, extra);
         }
 
-        // Tracks mouse button up message when cursor leave window area when mouse button is down.
+        // Tracks mouse button up message when mouse button is down and cursor leave window draw (client) area.
         if (is_down) {
             SetCapture(m_window_handle);
         } else if (GetCapture() == m_window_handle) {
