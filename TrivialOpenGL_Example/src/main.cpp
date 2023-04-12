@@ -860,7 +860,7 @@ int main(int argc, char *argv[]) {
 
             if (is_down) {
                 switch (key_id) {
-                case 'I': {
+                case 'X': {
                     togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_CAPS_LOCK));
                     togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_INSERT));
                     togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_NUMLOCK));
@@ -881,6 +881,8 @@ int main(int argc, char *argv[]) {
                     if (!s_is_display_mose_move_data)   puts("disabled display mouse move data");
                     break;
 
+                default:
+                    break;
                 } // switch
             }
         };
@@ -904,6 +906,46 @@ int main(int argc, char *argv[]) {
 
                 puts(message.c_str());
             }
+        };
+
+        return TOGL::Run(data);
+    } else if (IsFlag("TIMER")) {
+        s_resolution = {600, 300};
+
+        const TOGL::SizeU16 screen_size = TOGL::GetScreenSize();
+
+        TOGL::Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example WINDOW_STATE";
+        //data.style              |= TOGL::StyleBit::DRAW_AREA_SIZE;
+        //data.style              |= TOGL::StyleBit::DRAW_AREA_ONLY;
+        //data.style              |= TOGL::StyleBit::REDRAW_ON_CHANGE_OR_REQUEST;
+        //data.style              |= TOGL::StyleBit::NO_RESIZE;
+        //data.style              |= TOGL::StyleBit::NO_MAXIMIZE;
+        data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
+        //data.area               = {TOGL::DEF, TOGL::DEF, screen_size.width, screen_size.height};
+        data.icon_resource_id   = ICON_ID;
+        data.timer_time_interval = 500;
+        data.log_level          = TOGL::LOG_LEVEL_DEBUG;
+
+        data.do_on_create = []() {
+            s_test_image.Initialize(s_resolution);
+        };
+
+        data.draw = []() {
+            s_test_image.Animate();
+        };
+
+        data.do_on_resize = [](uint16_t width, uint16_t height) {
+            s_test_image.Resize(width, height);
+        };
+
+        data.do_on_time = [](uint32_t time_interval) {
+            printf("Do On Time (%dms)\n", time_interval);
+        };
+
+        data.do_on_key = [](TOGL::KeyId key_id, bool is_down, const TOGL::Extra& extra) {
+            if (key_id == 'X' && !is_down) TOGL::ToWindow().RequestClose();
         };
 
         return TOGL::Run(data);

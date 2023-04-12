@@ -98,6 +98,10 @@ namespace TrivialOpenGL {
         uint16_t        icon_resource_id    = 0;       
 
 
+        // If not zero then this is a time interval for which do_on_time(elapsed_time) callback function will be called. 
+        uint32_t        timer_time_interval = 0; // in milliseconds
+
+
         // LOG_LEVEL_ERROR         - error messages only
         // LOG_LEVEL_INFO          - info and error messages
         // LOG_LEVEL_DEBUG         - debug, info and error messages
@@ -143,7 +147,10 @@ namespace TrivialOpenGL {
         void (*do_on_show)()                                                = nullptr;
         void (*do_on_hide)()                                                = nullptr;
 
-        void (*do_on_foreground)(bool is_gain)                              = nullptr;                         
+        void (*do_on_foreground)(bool is_gain)                              = nullptr;   
+
+        // time_interval - in milliseconds
+        void (*do_on_time)(uint32_t time_interval)                           = nullptr;
     };
 
     // Get access to window singleton.
@@ -265,7 +272,8 @@ namespace TrivialOpenGL {
 
         // Window client area width extension to force functional windowed full screen window (reduced flashing and be able alt+tab in Windows 7).
         enum {
-            WIDTH_CORRECTION_TO_FAKE = 1
+            WIDTH_CORRECTION_TO_FAKE    = 1,
+            DEFAULT_TIMER_ID             = 1,
         };
 
         Window();
@@ -451,6 +459,12 @@ namespace TrivialOpenGL {
 
         if (!m_window_handle) {
             LogFatalError("Error TOGLW::Window::Run: Cannot create window.");
+        }
+
+        if (m_data.timer_time_interval > 0) {
+            const UINT_PTR result = SetTimer(m_window_handle, DEFAULT_TIMER_ID, m_data.timer_time_interval, NULL);
+
+            if (!result) LogFatalError(std::string() + "Error TOGLW::Window::Create: Can not set timer. (windows error code:" + std::to_string(GetLastError()) + ")");
         }
 
         ShowWindow(m_window_handle, SW_SHOW);
@@ -1466,6 +1480,11 @@ namespace TrivialOpenGL {
             }
             break;								
  
+        case WM_TIMER:
+            if (w_param == DEFAULT_TIMER_ID) {
+                if (m_data.do_on_time) m_data.do_on_time(m_data.timer_time_interval);
+            }
+            return 0;
 
         //////////////
         // Keyboard //
