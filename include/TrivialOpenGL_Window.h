@@ -49,9 +49,10 @@ namespace TrivialOpenGL {
     };
 
     struct SpecialDebug {
-        bool is_notify_each_window_message  = false;
-        bool is_notify_each_draw_call       = false;
-        bool is_notify_each_mouse_move      = false;
+        bool is_notify_any_message      = false;
+        bool is_notify_draw_call        = false;
+        bool is_notify_mouse_move       = false;
+        bool is_notify_key_message      = false;
     };
 
     struct Data {
@@ -141,6 +142,8 @@ namespace TrivialOpenGL {
 
         void (*do_on_show)()                                                = nullptr;
         void (*do_on_hide)()                                                = nullptr;
+
+        void (*do_on_foreground)(bool is_gain)                              = nullptr;                         
     };
 
     // Get access to window singleton.
@@ -234,15 +237,17 @@ namespace TrivialOpenGL {
         bool IsWindowMaximized() const;
         bool IsWindowedFullScreen() const;
 
+        // Moves window to foreground.
+        void GoForeground();
+        bool IsForeground() const;
+
         // ---
 
         PointI GetCursorPosInDrawArea() const;
 
-        // ---
-
         void SetLogLevel(uint32_t log_level);
-
         uint32_t GetLogLevel() const;
+
         Version GetOpenGL_Version() const;
 
         // ---
@@ -697,6 +702,16 @@ namespace TrivialOpenGL {
         return GetState() == WindowState::WINDOWED_FULL_SCREENED;
     }
 
+    inline void Window::GoForeground() {
+        SetForegroundWindow(m_window_handle);
+    }
+
+    inline bool Window::IsForeground() const {
+        return GetForegroundWindow() == m_window_handle;
+    }
+
+    //--------------------------------------------------------------------------
+
     inline PointI Window::GetCursorPosInDrawArea() const {
         POINT pos;
         if (GetCursorPos(&pos) && ScreenToClient(m_window_handle, &pos)) {
@@ -704,10 +719,6 @@ namespace TrivialOpenGL {
         }
         return {};
     }
-
-    //--------------------------------------------------------------------------
-    // Get Generic
-    //--------------------------------------------------------------------------
 
     inline void Window::SetLogLevel(uint32_t log_level) {
         m_data.log_level = log_level;
@@ -720,6 +731,8 @@ namespace TrivialOpenGL {
     inline Version Window::GetOpenGL_Version() const {
         return m_data.opengl_verion;
     }
+
+    //--------------------------------------------------------------------------
 
     inline Window& Window::To() {
         return Global<Window>::To();
@@ -787,7 +800,7 @@ namespace TrivialOpenGL {
     }
     
     inline void Window::Draw() {
-        if (m_data.special_debug.is_notify_each_draw_call) {
+        if (m_data.special_debug.is_notify_draw_call) {
             LogDebug("Window::Draw"); 
         }
 
@@ -1111,7 +1124,7 @@ namespace TrivialOpenGL {
     //--------------------------------------------------------------------------
 
     inline LRESULT Window::InnerWindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param) {
-        if (m_data.special_debug.is_notify_each_window_message) {
+        if (m_data.special_debug.is_notify_any_message) {
             LogDebug(std::string() + "[" + WM_ToStr(message) + "] " + std::to_string(m_dbg_message_id++));
         }
 
@@ -1394,10 +1407,9 @@ namespace TrivialOpenGL {
                 m_is_active = is_active;
 
                 if (is_active) {
-                    //SetForegroundWindow(m_window_handle);
-                    // do_on_foreground(true)
+                    if (m_data.do_on_foreground) m_data.do_on_foreground(true);
                 } else {
-                    // do_on_foreground(false)
+                    if (m_data.do_on_foreground) m_data.do_on_foreground(false);
                 }
             }
 
@@ -1460,7 +1472,7 @@ namespace TrivialOpenGL {
         //////////////
 
         case WM_KEYDOWN:
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_KEYDOWN   ";
 
                 dbg_msg += InnerKeySupport::WinApiKeyDataToStr(w_param, l_param);
@@ -1471,7 +1483,7 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_KEYUP:
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_KEYUP     ";
 
                 dbg_msg += InnerKeySupport::WinApiKeyDataToStr(w_param, l_param);
@@ -1482,7 +1494,7 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_SYSKEYDOWN:
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_SYSKEYDOWN";
 
                 dbg_msg += InnerKeySupport::WinApiKeyDataToStr(w_param, l_param);
@@ -1493,7 +1505,7 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_SYSKEYUP:
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_SYSKEYUP  ";
 
                 dbg_msg += InnerKeySupport::WinApiKeyDataToStr(w_param, l_param);
@@ -1509,7 +1521,7 @@ namespace TrivialOpenGL {
         ///////////
 
         case WM_LBUTTONDOWN:
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_LBUTTONDOWN";
 
                 dbg_msg += InnerKeySupport::WinApiMouseButtonToStr(w_param, l_param);
@@ -1520,7 +1532,7 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_LBUTTONUP:
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_LBUTTONUP";
 
                 dbg_msg += InnerKeySupport::WinApiMouseButtonToStr(w_param, l_param);
@@ -1531,7 +1543,7 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_RBUTTONDOWN:   
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_RBUTTONDOWN";
 
                 dbg_msg += InnerKeySupport::WinApiMouseButtonToStr(w_param, l_param);
@@ -1542,7 +1554,7 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_RBUTTONUP: 
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_RBUTTONUP";
 
                 dbg_msg += InnerKeySupport::WinApiMouseButtonToStr(w_param, l_param);
@@ -1553,7 +1565,7 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_MBUTTONDOWN:   
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_MBUTTONDOWN";
 
                 dbg_msg += InnerKeySupport::WinApiMouseButtonToStr(w_param, l_param);
@@ -1564,7 +1576,7 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_MBUTTONUP: 
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_MBUTTONUP";
 
                 dbg_msg += InnerKeySupport::WinApiMouseButtonToStr(w_param, l_param);
@@ -1575,7 +1587,7 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_XBUTTONDOWN:
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_XBUTTONDOWN";
 
                 if (HIWORD(w_param) == XBUTTON1) dbg_msg += " X1";
@@ -1589,7 +1601,7 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_XBUTTONUP:
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_XBUTTONUP";
 
                 if (HIWORD(w_param) == XBUTTON1) dbg_msg += " X1";
@@ -1603,7 +1615,7 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_MOUSEWHEEL: {
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_MOUSEWHEEL";
 
                 const int   delta   = GET_WHEEL_DELTA_WPARAM(w_param);
@@ -1646,7 +1658,7 @@ namespace TrivialOpenGL {
         }
 
         case WM_MOUSEMOVE: {
-            if (m_data.special_debug.is_notify_each_mouse_move) {
+            if (m_data.special_debug.is_notify_mouse_move) {
                 std::string dbg_msg = "WM_MOUSEMOVE";
 
                 const int   x       = GET_X_LPARAM(l_param);

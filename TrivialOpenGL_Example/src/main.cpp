@@ -487,6 +487,7 @@ int main(int argc, char *argv[]) {
         //data.area               = {TOGL::DEF, TOGL::DEF, screen_size.width, screen_size.height};
         data.icon_resource_id   = ICON_ID;
         data.log_level          = TOGL::LOG_LEVEL_DEBUG;
+        //data.special_debug.is_notify_any_message = true;
 
         data.do_on_create = []() {
             s_test_image.Initialize(s_resolution);
@@ -510,9 +511,9 @@ int main(int argc, char *argv[]) {
             std::string message = "Changed Window State to: ";
 
             switch (window_state) {
-            case TOGL::WindowState::NORMAL: message += "NORMAL"; break;
-            case TOGL::WindowState::MAXIMIZED: message += "MAXIMIZED"; break;
-            case TOGL::WindowState::MINIMIZED: message += "MINIMIZED"; break;
+            case TOGL::WindowState::NORMAL:                 message += "NORMAL"; break;
+            case TOGL::WindowState::MAXIMIZED:              message += "MAXIMIZED"; break;
+            case TOGL::WindowState::MINIMIZED:              message += "MINIMIZED"; break;
             case TOGL::WindowState::WINDOWED_FULL_SCREENED: message += "WINDOWED_FULL_SCREENED"; break;
             }
 
@@ -527,6 +528,10 @@ int main(int argc, char *argv[]) {
             puts("On Hide");
         };
 
+        data.do_on_foreground = [](bool is_gain) {
+            puts(is_gain ? "On Foreground Gain" : "On Foreground Lose");
+        };
+
         data.do_on_key = [](TOGL::KeyId key_id, bool is_down, const TOGL::Extra& extra) {
             if (!is_down) {
 
@@ -536,6 +541,45 @@ int main(int argc, char *argv[]) {
                 case TOGL::KEY_ID_R:    TOGL::ToWindow().RequestRedraw(); break;
                 case TOGL::KEY_ID_C:    TOGL::ToWindow().Center(s_resolution, false); break;
                 case TOGL::KEY_ID_V:    TOGL::ToWindow().Center(s_resolution, true); break;
+
+                case 'F':
+                    // Moves behind window to foreground.
+                    SetForegroundWindow(GetNextWindow(GetForegroundWindow(), GW_HWNDNEXT));
+                    togl_print_i32(TOGL::ToWindow().IsForeground());
+
+                    puts("---");
+                    Sleep(1000);
+
+                    TOGL::ToWindow().GoForeground();
+                    togl_print_i32(TOGL::ToWindow().IsForeground());
+
+                    puts("---");
+                    Sleep(1000);
+
+                    TOGL::ToWindow().Minimize();
+                    togl_print_i32(TOGL::ToWindow().IsForeground());
+
+                    puts("---");
+                    Sleep(1000);
+
+                    TOGL::ToWindow().Center(s_resolution);
+                    //TOGL::ToWindow().GoForeground(); // redundant
+                    togl_print_i32(TOGL::ToWindow().IsForeground());
+
+                    puts("---");
+                    Sleep(1000);
+
+                    TOGL::ToWindow().Hide();
+                    togl_print_i32(TOGL::ToWindow().IsForeground());
+
+                    puts("---");
+                    Sleep(1000);
+
+                    TOGL::ToWindow().Show();
+                    //TOGL::ToWindow().GoForeground(); // redundant
+                    togl_print_i32(TOGL::ToWindow().IsForeground());
+
+                    break;
 
                 case TOGL::KEY_ID_ARROW_LEFT:
                     TOGL::ToWindow().MoveBy(-30, 0);
@@ -612,12 +656,16 @@ int main(int argc, char *argv[]) {
                     togl_print_i32(TOGL::ToWindow().GetArea().y);
                     togl_print_i32(TOGL::ToWindow().GetArea().width);
                     togl_print_i32(TOGL::ToWindow().GetArea().height);
+                    togl_print_i32(TOGL::ToWindow().IsForeground());
 
                     Sleep(1000);
 
                     puts("---");
                     TOGL::ToWindow().Show(); 
                     //TOGL::ToWindow().Center(s_resolution);
+
+
+                    togl_print_i32(TOGL::ToWindow().IsForeground());
                 
                     PrintWindowStates();
                     break;
