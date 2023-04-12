@@ -1,0 +1,283 @@
+--- done --
+
+WM_SIZE
+WM_SIZING
+do_on_resize(width, height)
+
+WM_KEYDOWN
+WM_KEYUP
+WM_SYSKEYDOWN
+WM_SYSKEYUP
+WM_LBUTTONDOWN   
+WM_LBUTTONUP 
+WM_RBUTTONDOWN   
+WM_RBUTTONUP 
+WM_MBUTTONDOWN   
+WM_MBUTTONUP 
+WM_XBUTTONDOWN
+WM_XBUTTONUP
+do_on_key(key_id, is_down, extra)
+
+WM_MOUSEHWHEEL
+do_on_mouse_wheel(x, y, step_count)
+
+WM_MOUSEMOVE    
+do_on_mouse_move(x, y)
+
+WM_SIZE
+Resize/SetArea/Centre()
+Maximize()
+Minimize()
+FullScreenWindowed()
+do_on_state_change(state)
+
+WM_SHOWWINDOW
+Hide()
+Show()
+do_on_show()
+do_on_hide()
+
+WM_ACTIVATE
+GoForeground()
+IsForeground() : bool
+do_on_foreground(is_gain)
+do_on_foreground_gain()
+do_on_foreground_lose()
+
+WM_TIMER
+do_on_timer(delay)
+
+WM_CHAR
+WM_UNICHAR - not used !!!
+do_on_char_utf8(code : char)
+do_on_char_utf16(code : wchar_t)
+do_on_char_utf32(code : int)
+
+SetCapture()
+GetCapture()
+
+--- to do ---
+
+
+--- maybe ---
+WM_KILLFOCUS
+WM_SETFOCUS
+# true - keyboard focus has been gained, false - keyboard focus will be lost (in moment)
+do_on_keyboard_focus(is_gain)
+
+WM_ACTIVATEAPP - when alt + tab is pressed
+SetOption(WINDOW_OPTION_MINIMIZE_AT_ALT_TAB)
+
+TrackMouseEvent
+WM_MOUSEHOVER
+WM_MOUSELEAVE
+
+--- ignore ---
+WM_CAPTURECHANGED - when mouse capture is lost
+WM_MOUSEACTIVATE
+
+NC - non-client part of window
+
+WM_NCHITTEST - hit test for mouse resizing, custom resizing
+
+WM_ACTIVATEAPP - when alt + tab is pressed
+
+WM_MOVE
+WM_MOVING - should save new last_area?
+
+
+WM_SHOWWINDOW - when window goes from hidden->visible
+
+WM_APPCOMMAND - when clicked on application button
+WM_HOTKEY - hot key registered by  RegisterHotKey
+WM_DEADCHAR - characters which are combination of key strokes
+WM_SYSDEADCHAR
+
+
+WM_ENTERSIZEMOVE    - starts resizing moving
+WM_EXITSIZEMOVE     - stops resizing moving
+
+WM_CLOSE
+WM_CREATE
+WM_DESTROY
+WM_NULL
+WM_QUIT
+
+WM_NCACTIVATE       - WM_ACTIVATE for non-client area
+WM_NCCALCSIZE       - Sent when the size and position of a window's client area must be calculated. 
+WM_NCCREATE         - before WM_CREATE
+WM_NCDESTROY        - after WM_DESTROY
+
+
+WM_CANCELMODE       - sometimes when message box is displayed sends this message to halt main window.
+WM_CHILDACTIVATE
+WM_COMPACTING       - indicates that system memory is low
+
+
+WM_DPICHANGED
+WM_ENABLE           - when window is enabled to receive input, after creating with WS_DISABLED
+
+WM_GETICON
+WM_GETMINMAXINFO    - sends when window position or size is about to change, can alter this values
+WM_INPUTLANGCHANGE  - after input language has ben changed
+WM_INPUTLANGCHANGEREQUEST - when user chosen new input language
+
+WM_QUERYDRAGICON
+WM_QUERYOPEN
+
+WM_STYLECHANGED
+WM_STYLECHANGING
+
+WM_THEMECHANGED
+WM_USERCHANGED
+
+WM_WINDOWPOSCHANGED     - when position in z order has ben changed
+WM_WINDOWPOSCHANGING    - when position in z order is changing
+
+--- structures ---
+
+
+TrivialOpenGL
+    togl_print_i32(variable)
+    
+    SetCustomLogFunction(custom_log)
+    
+    GetDesktopAreaNoTaskBar() : AreaIU16
+    GetDesktopAreaSizeNoTaskBar() : SizeU16
+    GetScreenSize() : SizeU16
+    
+    GetCursorPosInScreen() : PointI
+    
+    KeyIdToStr(key_id) : string
+    IsKeyToggled(key_id) : bool
+    
+    Run(data) : int
+    
+    ToWindow() : Window&
+    
+    Window
+        Run(data) : int
+        
+        RequestClose()
+        RequestRedraw()
+        
+        SetOption(window_option, is_enabled)
+        IsEnabled(window_option)
+        
+        MoveTo(x, y, is_draw_area = false)
+        MoveTo(pos, is_draw_area = false)
+        
+        MoveBy(x, y)
+        MoveBy(offset)
+        
+        SetSize(width, height, is_draw_area = false)
+        SetSize(size, is_draw_area = false)
+        
+        SetArea(x, y, width, height, is_draw_area = false)
+        SetArea(area, is_draw_area = false)
+        
+        Center(width, height, is_draw_area = false)
+        Center(size, is_draw_area = false)
+        
+        GetPos() : PointI
+        GetSize() : SizeU16
+        GetArea() : AreaIU16
+        
+        GetDrawAreaPos() : PointI
+        GetDrawAreaSize() : SizeU16
+        GetDrawAreaArea() : AreaIU16
+        
+        Hide()
+        Show()
+        IsVisible()
+        
+        Minimize()
+        Maximize()
+        GoWindowedFullScreen()
+        # GoFullScreeen()
+        
+        GetState() : WindowState
+        
+        IsNormal() : bool
+        IsWindowMinimized() : bool
+        IsWindowMaximized() : bool
+        IsWindowedFullScreen() : bool
+        # IsNativeFullScreen() : bool
+        # IsFullScreen() : bool
+        
+        GoForeground()
+        IsForeground() : bool
+        
+        GetCursorPosInDrawArea() : PointI
+        
+        GetOpenGL_Version() : Version
+        
+        SetLogLevel(log_level)
+        GetLogLevel() : u32
+        
+        To() : Window&
+        
+    Data
+        window_name
+        area
+        style
+        opengl_version
+        icon_file_name
+        icon_resource_id
+        log_level
+        special_debug
+        
+    {callback function declaration templates}
+        do_on_create() 
+        do_on_destroy()
+        
+        draw()
+        
+        do_on_key(key_id, is_down, extra)
+        do_on_resize(width, height)
+    
+
+
+
+---
+
+KeyEvent
+    key
+    is_down
+    x
+    y
+    count
+    
+GetNextKeyEvent() : KeyEvent*
+
+
+KeyId
+    KEY_ID_UNKNOWN
+    ...
+    KEY_ID_1
+    ...
+    KEY_ID_F10
+
+key_id : KeyId = KEY_ID_UNKNOWN
+
+Extra
+    count
+    x
+    y
+    side # NONE, LEFT, RIGHT (for shift, control, and alt)
+
+#Mode
+#    MODE_NATIVE
+#    MODE_WINDOWED
+#
+# ToWindow().FullScreen(MODE_WINDOWED)
+# ToWindow().FullScreen(MODE_NATIVE)
+# ToWindow().FullScreen()
+ToWindow().FullScreenWindowed()
+
+State
+    NORMAL
+    HIDDEN
+    MINIMIZED
+    MAXIMIZED
+    FULL_SCREEN_WINDOWED
