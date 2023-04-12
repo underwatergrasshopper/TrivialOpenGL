@@ -49,10 +49,11 @@ namespace TrivialOpenGL {
     };
 
     struct SpecialDebug {
-        bool is_notify_any_message      = false;
-        bool is_notify_draw_call        = false;
-        bool is_notify_mouse_move       = false;
-        bool is_notify_key_message      = false;
+        bool is_notify_any_message          = false;
+        bool is_notify_draw_call            = false;
+        bool is_notify_mouse_move           = false;
+        bool is_notify_key_message          = false;
+        bool is_notify_character_message    = false;
     };
 
     enum WindowOption {
@@ -131,6 +132,15 @@ namespace TrivialOpenGL {
         //                    cursor position in draw area (extra.x, extra.y), 
         //                    indicator if pressed key is left right or doesn't matter (extra.keyboard_side).
         void (*do_on_key)(KeyId key_id, bool is_down, const Extra& extra)   = nullptr;
+
+        // code     - code unit of utf8 character
+        void (*do_on_char)(char code)                                       = nullptr;
+
+        // code     - code unit of utf16 character
+        void (*do_on_char_utf16)(wchar_t code)                              = nullptr;
+
+        // code     - code unit of utf32 character
+        void (*do_on_char_utf32)(int code)                                  = nullptr;
 
         // Called each time window resize.
         void (*do_on_resize)(uint16_t width, uint16_t height)               = nullptr;
@@ -285,8 +295,9 @@ namespace TrivialOpenGL {
 
         // Window client area width extension to force functional windowed full screen window (reduced flashing and be able alt+tab in Windows 7).
         enum {
-            WIDTH_CORRECTION_TO_FAKE    = 1,
-            DEFAULT_TIMER_ID             = 1,
+            WIDTH_CORRECTION_TO_FAKE        = 1,
+            DEFAULT_TIMER_ID                = 1,
+            MAX_NUM_OF_UTF16_CODE_UNITS     = 2,
         };
 
         Window();
@@ -338,6 +349,21 @@ namespace TrivialOpenGL {
         void HandleDoOnKeyboardKey(WPARAM w_param, LPARAM l_param);
         void HandleDoOnMouseKey(UINT message, WPARAM w_param, LPARAM l_param);
 
+        template <unsigned NUNMBER_OF_CODE_UNITS>
+        void HandleUTF16_ToUTF8(const wchar_t (&char_utf16)[NUNMBER_OF_CODE_UNITS]) {
+            if (m_data.do_on_char) {
+                enum { MAX_NUM_UTF8_CODE_UNITS = 6 };
+
+                uint8_t char_utf8[MAX_NUM_UTF8_CODE_UNITS];
+
+                uint32_t number = WideCharToMultiByte(CP_UTF8, 0, (LPCWCH)char_utf16, NUNMBER_OF_CODE_UNITS, (LPSTR)char_utf8, MAX_NUM_UTF8_CODE_UNITS, NULL, NULL);
+
+                for (uint32_t ix = 0; ix < number; ix++) {
+                    m_data.do_on_char(char_utf8[ix]);
+                }
+            }
+        }
+
         LRESULT InnerWindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
         static LRESULT CALLBACK WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
 
@@ -369,6 +395,8 @@ namespace TrivialOpenGL {
         WindowAreaCorrector m_window_area_corrector;
 
         std::map<bool*, std::stack<bool>> m_on_off_stack_map;
+
+        wchar_t     m_char_utf16[MAX_NUM_OF_UTF16_CODE_UNITS];
     };
 
 } // namespace TrivialOpenGL
@@ -416,6 +444,8 @@ namespace TrivialOpenGL {
         m_is_enable_change_state_at_resize  = true;
 
         m_dbg_message_id            = 0;
+
+        memset(m_char_utf16, 0, sizeof(m_char_utf16));
     }
 
     inline Window::~Window() {
@@ -1578,6 +1608,57 @@ namespace TrivialOpenGL {
             HandleDoOnKeyboardKey(w_param, l_param);
             return 0;
 
+        case WM_CHAR: {
+            if (m_data.special_debug.is_notify_character_message) {
+                // test for utf-32:
+                // in ahk: a::Send {U+24B62}
+                // utf-16 output should be: D852, DF62
+                // 
+                // test for utf-32:
+                // in ahk: a::Send {U+10348}
+                // utf-16 output should be: D800, DF48
+                // utf-8 output should be: F0, 90, 8D, 88
+
+                std::string dbg_msg = "WM_CHAR ";
+
+                const char c                = (char)w_param;
+                const uint16_t code_utf16   = (uint16_t)w_param;
+                const unsigned scan_code    = (unsigned(l_param) >> 16) & 0xFFFF;
+
+                dbg_msg += "'";
+                dbg_msg += c;
+                dbg_msg += "'";
+                dbg_msg += " utf8_code=" + std::to_string(code_utf16);
+                dbg_msg += " scan_code=" + std::to_string(scan_code);
+
+                LogDebug(dbg_msg);
+            }
+
+            const uint16_t code_utf16 = (uint16_t)w_param;
+
+            if (m_data.do_on_char_utf16) m_data.do_on_char_utf16(code_utf16);
+
+            if ((0xDC00 & code_utf16) == 0xDC00) { // second code unit from two
+                m_char_utf16[1] = code_utf16;
+
+                int char_utf32 = (uint32_t(m_char_utf16[0]) & 0x0000'03FF) << 10;
+                char_utf32 += (uint32_t(m_char_utf16[1]) & 0x0000'03FF) + 0x0001'0000;
+
+                if (m_data.do_on_char_utf32) m_data.do_on_char_utf32(char_utf32);
+
+                HandleUTF16_ToUTF8(m_char_utf16);
+
+            } else if ((0xD800 & code_utf16) == 0xD800) { // first code unit from two
+                m_char_utf16[0] = code_utf16;
+            } else { // only one code unit
+                if (m_data.do_on_char_utf32) m_data.do_on_char_utf32(code_utf16);
+
+                HandleUTF16_ToUTF8({code_utf16});
+            }
+
+            return 0;
+        }
+
 
         ///////////
         // Mouse //
@@ -1748,7 +1829,6 @@ namespace TrivialOpenGL {
 
             return 0;
         }
-
         } // switch
 
         return DefWindowProcW(window_handle, message, w_param, l_param);

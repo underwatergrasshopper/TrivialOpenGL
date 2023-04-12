@@ -241,10 +241,14 @@ int main(int argc, char *argv[]) {
 
     if (flags.size() == 0) {
         //ForceFlag("MOVE_AND_RESIZE");
-        ForceFlag("WINDOW_STATE");
+        //ForceFlag("WINDOW_STATE");
         //ForceFlag("OPENGL_VERSION");
 
         //ForceFlag("KEYBOARD");
+
+        ForceFlag("CHARACTER");
+
+        
     }
 
     if (IsFlag("ICON")) {
@@ -488,6 +492,7 @@ int main(int argc, char *argv[]) {
         data.icon_resource_id   = ICON_ID;
         data.log_level          = TOGL::LOG_LEVEL_DEBUG;
         //data.special_debug.is_notify_any_message = true;
+        //data.special_debug.is_notify_character_message = true;
 
         data.do_on_create = []() {
             s_test_image.Initialize(s_resolution);
@@ -860,7 +865,11 @@ int main(int argc, char *argv[]) {
 
             if (is_down) {
                 switch (key_id) {
-                case 'X': {
+                case 'X':
+                    TOGL::ToWindow().RequestClose();
+                    break;
+
+                case 'I': {
                     togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_CAPS_LOCK));
                     togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_INSERT));
                     togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_NUMLOCK));
@@ -908,7 +917,185 @@ int main(int argc, char *argv[]) {
             }
         };
 
+        data.do_on_char = [](char code) {
+            printf("On Char UTF8: '%c' %02hhX\n", code, uint32_t((int)code));
+        };
+
+        data.do_on_char_utf16 = [](wchar_t code) {
+            printf("On Char UTF16: %04hX\n", uint32_t((int)code));
+        };
+
+        data.do_on_char_utf32 = [](int code) {
+            printf("On Char UTF32: %08X\n", uint32_t(code));
+        };
+
         return TOGL::Run(data);
+
+    } else if (IsFlag("CHARACTER")) {
+            s_resolution = {600, 300};
+
+            const TOGL::SizeU16 screen_size = TOGL::GetScreenSize();
+
+            TOGL::Data data = {};
+
+            data.window_name        = "TrivialOpenGL_Example WINDOW_STATE";
+            //data.style              |= TOGL::StyleBit::DRAW_AREA_SIZE;
+            //data.style              |= TOGL::StyleBit::DRAW_AREA_ONLY;
+            //data.style              |= TOGL::StyleBit::REDRAW_ON_CHANGE_OR_REQUEST;
+            //data.style              |= TOGL::StyleBit::NO_RESIZE;
+            //data.style              |= TOGL::StyleBit::NO_MAXIMIZE;
+            data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
+            //data.area               = {TOGL::DEF, TOGL::DEF, screen_size.width, screen_size.height};
+            data.icon_resource_id   = ICON_ID;
+            data.log_level          = TOGL::LOG_LEVEL_DEBUG;
+
+            data.do_on_create = []() {
+                s_test_image.Initialize(s_resolution);
+
+                // TOGL::ToWindow().GoWindowedFullScreen();
+            };
+
+            data.draw = []() {
+                s_test_image.Animate();
+            };
+
+            data.do_on_resize = [](uint16_t width, uint16_t height) {
+                s_test_image.Resize(width, height);
+            };
+
+            data.do_on_key = [](TOGL::KeyId key_id, bool is_down, const TOGL::Extra& extra) {
+                if (is_down) {
+                    switch (key_id) {
+                    case 'X':
+                        TOGL::ToWindow().RequestClose();
+                        break;
+                    } // switch
+                }
+            };
+
+            data.do_on_char = [](char code) {
+                printf("On Char UTF8: '%c' %02hhX\n", code, uint32_t((int)code));
+            };
+
+            data.do_on_char_utf16 = [](wchar_t code) {
+                printf("On Char UTF16: %04hX\n", uint32_t((int)code));
+            };
+
+            data.do_on_char_utf32 = [](int code) {
+                printf("On Char UTF32: %08X\n", uint32_t(code));
+            };
+
+            return TOGL::Run(data);
+
+     } else if (IsFlag("KEYBOARD")) {
+            s_resolution = {600, 300};
+
+            const TOGL::SizeU16 screen_size = TOGL::GetScreenSize();
+
+            TOGL::Data data = {};
+
+            data.window_name        = "TrivialOpenGL_Example WINDOW_STATE";
+            //data.style              |= TOGL::StyleBit::DRAW_AREA_SIZE;
+            //data.style              |= TOGL::StyleBit::DRAW_AREA_ONLY;
+            //data.style              |= TOGL::StyleBit::REDRAW_ON_CHANGE_OR_REQUEST;
+            //data.style              |= TOGL::StyleBit::NO_RESIZE;
+            //data.style              |= TOGL::StyleBit::NO_MAXIMIZE;
+            data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
+            //data.area               = {TOGL::DEF, TOGL::DEF, screen_size.width, screen_size.height};
+            data.icon_resource_id   = ICON_ID;
+            data.log_level          = TOGL::LOG_LEVEL_DEBUG;
+
+            data.do_on_create = []() {
+                s_test_image.Initialize(s_resolution);
+
+                // TOGL::ToWindow().GoWindowedFullScreen();
+            };
+
+            data.draw = []() {
+                s_test_image.Animate();
+            };
+
+            data.do_on_resize = [](uint16_t width, uint16_t height) {
+                s_test_image.Resize(width, height);
+            };
+
+            data.do_on_key = [](TOGL::KeyId key_id, bool is_down, const TOGL::Extra& extra) {
+                std::string message = "Key: ";
+
+                message += TOGL::KeyIdToStr(key_id);
+                message += is_down ? " down" : " up";
+                message += TOGL::ExtraToStr(extra);
+
+                puts(message.c_str());
+
+                if (is_down) {
+                    switch (key_id) {
+                    case 'X':
+                        TOGL::ToWindow().RequestClose();
+                        break;
+
+                    case 'I': {
+                        togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_CAPS_LOCK));
+                        togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_INSERT));
+                        togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_NUMLOCK));
+
+                        const TOGL::PointI cursor_pos_in_screen = TOGL::GetCursorPosInScreen();
+                        togl_print_i32(cursor_pos_in_screen.x);
+                        togl_print_i32(cursor_pos_in_screen.y);
+
+                        const TOGL::PointI cursor_pos_in_draw_area = TOGL::ToWindow().GetCursorPosInDrawArea();
+                        togl_print_i32(cursor_pos_in_draw_area.x);
+                        togl_print_i32(cursor_pos_in_draw_area.y);
+                        break;
+                    }
+
+                    case 'S':
+                        s_is_display_mose_move_data = !s_is_display_mose_move_data;
+                        if (s_is_display_mose_move_data)    puts("enabled display mouse move data");
+                        if (!s_is_display_mose_move_data)   puts("disabled display mouse move data");
+                        break;
+
+                    default:
+                        break;
+                    } // switch
+                }
+            };
+
+            data.do_on_mouse_wheel_roll = [](int step_count, int x, int y) {
+                std::string message = "Mouse Wheel:";
+
+                message += " step_count=" + std::to_string(step_count);
+                message += " x=" + std::to_string(x);
+                message += " y=" + std::to_string(y);
+
+                puts(message.c_str());
+            };
+
+            data.do_on_mouse_move = [](int x, int y) {
+                if (s_is_display_mose_move_data) {
+                    std::string message = "Mouse Move:";
+
+                    message += " x=" + std::to_string(x);
+                    message += " y=" + std::to_string(y);
+
+                    puts(message.c_str());
+                }
+            };
+
+            data.do_on_char = [](char code) {
+                printf("On Char UTF8: '%c' %02hhX\n", code, uint32_t((int)code));
+            };
+
+            data.do_on_char_utf16 = [](wchar_t code) {
+                printf("On Char UTF16: %04hX\n", uint32_t((int)code));
+            };
+
+            data.do_on_char_utf32 = [](int code) {
+                printf("On Char UTF32: %08X\n", uint32_t(code));
+            };
+
+            return TOGL::Run(data);
+
     } else if (IsFlag("TIMER")) {
         s_resolution = {600, 300};
 
