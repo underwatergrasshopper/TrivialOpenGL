@@ -244,9 +244,9 @@ int main(int argc, char *argv[]) {
         //ForceFlag("WINDOW_STATE");
         //ForceFlag("OPENGL_VERSION");
 
-        //ForceFlag("KEYBOARD");
+        ForceFlag("KEYBOARD");
 
-        ForceFlag("CHARACTER");
+        //ForceFlag("CHARACTER");
 
         
     }
