@@ -367,36 +367,36 @@ namespace TrivialOpenGL {
         LRESULT InnerWindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
         static LRESULT CALLBACK WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
 
-        Data        m_data;
+        Data            m_data;
 
-        HINSTANCE   m_instance_handle;
-        HWND        m_window_handle;
-        HDC         m_device_context_handle;
-        HGLRC       m_rendering_context_handle;
+        HINSTANCE       m_instance_handle;
+        HWND            m_window_handle;
+        HDC             m_device_context_handle;
+        HGLRC           m_rendering_context_handle;
 
-        DWORD       m_window_style;
-        DWORD       m_window_extended_style;
+        DWORD           m_window_style;
+        DWORD           m_window_extended_style;
 
-        bool        m_is_active;
-        bool        m_is_visible;
-        bool        m_is_frame;
+        bool            m_is_active;
+        bool            m_is_visible;
+        bool            m_is_frame;
 
-        WindowState m_state;
-        WindowState m_prev_state;
+        WindowState     m_state;
+        WindowState     m_prev_state;
 
-        bool        m_is_win7;
+        bool            m_is_win7;
 
-        bool        m_is_apply_fake_width;
-        bool        m_is_enable_do_on_resize;
-        bool        m_is_enable_change_state_at_resize;
+        bool            m_is_apply_fake_width;
+        bool            m_is_enable_do_on_resize;
+        bool            m_is_enable_change_state_at_resize;
 
-        uint64_t    m_dbg_message_id;
+        uint64_t        m_dbg_message_id;
 
         WindowAreaCorrector m_window_area_corrector;
 
         std::map<bool*, std::stack<bool>> m_on_off_stack_map;
 
-        wchar_t     m_char_utf16[MAX_NUM_OF_UTF16_CODE_UNITS];
+        wchar_t         m_char_utf16[MAX_NUM_OF_UTF16_CODE_UNITS];
     };
 
 } // namespace TrivialOpenGL
@@ -1182,9 +1182,10 @@ namespace TrivialOpenGL {
 
 
     inline void Window::HandleDoOnMouseKey(UINT message, WPARAM w_param, LPARAM l_param) {
+        const bool is_down = InnerKeySupport::IsMouseButtonDown(message);
+
         if (m_data.do_on_key) {
             const KeyId key_id = InnerKeySupport::GetMouseKeyId(message, w_param);
-            const bool is_down = InnerKeySupport::IsMouseButtonDown(message);
 
             Extra extra = {};
             extra.count         = 1;
@@ -1193,6 +1194,13 @@ namespace TrivialOpenGL {
             extra.keyboard_side = KEYBOARD_SIDE_NONE;
 
             m_data.do_on_key(key_id, is_down, extra);
+        }
+
+        // Tracks mouse button up message when cursor leave window area when mouse button is down.
+        if (is_down) {
+            SetCapture(m_window_handle);
+        } else if (GetCapture() == m_window_handle) {
+            ReleaseCapture();
         }
     }
 
@@ -1826,7 +1834,6 @@ namespace TrivialOpenGL {
             if (m_data.do_on_mouse_move) {
                 m_data.do_on_mouse_move(GET_X_LPARAM(l_param), GET_Y_LPARAM(l_param));
             }
-
             return 0;
         }
         } // switch
