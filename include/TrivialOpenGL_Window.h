@@ -1470,6 +1470,17 @@ namespace TrivialOpenGL {
         //////////////
         // Keyboard //
         //////////////
+        case WM_SETFOCUS:
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+                LogDebug("WM_SETFOCUS");
+            }
+            return 0;
+
+        case WM_KILLFOCUS:
+            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+                LogDebug("WM_KILLFOCUS");
+            }
+            return 0;
 
         case WM_KEYDOWN:
             if (m_data.special_debug.is_notify_key_message) {
