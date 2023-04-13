@@ -411,13 +411,9 @@ namespace TrivialOpenGL {
         WindowAreaCorrector() {
             m_dwmapi_lib_handle = LoadLibraryA("Dwmapi.dll");
             if (m_dwmapi_lib_handle) {
-
                 m_dwm_get_window_attribute          = (decltype(m_dwm_get_window_attribute)) GetProcAddress(m_dwmapi_lib_handle, "DwmGetWindowAttribute");
-                m_dwm_extend_frame_into_client_area = (decltype(m_dwm_extend_frame_into_client_area)) GetProcAddress(m_dwmapi_lib_handle, "DwmExtendFrameIntoClientArea");
-                
             } else {
                 m_dwm_get_window_attribute          = nullptr;
-                m_dwm_extend_frame_into_client_area = nullptr;
             }
         }
 
@@ -529,7 +525,6 @@ namespace TrivialOpenGL {
         };
         
         HRESULT (*m_dwm_get_window_attribute)(HWND hwnd, DWORD dwAttribute, PVOID pvAttribute, DWORD cbAttribute);
-        HRESULT (*m_dwm_extend_frame_into_client_area)(HWND hWnd, const MARGINS *pMarInset);
     };
 
     //--------------------------------------------------------------------------
