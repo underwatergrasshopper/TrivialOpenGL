@@ -281,6 +281,23 @@ namespace TrivialOpenGL {
         Version GetOpenGL_Version() const;
 
         // ---
+        bool LoadFont(const std::string& name, uint16_t size, bool is_bold = false) {
+            return m_text_drawer.LoadFont(m_device_context_handle, name, size, is_bold);
+        }
+
+        void UnloadFont() {
+            m_text_drawer.UnloadFont();
+        }
+
+        void RenderText(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text) {
+            m_text_drawer.RenderText(x, y, r, g, b, a, text);
+        }
+
+        // '\n' is ignored.
+        SizeU16 GetTextSize(const std::string& text) const {
+            return m_text_drawer.GetTextSize(text);
+        }
+        // ---
 
         // Get access to singleton instance.
         static Window& To();
@@ -397,6 +414,8 @@ namespace TrivialOpenGL {
         std::map<bool*, std::stack<bool>> m_on_off_stack_map;
 
         wchar_t         m_char_utf16[MAX_NUM_OF_UTF16_CODE_UNITS];
+
+        TextDrawer      m_text_drawer;
     };
 
 } // namespace TrivialOpenGL
@@ -446,6 +465,8 @@ namespace TrivialOpenGL {
         m_dbg_message_id            = 0;
 
         memset(m_char_utf16, 0, sizeof(m_char_utf16));
+
+        
     }
 
     inline Window::~Window() {

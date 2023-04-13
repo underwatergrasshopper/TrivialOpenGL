@@ -540,6 +540,65 @@ void TestTOGL_Log() {
     TTK_ASSERT(LoadTextFromFile("log\\test\\log_custom.txt") == "Info: Some message.\nFatal Error: Some message 2.\n");
 }
 
+void TestTOGL_Split() {
+    {
+        auto list = TOGL::Split("", '\n');
+        TTK_ASSERT(list.size() == 1);
+        TTK_ASSERT(list[0] == "");
+    }
+    {
+        auto list = TOGL::Split("\n", '\n');
+        TTK_ASSERT(list.size() == 2);
+        TTK_ASSERT(list[0] == "");
+        TTK_ASSERT(list[1] == "");
+    }
+    {
+        auto list = TOGL::Split("\n\n", '\n');
+        TTK_ASSERT(list.size() == 3);
+        TTK_ASSERT(list[0] == "");
+        TTK_ASSERT(list[1] == "");
+        TTK_ASSERT(list[2] == "");
+    }
+    {
+        auto list = TOGL::Split("x", '\n');
+        TTK_ASSERT(list.size() == 1);
+        TTK_ASSERT(list[0] == "x");
+    }
+
+    {
+        auto list = TOGL::Split("\nx", '\n');
+        TTK_ASSERT(list.size() == 2);
+        TTK_ASSERT(list[0] == "");
+        TTK_ASSERT(list[1] == "x");
+    }
+
+    {
+        auto list = TOGL::Split("x\n", '\n');
+        TTK_ASSERT(list.size() == 2);
+        TTK_ASSERT(list[0] == "x");
+        TTK_ASSERT(list[1] == "");
+    }
+
+    {
+        auto list = TOGL::Split("x\nabc\n123", '\n');
+        TTK_ASSERT(list.size() == 3);
+        TTK_ASSERT(list[0] == "x");
+        TTK_ASSERT(list[1] == "abc");
+        TTK_ASSERT(list[2] == "123");
+    }
+
+    {
+        auto list = TOGL::Split("\nx\nabc\n\n123\n", '\n');
+        TTK_ASSERT(list.size() == 6);
+        TTK_ASSERT(list[0] == "");
+        TTK_ASSERT(list[1] == "x");
+        TTK_ASSERT(list[2] == "abc");
+        TTK_ASSERT(list[3] == "");
+        TTK_ASSERT(list[4] == "123");
+        TTK_ASSERT(list[5] == "");
+    }
+}
+
 int main(int argc, char *argv[]) {
     std::set<std::string> flags;
 
@@ -596,6 +655,8 @@ int main(int argc, char *argv[]) {
         TTK_ADD_TEST(TestTOGL_ToUTF16, 0);
         TTK_ADD_TEST(TestTOGL_ToUTF8, 0);
         TTK_ADD_TEST(TestTOGL_Log, 0);
+        TTK_ADD_TEST(TestTOGL_Split, 0);
+        
         return !TTK_Run();
     }
 }

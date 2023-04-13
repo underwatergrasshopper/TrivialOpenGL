@@ -19,6 +19,7 @@
 #include <string>
 #include <map>
 #include <stack>
+#include <vector>
 
 //==============================================================================
 // Declarations
@@ -544,33 +545,41 @@ namespace TrivialOpenGL {
 
         // name     - Font name.
         // size     - Height of characters in pixels.
-        void LoadFont(HDC device_context_handle, const std::string& name, uint16_t size, bool is_bold = false) {
+        bool LoadFont(HDC device_context_handle, const std::string& name, uint16_t size, bool is_bold = false) {
             UnloadFont();
+
+            BOOL is_success = false;
 
             m_device_context_handle = device_context_handle;
 
-            if (!name.empty()) {
-                m_font_handle = CreateFontA(
-                    -size,                    
-                    0, 0, 0,                            
-                    is_bold ? FW_BOLD : FW_NORMAL,
-                    FALSE, FALSE, FALSE,
-                    ANSI_CHARSET,
-                    OUT_TT_PRECIS,
-                    CLIP_DEFAULT_PRECIS,
-                    ANTIALIASED_QUALITY,
-                    FF_DONTCARE | DEFAULT_PITCH,
-                    name.c_str());  
-            } else {
-                m_font_handle = (HFONT)GetStockObject(SYSTEM_FONT);
+            m_font_handle = CreateFontA(
+                size,                    
+                0, 0, 0,                            
+                is_bold ? FW_BOLD : FW_NORMAL,
+                FALSE, FALSE, FALSE,
+                ANSI_CHARSET,
+                OUT_TT_PRECIS,
+                CLIP_DEFAULT_PRECIS,
+                ANTIALIASED_QUALITY,
+                FF_DONTCARE | DEFAULT_PITCH,
+                name.c_str());  
+
+            if (m_font_handle) {
+                HFONT old_font_handle = (HFONT)SelectObject(m_device_context_handle, m_font_handle); 
+
+                m_list_base = glGenLists(PRINT_LIST_LEN);
+                if (m_list_base) {
+                    is_success = wglUseFontBitmaps(m_device_context_handle, 0, PRINT_LIST_LEN, m_list_base);
+                }
+
+                SelectObject(m_device_context_handle, old_font_handle);
             }
 
-            HFONT old_font_handle = (HFONT)SelectObject(m_device_context_handle, m_font_handle); 
+            if (!is_success) {
+                UnloadFont();
+            }
 
-            m_list_base = glGenLists(PRINT_LIST_LEN);
-            wglUseFontBitmaps(m_device_context_handle, 0, PRINT_LIST_LEN, m_list_base);
-
-            SelectObject(m_device_context_handle, old_font_handle);
+            return is_success;
         }
 
         void UnloadFont() {
@@ -588,11 +597,21 @@ namespace TrivialOpenGL {
 
         void RenderText(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text) {
             if (m_list_base) {
-                glColor4b(r, g, b, a);
-
+                glPushAttrib(GL_ENABLE_BIT);
+                glPushAttrib(GL_COLOR_BUFFER_BIT);
                 glPushAttrib(GL_LIST_BIT);
+
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
+                
+                glColor4ub(r, g, b, a);
+                glRasterPos2i(x, y);
+
                 glListBase(m_list_base);
                 glCallLists((GLsizei)text.length(), GL_UNSIGNED_BYTE, text.c_str());
+
+                glPopAttrib();
+                glPopAttrib();
                 glPopAttrib();
             }
         }
@@ -647,6 +666,26 @@ namespace TrivialOpenGL {
             return {pos.x, pos.y};
         }
         return {};
+    }
+
+    //--------------------------------------------------------------------------
+
+    inline std::vector<std::string> Split(const std::string& text, char c) {
+        std::string temp = text;
+        std::vector<std::string> list;
+
+        while (true) {
+            size_t pos = temp.find(c, 0);
+
+            if (pos == std::string::npos) {
+                list.push_back(temp);
+                break;
+            } else {
+                list.push_back(temp.substr(0, pos));
+                temp = temp.substr(pos + 1);
+            }
+        }
+        return list;
     }
 
 } // namespace TrivialOpenGL

@@ -45,6 +45,16 @@ void DrawTriangle(float x, float y, float scale, float angle) {
     glPopMatrix();
 };
 
+void DrawInfoText(const std::string& text) {
+    const auto list = TOGL::Split(text, '\n');
+
+    int y = TOGL::ToWindow().GetDrawAreaSize().height;
+    for (const auto& line : list) {
+        y -= TOGL::ToWindow().GetTextSize(line).height;
+        TOGL::ToWindow().RenderText(10, y, 255, 255, 255, 255, line);
+    }
+}
+
 class TestImage {
 public:
     TestImage() {
@@ -216,6 +226,10 @@ void DisplayWindowInfo() {
 }
 
 //------------------------------------------------------------------------------
+
+enum {
+    FONT_SIZE = 16, // in pixels
+};
 
 static TOGL::SizeU16    s_resolution;
 static bool             s_is_client;
@@ -403,7 +417,7 @@ int main(int argc, char *argv[]) {
         data.log_level         = TOGL::LOG_LEVEL_DEBUG;
 
         data.do_on_create = []() {
-            s_test_image.Initialize(s_resolution);
+            s_test_image.Initialize(TOGL::ToWindow().GetDrawAreaSize());
         };
 
         data.draw = []() {
@@ -495,7 +509,7 @@ int main(int argc, char *argv[]) {
         //data.special_debug.is_notify_character_message = true;
 
         data.do_on_create = []() {
-            s_test_image.Initialize(s_resolution);
+            s_test_image.Initialize(TOGL::ToWindow().GetDrawAreaSize());
 
             // TOGL::ToWindow().GoWindowedFullScreen();
         };
@@ -841,13 +855,22 @@ int main(int argc, char *argv[]) {
         data.log_level          = TOGL::LOG_LEVEL_DEBUG;
 
         data.do_on_create = []() {
-            s_test_image.Initialize(s_resolution);
+            s_test_image.Initialize(TOGL::ToWindow().GetDrawAreaSize());
 
-            // TOGL::ToWindow().GoWindowedFullScreen();
+            if (!TOGL::ToWindow().LoadFont("Courier New", FONT_SIZE)) {
+                puts("Error: Can not load font.");
+            } else {
+                puts("Font loaded.");
+            }
+
+            //TOGL::SizeU16 size = TOGL::ToWindow().GetTextSize("Hello! jX");
+            //togl_print_i32(size.width);
+            //togl_print_i32(size.height);
         };
 
         data.draw = []() {
             s_test_image.Animate();
+            DrawInfoText("Hello! jX\nSome Text.\nSome Other Text.");
         };
 
         data.do_on_resize = [](uint16_t width, uint16_t height) {
@@ -870,6 +893,9 @@ int main(int argc, char *argv[]) {
                     break;
 
                 case 'I': {
+                    DisplayWindowInfo();
+
+
                     togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_CAPS_LOCK));
                     togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_INSERT));
                     togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_NUMLOCK));
@@ -950,7 +976,7 @@ int main(int argc, char *argv[]) {
             data.log_level          = TOGL::LOG_LEVEL_DEBUG;
 
             data.do_on_create = []() {
-                s_test_image.Initialize(s_resolution);
+                s_test_image.Initialize(TOGL::ToWindow().GetDrawAreaSize());
 
                 // TOGL::ToWindow().GoWindowedFullScreen();
             };
@@ -1006,7 +1032,7 @@ int main(int argc, char *argv[]) {
             data.log_level          = TOGL::LOG_LEVEL_DEBUG;
 
             data.do_on_create = []() {
-                s_test_image.Initialize(s_resolution);
+                s_test_image.Initialize(TOGL::ToWindow().GetDrawAreaSize());
 
                 // TOGL::ToWindow().GoWindowedFullScreen();
             };
@@ -1035,6 +1061,8 @@ int main(int argc, char *argv[]) {
                         break;
 
                     case 'I': {
+                        DisplayWindowInfo();
+
                         togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_CAPS_LOCK));
                         togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_INSERT));
                         togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_NUMLOCK));
@@ -1116,7 +1144,7 @@ int main(int argc, char *argv[]) {
         data.log_level          = TOGL::LOG_LEVEL_DEBUG;
 
         data.do_on_create = []() {
-            s_test_image.Initialize(s_resolution);
+            s_test_image.Initialize(TOGL::ToWindow().GetDrawAreaSize());
         };
 
         data.draw = []() {
