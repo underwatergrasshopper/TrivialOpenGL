@@ -944,11 +944,11 @@ int main(int argc, char *argv[]) {
         };
 
         data.do_on_char = [](char code) {
-            printf("On Char UTF8: '%c' %02hhX\n", code, uint32_t((int)code));
+            printf("On Char UTF8: '%c' %02hhX\n", code, uint8_t((int)code));
         };
 
         data.do_on_char_utf16 = [](wchar_t code) {
-            printf("On Char UTF16: %04hX\n", uint32_t((int)code));
+            printf("On Char UTF16: %04hX\n", uint16_t((int)code));
         };
 
         data.do_on_char_utf32 = [](int code) {
@@ -995,16 +995,18 @@ int main(int argc, char *argv[]) {
                     case 'X':
                         TOGL::ToWindow().RequestClose();
                         break;
+                    default:
+                        break;
                     } // switch
                 }
             };
 
             data.do_on_char = [](char code) {
-                printf("On Char UTF8: '%c' %02hhX\n", code, uint32_t((int)code));
+                printf("On Char UTF8: '%c' %02hhX\n", code, uint8_t((int)code));
             };
 
             data.do_on_char_utf16 = [](wchar_t code) {
-                printf("On Char UTF16: %04hX\n", uint32_t((int)code));
+                printf("On Char UTF16: %04hX\n", uint16_t((int)code));
             };
 
             data.do_on_char_utf32 = [](int code) {
@@ -1111,11 +1113,11 @@ int main(int argc, char *argv[]) {
             };
 
             data.do_on_char = [](char code) {
-                printf("On Char UTF8: '%c' %02hhX\n", code, uint32_t((int)code));
+                printf("On Char UTF8: '%c' %02hhX\n", code, uint8_t((int)code));
             };
 
             data.do_on_char_utf16 = [](wchar_t code) {
-                printf("On Char UTF16: %04hX\n", uint32_t((int)code));
+                printf("On Char UTF16: %04hX\n", uint16_t((int)code));
             };
 
             data.do_on_char_utf32 = [](int code) {
