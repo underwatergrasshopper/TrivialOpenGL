@@ -851,6 +851,7 @@ namespace TrivialOpenGL {
                 DispatchMessageW(&msg);
             }
             if (msg.message == WM_QUIT) {
+                m_window_handle = NULL;
                 return (int)msg.wParam;
             }
 
@@ -859,6 +860,7 @@ namespace TrivialOpenGL {
             while (true) {
                 if (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE)) {
                     if (msg.message == WM_QUIT) {
+                        m_window_handle = NULL;
                         return (int)msg.wParam;
                     }
 
@@ -1154,7 +1156,11 @@ namespace TrivialOpenGL {
 
         wglMakeCurrent(NULL, NULL); 
         wglDeleteContext(m_rendering_context_handle);
+        m_rendering_context_handle = NULL;
+
         ReleaseDC(m_window_handle, m_device_context_handle);
+        m_device_context_handle = NULL;
+
         PostQuitMessage(0);
     }
 
