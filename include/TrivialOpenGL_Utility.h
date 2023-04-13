@@ -14,6 +14,8 @@
 #include <windowsx.h>
 #undef WIN32_LEAN_AND_MEAN 
 
+#include <gl\gl.h>
+
 #include <string>
 #include <map>
 #include <stack>
@@ -526,6 +528,102 @@ namespace TrivialOpenGL {
         
         HRESULT (*m_dwm_get_window_attribute)(HWND hwnd, DWORD dwAttribute, PVOID pvAttribute, DWORD cbAttribute);
     };
+
+    //--------------------------------------------------------------------------
+    // WindowAreaCorrector
+    //--------------------------------------------------------------------------
+
+    class TextDrawer {
+    public:
+        TextDrawer() {
+            m_device_context_handle = NULL;
+            m_font_handle           = NULL;
+            m_list_base             = 0;
+        }
+        virtual ~TextDrawer() {}
+
+        // name     - Font name.
+        // size     - Height of characters in pixels.
+        void LoadFont(HDC device_context_handle, const std::string& name, uint16_t size, bool is_bold = false) {
+            UnloadFont();
+
+            m_device_context_handle = device_context_handle;
+
+            if (!name.empty()) {
+                m_font_handle = CreateFontA(
+                    -size,                    
+                    0, 0, 0,                            
+                    is_bold ? FW_BOLD : FW_NORMAL,
+                    FALSE, FALSE, FALSE,
+                    ANSI_CHARSET,
+                    OUT_TT_PRECIS,
+                    CLIP_DEFAULT_PRECIS,
+                    ANTIALIASED_QUALITY,
+                    FF_DONTCARE | DEFAULT_PITCH,
+                    name.c_str());  
+            } else {
+                m_font_handle = (HFONT)GetStockObject(SYSTEM_FONT);
+            }
+
+            HFONT old_font_handle = (HFONT)SelectObject(m_device_context_handle, m_font_handle); 
+
+            m_list_base = glGenLists(PRINT_LIST_LEN);
+            wglUseFontBitmaps(m_device_context_handle, 0, PRINT_LIST_LEN, m_list_base);
+
+            SelectObject(m_device_context_handle, old_font_handle);
+        }
+
+        void UnloadFont() {
+            if (m_list_base) {
+                glDeleteLists(m_list_base, PRINT_LIST_LEN);
+                m_list_base = 0;
+            }
+            if (m_font_handle) {
+                DeleteObject(m_font_handle);
+                m_font_handle = NULL;
+            }
+
+            m_device_context_handle = NULL;
+        }
+
+        void RenderText(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text) {
+            if (m_list_base) {
+                glColor4b(r, g, b, a);
+
+                glPushAttrib(GL_LIST_BIT);
+                glListBase(m_list_base);
+                glCallLists((GLsizei)text.length(), GL_UNSIGNED_BYTE, text.c_str());
+                glPopAttrib();
+            }
+        }
+
+        SizeU16 GetTextSize(const std::string& text) const {
+            if (m_font_handle) {
+                HFONT old_font_handle = (HFONT)SelectObject(m_device_context_handle, m_font_handle); 
+
+                SIZE size = {};
+                BOOL is_success = GetTextExtentPoint32A(m_device_context_handle, text.c_str(), (int)text.length(), &size);
+
+                SelectObject(m_device_context_handle, old_font_handle);
+
+                if (is_success) return SizeU16((uint16_t)size.cx, (uint16_t)size.cy);
+            }
+            return {};
+        }
+
+    private:
+        enum { 
+            PRINT_LIST_LEN      = 256,      // Size for full ascii table.
+        };
+
+        HDC     m_device_context_handle;    // not own
+        HFONT   m_font_handle;
+        GLint   m_list_base;
+    };
+
+    inline int PointsToPixels(HDC hdc, int size) {
+        return MulDiv(size, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+    }
 
     //--------------------------------------------------------------------------
 

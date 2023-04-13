@@ -829,7 +829,7 @@ int main(int argc, char *argv[]) {
 
         TOGL::Data data = {};
 
-        data.window_name        = "TrivialOpenGL_Example WINDOW_STATE";
+        data.window_name        = "TrivialOpenGL_Example KEYBOARD";
         //data.style              |= TOGL::StyleBit::DRAW_AREA_SIZE;
         //data.style              |= TOGL::StyleBit::DRAW_AREA_ONLY;
         //data.style              |= TOGL::StyleBit::REDRAW_ON_CHANGE_OR_REQUEST;
@@ -938,7 +938,7 @@ int main(int argc, char *argv[]) {
 
             TOGL::Data data = {};
 
-            data.window_name        = "TrivialOpenGL_Example WINDOW_STATE";
+            data.window_name        = "TrivialOpenGL_Example CHARACTER";
             //data.style              |= TOGL::StyleBit::DRAW_AREA_SIZE;
             //data.style              |= TOGL::StyleBit::DRAW_AREA_ONLY;
             //data.style              |= TOGL::StyleBit::REDRAW_ON_CHANGE_OR_REQUEST;
