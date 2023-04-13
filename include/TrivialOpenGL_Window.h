@@ -281,6 +281,10 @@ namespace TrivialOpenGL {
         Version GetOpenGL_Version() const;
 
         // ---
+
+        // name     - Font name.
+        // size     - Height of character in pixels.
+        // is_bold  - If true then rendered text will be bold.
         bool LoadFont(const std::string& name, uint16_t size, bool is_bold = false) {
             return m_text_drawer.LoadFont(m_device_context_handle, name, size, is_bold);
         }
@@ -289,14 +293,18 @@ namespace TrivialOpenGL {
             m_text_drawer.UnloadFont();
         }
 
+        // x, y         - Position of text.
+        // r, g, b, a   - Color of text.
+        // text         - Text to be rendered. Special characters are ignored (for example: '\n', '\t').
         void RenderText(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text) {
             m_text_drawer.RenderText(x, y, r, g, b, a, text);
         }
 
-        // '\n' is ignored.
+        // Special characters are ignored (for example: '\n', '\t').
         SizeU16 GetTextSize(const std::string& text) const {
             return m_text_drawer.GetTextSize(text);
         }
+
         // ---
 
         // Get access to singleton instance.
