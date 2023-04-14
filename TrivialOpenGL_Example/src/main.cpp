@@ -238,7 +238,142 @@ static bool             s_is_display_mose_move_data;
 
 //------------------------------------------------------------------------------
 
+class ExampleManager {
+public:
+    using RunExampleFnP_T = int (*)(const std::string& name, const std::set<std::string>& options);
+
+    ExampleManager() {}
+    virtual ~ExampleManager() {}
+
+
+    void AddExample(const std::string& name, RunExampleFnP_T run) {
+        m_examples.push_back({name, run});
+    }
+
+    int Run(const std::vector<std::string>& arguments) {
+        int result = 0;
+
+        if (arguments.size() > 0) {
+            std::string name = arguments[0];
+
+            std::set<std::string> options;
+            for (size_t index = 1; index < arguments.size(); ++index) options.insert(arguments[index]);
+
+            result = RunExample(name, options);
+
+        } else {
+            result = RunExample(m_default_name, m_default_options);
+        }
+
+        return result;
+    }
+
+    int Run(const std::string& default_name, const std::set<std::string>& default_options) {
+        m_default_name      = default_name;
+        m_default_options   = default_options;
+
+        int result = 0;
+
+        bool is_exit = false;
+        while (!is_exit) {
+            enum { BUFFER_SIZE = 4096 };
+            char buffer[BUFFER_SIZE] = {};
+
+            printf("Run (default=%s, exit=e): ", default_name.c_str());
+            fflush(stdout);
+
+            if (fgets(buffer, BUFFER_SIZE - 1, stdin)) {
+
+                size_t size = strlen(buffer);
+                if (size > 0 && buffer[size - 1] == '\n') buffer[size - 1] = '\0';
+
+                std::vector<std::string> arguments = RemoveEmpty(TOGL::Split(buffer, ' '));
+
+                if (arguments.empty()) {
+                    result = RunExample(default_name, default_options);
+                    if (result != 0) is_exit = true;
+
+                } else if (arguments[0] == "e") {
+                    result = 0;
+                    is_exit = true;
+
+                } else {
+                    result = Run(arguments);
+                    if (result != 0) is_exit = true;
+                }
+            } else {
+                puts("Example Error: Can not read arguments.");
+                result = EXIT_FAILURE;
+                is_exit = true;
+            }
+        }
+
+        return result;
+    }
+
+
+private:
+    struct Example {
+        std::string         name;
+        RunExampleFnP_T     run;
+    };
+
+    // Removes empty strings.
+    std::vector<std::string> RemoveEmpty(std::vector<std::string> poluted_arguments) {
+        std::vector<std::string> arguments;
+        for (const auto& argument : poluted_arguments) if (!argument.empty()) arguments.push_back(argument);
+        return arguments;
+    }
+
+    Example* Find(const std::string& name) {
+        for (auto& example : m_examples) {
+            if (example.name == name) return &example;
+        }
+        return nullptr;
+    }
+
+    int RunExample(const std::string& name, const std::set<std::string>& options) {
+        Example* example = Find(name);
+        if (example) {
+            return example->run(name, options);
+        }
+        printf("Example Error: Can not find example with name \"%s\".\n", name.c_str());
+        return 0;
+    }
+
+    std::vector<Example>    m_examples;
+
+    std::string             m_default_name;
+    std::set<std::string>   m_default_options;
+};
+
+//------------------------------------------------------------------------------
+
+
 int main(int argc, char *argv[]) {
+    std::vector<std::string> arguments;
+    for (size_t index = 1; index < argc; ++index) {
+        arguments.push_back(argv[index]);
+    }
+
+    ExampleManager example_manager;
+
+    example_manager.AddExample("XXX", [](const std::string& name, const std::set<std::string>& options) {
+        puts(name.c_str());
+        for (const auto& option : options) puts(option.c_str());
+        return 0;
+    });
+
+    if (arguments.empty()) {
+        return example_manager.Run("XXX", {"A", "B", "C"});
+    } else {
+        return example_manager.Run(arguments);
+    }
+
+
+    return example_manager.Run(arguments);
+
+
     std::set<std::string> flags;
 
     for (size_t index = 1; index < argc; ++index) {
