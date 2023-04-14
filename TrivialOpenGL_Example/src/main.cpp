@@ -719,10 +719,34 @@ int main(int argc, char *argv[]) {
 
         data.do_on_create = []() {
             s_test_image.Initialize(TOGL::ToWindow().GetDrawAreaSize());
+
+            if (!TOGL::ToWindow().LoadFont("Courier New", FONT_SIZE)) {
+                puts("Error: Can not load font.");
+            } else {
+                puts("Font loaded.");
+            }
         };
 
         data.draw = []() {
             s_test_image.Animate();
+
+            DrawInfoText(
+                std::string() +
+                "1 - MoveTo(0, 0)\n"
+                "2 - MoveTo(10, 100)\n"
+                "3 - SetSize(400, 200)\n"
+                "4 - SetSize(800, 400)\n"
+                "5 - SetArea(100, 10, 800, 400)\n"
+                "6 - SetArea(window_area/draw_area)\n"
+                "7 - SetArea(desktop_area_no_taskbar)\n"
+                "8 - SetArea(screen_area)\n"
+                "C - Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.width) + ")\n"
+                "Arrow Left     - MoveBy(-30, 0)\n"
+                "Arrow Right    - MoveBy(30, 0)\n"
+                "X - RequestClose()\n"
+                "I - Display Window Info\n"
+                "T - Swap target window_area/draw_area\n"
+            );
         };
 
         data.do_on_resize = [](uint16_t width, uint16_t height) {
@@ -746,7 +770,7 @@ int main(int argc, char *argv[]) {
                     case TOGL::KEY_ID_7:            window.SetArea(TOGL::GetDesktopAreaNoTaskBar()); break;
                     case TOGL::KEY_ID_8:            window.SetArea({{}, TOGL::GetScreenSize()}); break;
 
-                    case TOGL::KEY_ID_C:            window.Center(s_resolution); break;
+                    case TOGL::KEY_ID_C:            window.Center(s_resolution, s_is_client); break;
 
                     case TOGL::KEY_ID_ARROW_LEFT:   window.MoveBy(-30, 0); break;
                     case TOGL::KEY_ID_ARROW_RIGHT:  window.MoveBy(30, 0); break;
@@ -771,7 +795,7 @@ int main(int argc, char *argv[]) {
                     case TOGL::KEY_ID_7:            window.SetArea(TOGL::GetDesktopAreaNoTaskBar(), false); break;
                     case TOGL::KEY_ID_8:            window.SetArea({{}, TOGL::GetScreenSize()}, false); break;
 
-                    case TOGL::KEY_ID_C:            window.Center(s_resolution); break;
+                    case TOGL::KEY_ID_C:            window.Center(s_resolution, s_is_client); break;
 
                     case TOGL::KEY_ID_ARROW_LEFT:   window.MoveBy(-30, 0); break;
                     case TOGL::KEY_ID_ARROW_RIGHT:  window.MoveBy(30, 0); break;
@@ -795,8 +819,13 @@ int main(int argc, char *argv[]) {
     // window_state
     ////////////////////////////////////////////////////////////////////////////////
 
-    std::set<std::string> window_state_all_options = all_options;
-    window_state_all_options.insert("full_screen_at_start");
+    auto Combine = [](const std::set<std::string>& l, const std::set<std::string>& r) {
+        std::set<std::string> temp = l;
+        temp.insert(r.begin(), r.end());
+        return temp;
+    };
+
+    std::set<std::string> window_state_all_options = Combine(all_options, {"full_screen_at_start"});
 
     example_manager.AddExample("window_state", window_state_all_options, {}, [](const std::string& name, const std::set<std::string>& options) {
         auto IsOption = [&options](const std::string& option) { return options.find(option) != options.end(); };
