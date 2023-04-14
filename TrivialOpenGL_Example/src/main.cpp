@@ -1,3 +1,8 @@
+/**
+* @file TrivialOpenGL.h
+* @author underwatergrasshopper
+*/
+
 #include <stdio.h>
 
 #include <string>
@@ -227,6 +232,44 @@ void DisplayWindowInfo() {
 
 //------------------------------------------------------------------------------
 
+class DelayedActionManager {
+public:
+    DelayedActionManager() {}
+    virtual ~DelayedActionManager() {}
+
+    using RunFnP_T = void (*)();
+
+    // delay - in seconds
+    void Add(double delay, RunFnP_T run) {
+        m_actions.push_back({delay, run});
+        m_time_lapse.Reset();
+    }
+
+    void Run() {
+        m_time_lapse.Update();
+
+        if (!m_actions.empty()) {
+            Action& action = m_actions[0];
+
+            action.delay -= m_time_lapse.Get();
+            if (action.delay <= 0.0) {
+                action.run();
+                m_actions.erase(m_actions.begin());
+            }
+        }
+    }
+private:
+    struct Action {
+        double      delay;
+        RunFnP_T    run;
+    };
+
+    std::vector<Action>     m_actions;
+    TimeLapseF64            m_time_lapse;
+};
+
+//------------------------------------------------------------------------------
+
 enum {
     FONT_SIZE = 16, // in pixels
 };
@@ -236,16 +279,17 @@ static bool             s_is_client;
 static TestImage        s_test_image;
 static bool             s_is_display_mose_move_data;
 
+static DelayedActionManager s_actions;
+
 //------------------------------------------------------------------------------
 
 
-//------------------------------------------------------------------------------
 
 class ExampleManager {
 public:
     using RunExampleFnP_T = int (*)(const std::string& name, const std::set<std::string>& options);
 
-    ExampleManager() {}
+    ExampleManager() : m_buffer{} {}
     virtual ~ExampleManager() {}
 
     void SetDefaultExample(const std::string& name) {
@@ -829,6 +873,8 @@ int main(int argc, char *argv[]) {
                 "I - Display Info\n"
                 "D - on/off TOGL Debug\n"
             );
+
+            s_actions.Run();
         };
 
         data.do_on_resize = [](uint16_t width, uint16_t height) {
@@ -875,44 +921,55 @@ int main(int argc, char *argv[]) {
                 case TOGL::KEY_ID_V:    TOGL::ToWindow().Center(s_resolution, true); break;
 
                 case 'F':
-                    // Moves behind window to foreground.
-                    SetForegroundWindow(GetNextWindow(GetForegroundWindow(), GW_HWNDNEXT));
-                    togl_print_i32(TOGL::ToWindow().IsForeground());
+                    s_actions.Add(0, [](){
+                        // Moves behind window to foreground.
+                        SetForegroundWindow(GetNextWindow(GetForegroundWindow(), GW_HWNDNEXT));
+                        togl_print_i32(TOGL::ToWindow().IsForeground());
 
-                    puts("---");
-                    Sleep(1000);
+                        puts("---");
+                    });
 
-                    TOGL::ToWindow().GoForeground();
-                    togl_print_i32(TOGL::ToWindow().IsForeground());
+                    s_actions.Add(1, [](){
 
-                    puts("---");
-                    Sleep(1000);
+                        TOGL::ToWindow().GoForeground();
+                        togl_print_i32(TOGL::ToWindow().IsForeground());
 
-                    TOGL::ToWindow().Minimize();
-                    togl_print_i32(TOGL::ToWindow().IsForeground());
+                        puts("---");
+                    });
 
-                    puts("---");
-                    Sleep(1000);
+                    s_actions.Add(1, [](){
 
-                    TOGL::ToWindow().Center(s_resolution);
-                    //TOGL::ToWindow().GoForeground(); // redundant
-                    togl_print_i32(TOGL::ToWindow().IsForeground());
+                        TOGL::ToWindow().Minimize();
+                        togl_print_i32(TOGL::ToWindow().IsForeground());
 
-                    puts("---");
-                    Sleep(1000);
+                        puts("---");
+                    });
 
-                    TOGL::ToWindow().Hide();
-                    togl_print_i32(TOGL::ToWindow().IsForeground());
+                    s_actions.Add(1, [](){
 
-                    puts("---");
-                    Sleep(1000);
+                        TOGL::ToWindow().Center(s_resolution);
+                        //TOGL::ToWindow().GoForeground(); // redundant
+                        togl_print_i32(TOGL::ToWindow().IsForeground());
 
-                    TOGL::ToWindow().Show();
-                    //TOGL::ToWindow().GoForeground(); // redundant
-                    togl_print_i32(TOGL::ToWindow().IsForeground());
+                        puts("---");
+                    });
 
-                    puts("Finished");
+                    s_actions.Add(1, [](){
 
+                        TOGL::ToWindow().Hide();
+                        togl_print_i32(TOGL::ToWindow().IsForeground());
+
+                        puts("---");
+                    });
+
+                    s_actions.Add(1, [](){
+
+                        TOGL::ToWindow().Show();
+                        //TOGL::ToWindow().GoForeground(); // redundant
+                        togl_print_i32(TOGL::ToWindow().IsForeground());
+
+                        puts("Finished");
+                    });
                     break;
 
                 case TOGL::KEY_ID_ARROW_LEFT:
@@ -932,114 +989,128 @@ int main(int argc, char *argv[]) {
                     break;
 
                 case TOGL::KEY_ID_0: 
-                    puts("--- Show --");
-                    TOGL::ToWindow().Hide();
-                    PrintWindowStates();
+                    s_actions.Add(0, [](){
+                        puts("--- Show --");
+                        TOGL::ToWindow().Hide();
+                        PrintWindowStates();
 
-                    Sleep(1000);
+                    });
 
-                    puts("---");
-                    TOGL::ToWindow().Show(); 
-                    PrintWindowStates();
+                    s_actions.Add(1, [](){
 
-                    Sleep(1000);
+                        puts("---");
+                        TOGL::ToWindow().Show(); 
+                        PrintWindowStates();
+                    });
 
-                    puts("--- Restore ---");
-                    TOGL::ToWindow().Hide();
-                    PrintWindowStates();
+                    s_actions.Add(1, [](){
 
-                    Sleep(1000);
+                        puts("--- Restore ---");
+                        TOGL::ToWindow().Hide();
+                        PrintWindowStates();
+                    });
 
-                    puts("---");
-                    TOGL::ToWindow().SetSize(s_resolution); 
-                    PrintWindowStates();
+                    s_actions.Add(1, [](){
 
-                    Sleep(1000);
+                        puts("---");
+                        TOGL::ToWindow().SetSize(s_resolution); 
+                        PrintWindowStates();
+                    });
 
-                    puts("--- Minimize ---");
-                    TOGL::ToWindow().Hide();
-                    PrintWindowStates();
+                    s_actions.Add(1, [](){
 
-                    Sleep(1000);
+                        puts("--- Minimize ---");
+                        TOGL::ToWindow().Hide();
+                        PrintWindowStates();
+                    });
 
-                    puts("---");
-                    TOGL::ToWindow().Minimize(); 
-                    PrintWindowStates();
+                    s_actions.Add(1, [](){
 
-                    Sleep(1000);
+                        puts("---");
+                        TOGL::ToWindow().Minimize(); 
+                        PrintWindowStates();
 
-                    puts("--- Maximize ---");
-                    TOGL::ToWindow().Hide();
-                    PrintWindowStates();
+                    });
 
-                    Sleep(1000);
+                    s_actions.Add(1, [](){
 
-                    puts("---");
-                    TOGL::ToWindow().Maximize(); 
-                    PrintWindowStates();
+                        puts("--- Maximize ---");
+                        TOGL::ToWindow().Hide();
+                        PrintWindowStates();
 
-                    puts("Finished");
+                    });
 
+                    s_actions.Add(1, [](){
+
+                        puts("---");
+                        TOGL::ToWindow().Maximize(); 
+                        PrintWindowStates();
+
+                        puts("Finished");
+                    });
                     break;
 
 
                 case '1':
-                    puts("---");
-                    TOGL::ToWindow().Hide();
-                    PrintWindowStates();
+                    s_actions.Add(0, [](){
+                        puts("---");
+                        TOGL::ToWindow().Hide();
+                        PrintWindowStates();
 
-                    togl_print_i32(TOGL::ToWindow().GetArea().x);
-                    togl_print_i32(TOGL::ToWindow().GetArea().y);
-                    togl_print_i32(TOGL::ToWindow().GetArea().width);
-                    togl_print_i32(TOGL::ToWindow().GetArea().height);
-                    togl_print_i32(TOGL::ToWindow().IsForeground());
+                        togl_print_i32(TOGL::ToWindow().GetArea().x);
+                        togl_print_i32(TOGL::ToWindow().GetArea().y);
+                        togl_print_i32(TOGL::ToWindow().GetArea().width);
+                        togl_print_i32(TOGL::ToWindow().GetArea().height);
 
-                    Sleep(1000);
+                        togl_print_i32(TOGL::ToWindow().IsForeground());
+                    });
 
-                    puts("---");
-                    TOGL::ToWindow().Show(); 
-                    //TOGL::ToWindow().Center(s_resolution);
+                    s_actions.Add(1, [](){
+                        puts("---");
+                        TOGL::ToWindow().Show(); 
 
+                        togl_print_i32(TOGL::ToWindow().IsForeground());
 
-                    togl_print_i32(TOGL::ToWindow().IsForeground());
-
-                    PrintWindowStates();
+                        PrintWindowStates();
+                    });
                     break;
 
                 case TOGL::KEY_ID_2: 
-                    puts("---");
-                    TOGL::ToWindow().Minimize();
-                    PrintWindowStates();
+                    s_actions.Add(0, [](){
+                        puts("---");
+                        TOGL::ToWindow().Minimize();
+                        PrintWindowStates();
 
-                    togl_print_i32(TOGL::ToWindow().GetArea().x);
-                    togl_print_i32(TOGL::ToWindow().GetArea().y);
-                    togl_print_i32(TOGL::ToWindow().GetArea().width);
-                    togl_print_i32(TOGL::ToWindow().GetArea().height);
+                        togl_print_i32(TOGL::ToWindow().GetArea().x);
+                        togl_print_i32(TOGL::ToWindow().GetArea().y);
+                        togl_print_i32(TOGL::ToWindow().GetArea().width);
+                        togl_print_i32(TOGL::ToWindow().GetArea().height);
+                    });
 
-                    Sleep(1000);
+                    s_actions.Add(1, [](){
+                        puts("---");
 
-                    puts("---");
-
-                    TOGL::ToWindow().Center(s_resolution);
-                    PrintWindowStates();
+                        TOGL::ToWindow().Center(s_resolution);
+                        PrintWindowStates();
+                    });
                     break;
 
                 case TOGL::KEY_ID_W: 
-                    puts("---");
-                    TOGL::ToWindow().Minimize();
-                    PrintWindowStates();
+                    s_actions.Add(0, [](){
+                        puts("---");
+                        TOGL::ToWindow().Minimize();
+                        PrintWindowStates();
 
-                    togl_print_i32(TOGL::ToWindow().GetArea().x);
-                    togl_print_i32(TOGL::ToWindow().GetArea().y);
-                    togl_print_i32(TOGL::ToWindow().GetArea().width);
-                    togl_print_i32(TOGL::ToWindow().GetArea().height);
+                        togl_print_i32(TOGL::ToWindow().GetArea().x);
+                        togl_print_i32(TOGL::ToWindow().GetArea().y);
+                        togl_print_i32(TOGL::ToWindow().GetArea().width);
+                        togl_print_i32(TOGL::ToWindow().GetArea().height);
+                    });
 
-                    Sleep(1000);
-
-                    puts("---");
-
-                    TOGL::ToWindow().MoveBy(30, 0);
-                    PrintWindowStates();
+                    s_actions.Add(1, [](){
+                        TOGL::ToWindow().MoveBy(30, 0);
+                        PrintWindowStates();
+                    });
                     break;
 
                 case TOGL::KEY_ID_3:
@@ -1061,14 +1132,16 @@ int main(int argc, char *argv[]) {
                     break;
 
                 case TOGL::KEY_ID_6:
-                    puts("---");
-                    TOGL::ToWindow().Hide();
-                    PrintWindowStates();
+                    s_actions.Add(0, [](){
+                        puts("---");
+                        TOGL::ToWindow().Hide();
+                        PrintWindowStates();
+                    });
 
-                    Sleep(1000);
-
-                    TOGL::ToWindow().GoWindowedFullScreen(); 
-                    PrintWindowStates();
+                    s_actions.Add(1, [](){
+                        TOGL::ToWindow().GoWindowedFullScreen(); 
+                        PrintWindowStates();
+                    });
                     break;
 
                 case TOGL::KEY_ID_7:
