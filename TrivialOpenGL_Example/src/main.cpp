@@ -245,9 +245,12 @@ public:
     ExampleManager() {}
     virtual ~ExampleManager() {}
 
+    void SetDefaultExample(const std::string& name) {
+        m_default_example_name = name;
+    }
 
-    void AddExample(const std::string& name, RunExampleFnP_T run) {
-        m_examples.push_back({name, run});
+    void AddExample(const std::string& name, const std::set<std::string>& all_options, const std::set<std::string>& default_options, RunExampleFnP_T run) {
+        m_examples.push_back({name, all_options, default_options, run});
     }
 
     int Run(const std::vector<std::string>& arguments) {
@@ -259,52 +262,95 @@ public:
             std::set<std::string> options;
             for (size_t index = 1; index < arguments.size(); ++index) options.insert(arguments[index]);
 
-            result = RunExample(name, options);
-
+            Example* example = Find(name);
+            if (!example) {
+                puts("");
+                printf("Example Error: Can not find example with name \"%s\".\n", name.c_str());
+                result = EXIT_FAILURE;
+            } else {
+                result = example->run(name, options);
+            }
         } else {
-            result = RunExample(m_default_name, m_default_options);
+            result = Run();
         }
 
         return result;
     }
 
-    int Run(const std::string& default_name, const std::set<std::string>& default_options) {
-        m_default_name      = default_name;
-        m_default_options   = default_options;
-
+    int Run() {
         int result = 0;
 
-        bool is_exit = false;
-        while (!is_exit) {
-            enum { BUFFER_SIZE = 4096 };
-            char buffer[BUFFER_SIZE] = {};
+        while (true) {
+            puts("--- Example Manager ---");
+            for (const auto& example : m_examples) printf("%s, ", example.name.c_str());
+            puts("");
 
-            printf("Run (default=%s, exit=e): ", default_name.c_str());
+            printf("(e=exit, d=%s)\n", m_default_example_name.c_str());
+            printf("%s", "Example: ");
             fflush(stdout);
 
-            if (fgets(buffer, BUFFER_SIZE - 1, stdin)) {
+            std::string name;
 
-                size_t size = strlen(buffer);
-                if (size > 0 && buffer[size - 1] == '\n') buffer[size - 1] = '\0';
-
-                std::vector<std::string> arguments = RemoveEmpty(TOGL::Split(buffer, ' '));
-
-                if (arguments.empty()) {
-                    result = RunExample(default_name, default_options);
-                    if (result != 0) is_exit = true;
-
-                } else if (arguments[0] == "e") {
-                    result = 0;
-                    is_exit = true;
-
-                } else {
-                    result = Run(arguments);
-                    if (result != 0) is_exit = true;
-                }
-            } else {
-                puts("Example Error: Can not read arguments.");
+            if (!GetStdIn(name)) {
+                puts("");
+                puts("Example Error: Can not read argument.");
                 result = EXIT_FAILURE;
-                is_exit = true;
+                break;
+            } 
+            puts("");
+
+            if (name == "d") {
+                name = m_default_example_name;
+            } else if (name == "e") {
+                result = EXIT_SUCCESS;
+                break;
+            } 
+
+            Example* example = Find(name);
+            if (!example) {
+                printf("Example Error: Can not find example with name \"%s\".\n", name.c_str());
+                continue;
+            }
+
+            for (const auto& option : example->all_options) printf("%s, ", option.c_str());
+            puts("");
+
+            std::string raw_default_options;
+            for (const auto& option : example->default_options) raw_default_options += option + " ";
+
+            printf("(e=exit, d=%s)\n", raw_default_options.c_str());
+            printf("%s", "Options: ");
+            fflush(stdout);
+
+            std::string raw_options;
+
+            if (!GetStdIn(raw_options)) {
+                puts("");
+                puts("Example Error: Can not read arguments.");
+                continue;
+            } 
+            puts("");
+
+            if (raw_options == "d") {
+                raw_options = raw_default_options;
+            } else if (raw_options == "e") {
+                result = EXIT_SUCCESS;
+                break;
+            } 
+
+            std::set<std::string> options;
+            for (const auto& option : RemoveEmpty(TOGL::Split(raw_options, ' '))) options.insert(option);
+
+            for (const auto& option : options) {
+                if (example->all_options.find(option) == example->all_options.end()) {
+                    printf("Example Error: Unknown option \"%s\".\n", option.c_str());
+                    continue;
+                }
+            }
+
+            result = example->run(name, options);
+            if (result != EXIT_SUCCESS) {
+                printf("Example Error: Example returned error code %d.\n", result);
             }
         }
 
@@ -313,9 +359,14 @@ public:
 
 
 private:
+    enum { BUFFER_SIZE = 4096 };
+
     struct Example {
-        std::string         name;
-        RunExampleFnP_T     run;
+        std::string             name;
+        std::set<std::string>   all_options;
+        std::set<std::string>   default_options;
+
+        RunExampleFnP_T         run;
     };
 
     // Removes empty strings.
@@ -332,19 +383,27 @@ private:
         return nullptr;
     }
 
-    int RunExample(const std::string& name, const std::set<std::string>& options) {
-        Example* example = Find(name);
-        if (example) {
-            return example->run(name, options);
+    bool GetStdIn(std::string& in_text) {
+        memset(m_buffer, 0, sizeof(m_buffer));
+
+        if (!fgets(m_buffer, BUFFER_SIZE - 1, stdin)) {
+            puts("Example Error: Can not read arguments.");
+
+            in_text = "";
+            return false;
         }
-        printf("Example Error: Can not find example with name \"%s\".\n", name.c_str());
-        return 0;
+
+        // Removes new line character from string end.
+        size_t size = strlen(m_buffer);
+        if (size > 0 && m_buffer[size - 1] == '\n') m_buffer[size - 1] = '\0';
+
+        in_text = std::string(m_buffer);
+        return true;
     }
 
     std::vector<Example>    m_examples;
-
-    std::string             m_default_name;
-    std::set<std::string>   m_default_options;
+    std::string             m_default_example_name;
+    char                    m_buffer[BUFFER_SIZE];
 };
 
 //------------------------------------------------------------------------------
@@ -358,14 +417,16 @@ int main(int argc, char *argv[]) {
 
     ExampleManager example_manager;
 
-    example_manager.AddExample("XXX", [](const std::string& name, const std::set<std::string>& options) {
+    example_manager.AddExample("xxx", {"aaa", "bbb", "ccc"}, {"aaa"}, [](const std::string& name, const std::set<std::string>& options) {
         puts(name.c_str());
         for (const auto& option : options) puts(option.c_str());
         return 0;
     });
 
+    example_manager.SetDefaultExample("xxx");
+
     if (arguments.empty()) {
-        return example_manager.Run("XXX", {"A", "B", "C"});
+        return example_manager.Run();
     } else {
         return example_manager.Run(arguments);
     }
@@ -373,6 +434,8 @@ int main(int argc, char *argv[]) {
 
     return example_manager.Run(arguments);
 
+
+    // ------------------------------------------
 
     std::set<std::string> flags;
 
