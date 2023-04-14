@@ -406,8 +406,8 @@ private:
     char                    m_buffer[BUFFER_SIZE];
 };
 
-//------------------------------------------------------------------------------
 
+//------------------------------------------------------------------------------
 
 int main(int argc, char *argv[]) {
     std::vector<std::string> arguments;
@@ -417,20 +417,185 @@ int main(int argc, char *argv[]) {
 
     ExampleManager example_manager;
 
-    example_manager.AddExample("xxx", {"aaa", "bbb", "ccc"}, {"aaa"}, [](const std::string& name, const std::set<std::string>& options) {
-        puts(name.c_str());
-        for (const auto& option : options) puts(option.c_str());
-        return 0;
+    example_manager.SetDefaultExample("icon");
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // icon
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("icon", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        auto IsOption = [&options](const std::string& option) { return options.find(option) != options.end(); };
+
+        TOGL::Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example ";
+        data.window_name        += name;
+        data.icon_file_name     = "..\\..\\..\\..\\TrivialOpenGL_Example\\assets\\icon.ico";
+
+        return TOGL::Run(data);
     });
 
-    example_manager.SetDefaultExample("xxx");
+    ////////////////////////////////////////////////////////////////////////////////
+    // icon_resource
+    ////////////////////////////////////////////////////////////////////////////////
 
-    if (arguments.empty()) {
-        return example_manager.Run();
-    } else {
-        return example_manager.Run(arguments);
-    }
+    example_manager.AddExample("icon_resource", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        TOGL::Data data = {};
 
+        data.window_name        = "TrivialOpenGL_Example ";
+        data.window_name        += name;
+        data.icon_resource_id   = ICON_ID;
+
+        return TOGL::Run(data);
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // custom_size
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("custom_size", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        TOGL::Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example ";
+        data.window_name        += name;
+        data.area               = {TOGL::DEF, TOGL::DEF, 400, 800};
+
+        return TOGL::Run(data);
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // custom_area
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("custom_area", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        TOGL::Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example ";
+        data.window_name        += name;
+        data.area               = {100, 200, 400, 800};
+
+        return TOGL::Run(data);
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // no_area
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("no_area", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        TOGL::Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example ";
+        data.window_name        += name;
+        data.area               = {0, 0, 0, 0};
+
+        return TOGL::Run(data);
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // no_resize
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("no_resize", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        TOGL::Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example ";
+        data.window_name        += name;
+        data.style              = TOGL::StyleBit::NO_RESIZE;
+
+        return TOGL::Run(data);
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // no_maximize
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("no_maximize", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        TOGL::Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example ";
+        data.window_name        += name;
+        data.style              = TOGL::StyleBit::NO_MAXIMIZE;
+
+        return TOGL::Run(data);
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // no_maximize_and_resize
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("no_maximize_and_resize", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        TOGL::Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example ";
+        data.window_name        += name;
+        data.style              = TOGL::StyleBit::NO_MAXIMIZE | TOGL::StyleBit::NO_RESIZE;
+
+        return TOGL::Run(data);
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // center
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("center", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        TOGL::Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example ";
+        data.window_name        += name;
+        data.area               = {0, 0, 400, 800};
+        data.style              = TOGL::StyleBit::CENTERED;
+
+        return TOGL::Run(data);
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // draw_area_size
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("draw_area_size", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        TOGL::Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example ";
+        data.window_name        += name;
+        data.area               = {TOGL::DEF, TOGL::DEF, 400, 200};
+        data.style              = TOGL::StyleBit::DRAW_AREA_SIZE;
+
+        return TOGL::Run(data);
+
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // draw_area_only
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("draw_area_only", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        TOGL::Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example ";
+        data.window_name        += name;
+        data.area               = {TOGL::DEF, TOGL::DEF, 400, 200};
+        data.style              = TOGL::StyleBit::DRAW_AREA_ONLY;
+
+        return TOGL::Run(data);
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // redraw_on_change_or_request
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("redraw_on_change_or_request", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        TOGL::Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example ";
+        data.window_name        += name;
+        data.style              = TOGL::StyleBit::REDRAW_ON_CHANGE_OR_REQUEST;
+        data.log_level          = 3;
+
+        return TOGL::Run(data);
+
+    });
+
+    //------------------------------------------------------------------------------
 
     return example_manager.Run(arguments);
 
@@ -451,122 +616,7 @@ int main(int argc, char *argv[]) {
         flags.insert(flag);
     };
 
-    if (flags.size() == 0) {
-        //ForceFlag("MOVE_AND_RESIZE");
-        //ForceFlag("WINDOW_STATE");
-        //ForceFlag("OPENGL_VERSION");
-
-        ForceFlag("KEYBOARD");
-
-        //ForceFlag("CHARACTER");
-
-        
-    }
-
-    if (IsFlag("ICON")) {
-        TOGL::Data data = {};
-
-        data.window_name        = "TrivialOpenGL_Example ICON";
-        data.icon_file_name     = "..\\..\\..\\..\\TrivialOpenGL_Example\\assets\\icon.ico";
-
-        return TOGL::Run(data);
-    } else if (IsFlag("ICON_RESOURCE")) {
-        TOGL::Data data = {};
-
-        data.window_name        = "TrivialOpenGL_Example ICON_RESOURCE";
-        data.icon_resource_id   = ICON_ID;
-
-        return TOGL::Run(data);
-    } else if (IsFlag("CUSTOM_SIZE")) {
-        TOGL::Data data = {};
-
-        data.window_name        = "TrivialOpenGL_Example CUSTOM_SIZE";
-        data.area               = {TOGL::DEF, TOGL::DEF, 400, 800};
-        data.icon_resource_id   = ICON_ID;
-
-        return TOGL::Run(data);
-    } else if (IsFlag("CUSTOM_AREA")) {
-        TOGL::Data data = {};
-
-        data.window_name        = "TrivialOpenGL_Example CUSTOM_AREA";
-        data.area               = {100, 200, 400, 800};
-        data.icon_resource_id   = ICON_ID;
-
-        return TOGL::Run(data);
-    } else if (IsFlag("NO_AREA")) {
-        TOGL::Data data = {};
-
-        data.window_name        = "TrivialOpenGL_Example NO_AREA";
-        data.area               = {0, 0, 0, 0};
-        data.icon_resource_id   = ICON_ID;
-
-        return TOGL::Run(data);
-    } else if (IsFlag("NO_RESIZE")) {
-        TOGL::Data data = {};
-
-        data.window_name        = "TrivialOpenGL_Example NO_RESIZE";
-        data.style              = TOGL::StyleBit::NO_RESIZE;
-        data.icon_resource_id   = ICON_ID;
-
-        return TOGL::Run(data);
-    } else if (IsFlag("NO_MAXIMIZE")) {
-        TOGL::Data data = {};
-
-        data.window_name        = "TrivialOpenGL_Example NO_MAXIMIZE";
-        data.style              = TOGL::StyleBit::NO_MAXIMIZE;
-        data.icon_resource_id   = ICON_ID;
-
-        return TOGL::Run(data);
-
-    } else if (IsFlag("NO_MAXIMIZE_NO_RESIZE")) {
-        TOGL::Data data = {};
-
-        data.window_name        = "TrivialOpenGL_Example NO_MAXIMIZE";
-        data.style              = TOGL::StyleBit::NO_MAXIMIZE | TOGL::StyleBit::NO_RESIZE;
-        data.icon_resource_id   = ICON_ID;
-
-        return TOGL::Run(data);
-
-    } else if (IsFlag("CENTERED")) {
-        TOGL::Data data = {};
-
-        data.window_name        = "TrivialOpenGL_Example CENTERED";
-        data.area               = {0, 0, 400, 800};
-        data.style              = TOGL::StyleBit::CENTERED;
-        data.icon_resource_id   = ICON_ID;
-
-        return TOGL::Run(data);
-
-    } else if (IsFlag("CLIENT_SIZE")) {
-        TOGL::Data data = {};
-
-        data.window_name        = "TrivialOpenGL_Example CLIENT_SIZE";
-        data.area               = {TOGL::DEF, TOGL::DEF, 400, 200};
-        data.style              = TOGL::StyleBit::DRAW_AREA_SIZE;
-        data.icon_resource_id   = ICON_ID;
-
-        return TOGL::Run(data);
-
-    } else if (IsFlag("CLIENT_ONLY")) {
-        TOGL::Data data = {};
-
-        data.window_name        = "TrivialOpenGL_Example CLIENT_ONLY";
-        data.area               = {TOGL::DEF, TOGL::DEF, 400, 200};
-        data.style              = TOGL::StyleBit::DRAW_AREA_ONLY;
-        data.icon_resource_id   = ICON_ID;
-
-        return TOGL::Run(data);
-    } else if (IsFlag("REDRAW_ON_CHANGE_OR_REQUEST")) {
-        TOGL::Data data = {};
-
-        data.window_name        = "TrivialOpenGL_Example REDRAW_ON_CHANGE_OR_REQUEST";
-        data.style              = TOGL::StyleBit::REDRAW_ON_CHANGE_OR_REQUEST;
-        data.icon_resource_id   = ICON_ID;
-        data.log_level         = 3;
-
-        return TOGL::Run(data);
-
-    } else if (IsFlag("DRAW_TRIANGLE")) {
+    if (IsFlag("DRAW_TRIANGLE")) {
         TOGL::Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example DRAW_TRIANGLE";

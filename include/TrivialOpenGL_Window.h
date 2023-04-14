@@ -553,7 +553,11 @@ namespace TrivialOpenGL {
 
         UpdateWindow(m_window_handle);
 
-        return ExecuteMainLoop();
+        int result = ExecuteMainLoop();
+
+        UnregisterClassW(WINDOW_CLASS_NAME, m_instance_handle);
+
+        return result;
     }
 
     inline void Window::RequestClose() {
