@@ -569,7 +569,10 @@ namespace TrivialOpenGL {
 
                 m_list_base = glGenLists(PRINT_LIST_LEN);
                 if (m_list_base) {
-                    is_success = wglUseFontBitmaps(m_device_context_handle, 0, PRINT_LIST_LEN, m_list_base);
+                    is_success = wglUseFontBitmapsA(m_device_context_handle, 0, PRINT_LIST_LEN, m_list_base);
+                    // Workaround for strange behavior. For POPUP window first call of wglUseFontBitmapsA fail with GetError() = 0.
+                    // Second call, right after first, seams to succeed.
+                    if (!is_success) is_success = wglUseFontBitmapsA(m_device_context_handle, 0, PRINT_LIST_LEN, m_list_base);
                 }
 
                 SelectObject(m_device_context_handle, old_font_handle);

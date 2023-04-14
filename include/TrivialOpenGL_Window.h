@@ -1035,7 +1035,7 @@ namespace TrivialOpenGL {
 
     inline DWORD Window::GetWindowStyle_DrawAreaOnly() { 
         return 
-            WS_POPUP 
+            WS_POPUP
             // Commented options are for tests only.
             //| WS_THICKFRAME 
             //| WS_CAPTION 

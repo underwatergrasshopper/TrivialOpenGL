@@ -903,6 +903,8 @@ int main(int argc, char *argv[]) {
                 "D - on/off TOGL Debug\n"
             );
 
+            TOGL::ToWindow().RenderText(100, 100, 255, 255, 255, 255, "Hi!");
+
             s_actions.Run();
         };
 
