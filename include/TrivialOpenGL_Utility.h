@@ -543,12 +543,11 @@ namespace TrivialOpenGL {
         }
         virtual ~TextDrawer() {}
 
-        // name     - Font name.
-        // size     - Height of characters in pixels.
+        // device_context_handle    - Must still exist for each call of RenderText.
+        // name                     - Font name.
+        // size                     - Height of characters in pixels.
         bool LoadFont(HDC device_context_handle, const std::string& name, uint16_t size, bool is_bold = false) {
             UnloadFont();
-
-            BOOL is_success = false;
 
             m_device_context_handle = device_context_handle;
 
@@ -569,23 +568,33 @@ namespace TrivialOpenGL {
 
                 m_list_base = glGenLists(PRINT_LIST_LEN);
                 if (m_list_base) {
-                    is_success = wglUseFontBitmapsA(m_device_context_handle, 0, PRINT_LIST_LEN, m_list_base);
+                    bool is_success = wglUseFontBitmapsA(m_device_context_handle, 0, PRINT_LIST_LEN, m_list_base);
                     // Workaround for strange behavior. For POPUP window first call of wglUseFontBitmapsA fail with GetError() = 0.
                     // Second call, right after first, seams to succeed.
                     if (!is_success) is_success = wglUseFontBitmapsA(m_device_context_handle, 0, PRINT_LIST_LEN, m_list_base);
+
+                    if (!is_success) {
+                        m_err_msg = "Error: Can not font bitmap.";
+                    }
+                } else {
+                    m_err_msg = "Error: Can not generate display list.";
                 }
 
                 SelectObject(m_device_context_handle, old_font_handle);
+            } else {
+                m_err_msg = "Error: Can not create font.";
             }
 
-            if (!is_success) {
+            if (!IsOk()) {
                 UnloadFont();
             }
 
-            return is_success;
+            return IsOk();
         }
 
         void UnloadFont() {
+            m_err_msg = "";
+
             if (m_list_base) {
                 glDeleteLists(m_list_base, PRINT_LIST_LEN);
                 m_list_base = 0;
@@ -633,14 +642,28 @@ namespace TrivialOpenGL {
             return {};
         }
 
+        bool IsOk() const {
+            return m_err_msg.empty();
+        }
+
+        std::string GetErrMsg() const {
+            return m_err_msg;
+        }
+
     private:
         enum { 
             PRINT_LIST_LEN      = 256,      // Size for full ascii table.
         };
 
-        HDC     m_device_context_handle;    // not own
-        HFONT   m_font_handle;
-        GLint   m_list_base;
+        // No Copy
+        TextDrawer(const TextDrawer&) = delete;
+        TextDrawer& operator=(const TextDrawer&) = delete;
+
+        HDC         m_device_context_handle;    // not own
+        HFONT       m_font_handle;
+        GLint       m_list_base;
+
+        std::string m_err_msg;
     };
 
     inline int PointsToPixels(HDC hdc, int size) {

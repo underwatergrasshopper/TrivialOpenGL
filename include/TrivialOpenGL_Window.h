@@ -300,6 +300,10 @@ namespace TrivialOpenGL {
             m_text_drawer.RenderText(x, y, r, g, b, a, text);
         }
 
+        std::string GetLoadFontErrMsg() const {
+            return m_text_drawer.GetErrMsg();
+        }
+
         // Special characters are ignored (for example: '\n', '\t').
         SizeU16 GetTextSize(const std::string& text) const {
             return m_text_drawer.GetTextSize(text);

@@ -732,6 +732,7 @@ int main(int argc, char *argv[]) {
 
             if (!TOGL::ToWindow().LoadFont("Courier New", FONT_SIZE)) {
                 puts("Error: Can not load font.");
+                puts(TOGL::ToWindow().GetLoadFontErrMsg().c_str());
             } else {
                 puts("Font loaded.");
             }
@@ -871,6 +872,7 @@ int main(int argc, char *argv[]) {
 
                 if (!TOGL::ToWindow().LoadFont("Courier New", FONT_SIZE)) {
                     puts("Error: Can not load font.");
+                    puts(TOGL::ToWindow().GetLoadFontErrMsg().c_str());
                 } else {
                     puts("Font loaded.");
                 }
@@ -881,6 +883,7 @@ int main(int argc, char *argv[]) {
 
                 if (!TOGL::ToWindow().LoadFont("Courier New", FONT_SIZE)) {
                     puts("Error: Can not load font.");
+                    puts(TOGL::ToWindow().GetLoadFontErrMsg().c_str());
                 } else {
                     puts("Font loaded.");
                 }
@@ -1320,8 +1323,10 @@ int main(int argc, char *argv[]) {
         data.do_on_create = []() {
             s_test_image.Initialize(TOGL::ToWindow().GetDrawAreaSize());
 
+
             if (!TOGL::ToWindow().LoadFont("Courier New", FONT_SIZE)) {
                 puts("Error: Can not load font.");
+                puts(TOGL::ToWindow().GetLoadFontErrMsg().c_str());
             } else {
                 puts("Font loaded.");
             }
