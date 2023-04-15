@@ -273,9 +273,7 @@ namespace TrivialOpenGL {
 
         // ---
 
-        StyleBit::Field GetStyle() const {
-            return m_data.style;
-        }
+        StyleBit::Field GetStyle() const;
 
         PointI GetCursorPosInDrawArea() const;
 
@@ -289,29 +287,19 @@ namespace TrivialOpenGL {
         // name     - Font name.
         // size     - Height of character in pixels.
         // is_bold  - If true then rendered text will be bold.
-        bool LoadFont(const std::string& name, uint16_t size, bool is_bold = false) {
-            return m_text_drawer.LoadFont(m_device_context_handle, name, size, is_bold);
-        }
+        bool LoadFont(const std::string& name, uint16_t size, bool is_bold = false);
 
-        void UnloadFont() {
-            m_text_drawer.UnloadFont();
-        }
+        void UnloadFont();
 
         // x, y         - Position of text.
         // r, g, b, a   - Color of text.
         // text         - Text to be rendered. Special characters are ignored (for example: '\n', '\t').
-        void RenderText(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text) {
-            m_text_drawer.RenderText(x, y, r, g, b, a, text);
-        }
+        void RenderText(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text);
 
-        std::string GetLoadFontErrMsg() const {
-            return m_text_drawer.GetErrMsg();
-        }
+        std::string GetLoadFontErrMsg() const;
 
         // Special characters are ignored (for example: '\n', '\t').
-        SizeU16 GetTextSize(const std::string& text) const {
-            return m_text_drawer.GetTextSize(text);
-        }
+        SizeU16 GetTextSize(const std::string& text) const;
 
         // ---
 
@@ -337,24 +325,9 @@ namespace TrivialOpenGL {
         Window(const Window&) = delete;
         Window& operator=(const Window&) = delete;
 
-        void SetState(WindowState state) {
-            m_prev_state = m_state;
-            m_state = state;
-            if (m_state != m_prev_state && m_data.do_on_state_change) m_data.do_on_state_change(m_state);
-        }
-
-        void Push(bool& value, bool new_value_after_push) {
-            m_on_off_stack_map[&value].push(value);
-            value = new_value_after_push;
-        }
-
-        void Pop(bool& value) {
-            auto stack = m_on_off_stack_map[&value];
-            if (!stack.empty()) {
-                value = stack.top();
-                stack.pop();
-            }
-        }
+        void SetState(WindowState state);
+        void Push(bool& value, bool new_value_after_push);
+        void Pop(bool& value);
 
         // Changes area by applying style from data parameter which was provided to Run function.
         void ChangeArea(const AreaI& area);
@@ -384,19 +357,7 @@ namespace TrivialOpenGL {
         void HandleDoOnMouseKey(UINT message, WPARAM w_param, LPARAM l_param);
 
         template <unsigned NUNMBER_OF_CODE_UNITS>
-        void HandleUTF16_ToUTF8(const wchar_t (&char_utf16)[NUNMBER_OF_CODE_UNITS]) {
-            if (m_data.do_on_char) {
-                enum { MAX_NUM_UTF8_CODE_UNITS = 6 };
-
-                uint8_t char_utf8[MAX_NUM_UTF8_CODE_UNITS];
-
-                uint32_t number = WideCharToMultiByte(CP_UTF8, 0, (LPCWCH)char_utf16, NUNMBER_OF_CODE_UNITS, (LPSTR)char_utf8, MAX_NUM_UTF8_CODE_UNITS, NULL, NULL);
-
-                for (uint32_t ix = 0; ix < number; ix++) {
-                    m_data.do_on_char(char_utf8[ix]);
-                }
-            }
-        }
+        void HandleUTF16_ToUTF8(const wchar_t (&char_utf16)[NUNMBER_OF_CODE_UNITS]);
 
         LRESULT InnerWindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
         static LRESULT CALLBACK WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
@@ -716,13 +677,6 @@ namespace TrivialOpenGL {
     // State
     //--------------------------------------------------------------------------
 
-    void RemoveFrame() {
-
-    }
-    void AddFrame() {
-
-    }
-
     inline void Window::Hide() {
         ShowWindow(m_window_handle, SW_HIDE);
     }
@@ -857,6 +811,10 @@ namespace TrivialOpenGL {
 
     //--------------------------------------------------------------------------
 
+    inline StyleBit::Field Window::GetStyle() const {
+        return m_data.style;
+    }
+
     inline PointI Window::GetCursorPosInDrawArea() const {
         POINT pos;
         if (GetCursorPos(&pos) && ScreenToClient(m_window_handle, &pos)) {
@@ -879,12 +837,55 @@ namespace TrivialOpenGL {
 
     //--------------------------------------------------------------------------
 
+    bool Window::LoadFont(const std::string& name, uint16_t size, bool is_bold) {
+        return m_text_drawer.LoadFont(m_device_context_handle, name, size, is_bold);
+    }
+
+    void Window::UnloadFont() {
+        m_text_drawer.UnloadFont();
+    }
+
+    void Window::RenderText(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text) {
+        m_text_drawer.RenderText(x, y, r, g, b, a, text);
+    }
+
+    std::string Window::GetLoadFontErrMsg() const {
+        return m_text_drawer.GetErrMsg();
+    }
+
+    SizeU16 Window::GetTextSize(const std::string& text) const {
+        return m_text_drawer.GetTextSize(text);
+    }
+
+    //--------------------------------------------------------------------------
+
     inline Window& Window::To() {
         return Global<Window>::To();
     }
 
     //--------------------------------------------------------------------------
     // Private
+    //--------------------------------------------------------------------------
+
+    inline void Window::SetState(WindowState state) {
+        m_prev_state = m_state;
+        m_state = state;
+        if (m_state != m_prev_state && m_data.do_on_state_change) m_data.do_on_state_change(m_state);
+    }
+
+    inline void Window::Push(bool& value, bool new_value_after_push) {
+        m_on_off_stack_map[&value].push(value);
+        value = new_value_after_push;
+    }
+
+    inline void Window::Pop(bool& value) {
+        auto stack = m_on_off_stack_map[&value];
+        if (!stack.empty()) {
+            value = stack.top();
+            stack.pop();
+        }
+    }
+    
     //--------------------------------------------------------------------------
 
     inline void Window::SingletonCheck() {
@@ -1288,6 +1289,21 @@ namespace TrivialOpenGL {
             SetCapture(m_window_handle);
         } else if (GetCapture() == m_window_handle) {
             ReleaseCapture();
+        }
+    }
+
+    template <unsigned NUNMBER_OF_CODE_UNITS>
+    inline void Window::HandleUTF16_ToUTF8(const wchar_t (&char_utf16)[NUNMBER_OF_CODE_UNITS]) {
+        if (m_data.do_on_char) {
+            enum { MAX_NUM_UTF8_CODE_UNITS = 6 };
+
+            uint8_t char_utf8[MAX_NUM_UTF8_CODE_UNITS];
+
+            uint32_t number = WideCharToMultiByte(CP_UTF8, 0, (LPCWCH)char_utf16, NUNMBER_OF_CODE_UNITS, (LPSTR)char_utf8, MAX_NUM_UTF8_CODE_UNITS, NULL, NULL);
+
+            for (uint32_t ix = 0; ix < number; ix++) {
+                m_data.do_on_char(char_utf8[ix]);
+            }
         }
     }
 
