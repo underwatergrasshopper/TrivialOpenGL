@@ -621,11 +621,11 @@ namespace TrivialOpenGL {
     //--------------------------------------------------------------------------
 
     inline void Window::Center(const SizeU16& size) {
-        Center(size, m_data.style & StyleBit::DRAW_AREA_ONLY);
+        Center(size, m_data.style & StyleBit::DRAW_AREA_SIZE);
     }
 
     inline void Window::Center(uint16_t width, uint16_t height) {
-        Center(width, height, m_data.style & StyleBit::DRAW_AREA_ONLY);
+        Center(width, height, m_data.style & StyleBit::DRAW_AREA_SIZE);
     }
 
     inline void Window::Center(const SizeU16& size, bool is_draw_area_size) {
