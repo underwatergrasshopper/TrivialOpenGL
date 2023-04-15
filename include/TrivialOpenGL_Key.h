@@ -181,7 +181,7 @@ namespace TrivialOpenGL {
     private:
         struct VirtualKeyData {
             // For more info check lParam for WM_KEYDOWN and WM_KEYUP on msdn.
-            uint32_t	count		    : 16,
+            uint32_t    count            : 16,
                         scan_code       : 8,
                         is_ext          : 1,
                         reserved1       : 4,
@@ -274,41 +274,41 @@ namespace TrivialOpenGL {
         case VK_F22:            return KEY_ID_F22;                    
         case VK_F23:            return KEY_ID_F23;                    
         case VK_F24:            return KEY_ID_F24;   
-        case '0':               return KEY_ID_0;	
-        case '1':               return KEY_ID_1;	
-        case '2':               return KEY_ID_2;	
-        case '3':               return KEY_ID_3;	
-        case '4':               return KEY_ID_4;	
-        case '5':               return KEY_ID_5;	
-        case '6':               return KEY_ID_6;	
-        case '7':               return KEY_ID_7;	
-        case '8':               return KEY_ID_8;	
-        case '9':               return KEY_ID_9;	
-        case 'A':               return KEY_ID_A;	
-        case 'B':               return KEY_ID_B;	
-        case 'C':               return KEY_ID_C;	
-        case 'D':               return KEY_ID_D;	
-        case 'E':               return KEY_ID_E;	
-        case 'F':               return KEY_ID_F;	
-        case 'G':               return KEY_ID_G;	
-        case 'H':               return KEY_ID_H;	
-        case 'I':               return KEY_ID_I;	
-        case 'J':               return KEY_ID_J;	
-        case 'K':               return KEY_ID_K;	
-        case 'L':               return KEY_ID_L;	
-        case 'M':               return KEY_ID_M;	
-        case 'N':               return KEY_ID_N;	
-        case 'O':               return KEY_ID_O;	
-        case 'P':               return KEY_ID_P;	
-        case 'Q':               return KEY_ID_Q;	
-        case 'R':               return KEY_ID_R;	
-        case 'S':               return KEY_ID_S;	
-        case 'T':               return KEY_ID_T;	
-        case 'U':               return KEY_ID_U;	
-        case 'V':               return KEY_ID_V;	
-        case 'W':               return KEY_ID_W;	
-        case 'X':               return KEY_ID_X;	
-        case 'Y':               return KEY_ID_Y;	
+        case '0':               return KEY_ID_0;    
+        case '1':               return KEY_ID_1;    
+        case '2':               return KEY_ID_2;    
+        case '3':               return KEY_ID_3;    
+        case '4':               return KEY_ID_4;    
+        case '5':               return KEY_ID_5;    
+        case '6':               return KEY_ID_6;    
+        case '7':               return KEY_ID_7;    
+        case '8':               return KEY_ID_8;    
+        case '9':               return KEY_ID_9;    
+        case 'A':               return KEY_ID_A;    
+        case 'B':               return KEY_ID_B;    
+        case 'C':               return KEY_ID_C;    
+        case 'D':               return KEY_ID_D;    
+        case 'E':               return KEY_ID_E;    
+        case 'F':               return KEY_ID_F;    
+        case 'G':               return KEY_ID_G;    
+        case 'H':               return KEY_ID_H;    
+        case 'I':               return KEY_ID_I;    
+        case 'J':               return KEY_ID_J;    
+        case 'K':               return KEY_ID_K;    
+        case 'L':               return KEY_ID_L;    
+        case 'M':               return KEY_ID_M;    
+        case 'N':               return KEY_ID_N;    
+        case 'O':               return KEY_ID_O;    
+        case 'P':               return KEY_ID_P;    
+        case 'Q':               return KEY_ID_Q;    
+        case 'R':               return KEY_ID_R;    
+        case 'S':               return KEY_ID_S;    
+        case 'T':               return KEY_ID_T;    
+        case 'U':               return KEY_ID_U;    
+        case 'V':               return KEY_ID_V;    
+        case 'W':               return KEY_ID_W;    
+        case 'X':               return KEY_ID_X;    
+        case 'Y':               return KEY_ID_Y;    
         case 'Z':               return KEY_ID_Z;
 
         case VK_OEM_1:          return KEY_ID_SEMICOLON;        // ;
@@ -318,10 +318,10 @@ namespace TrivialOpenGL {
         case VK_OEM_5:          return KEY_ID_BACK_SLASH;       
         case VK_OEM_6:          return KEY_ID_CLOSE_BRACKET;    // ]
         case VK_OEM_7:          return KEY_ID_APOSTROPHE;       // '
-        case VK_OEM_COMMA:	    return KEY_ID_COMMA;            // ,
-        case VK_OEM_PERIOD:	    return KEY_ID_DOT;              // .
-        case VK_OEM_MINUS:	    return KEY_ID_DASH;             // -
-        case VK_OEM_PLUS:	    return KEY_ID_EQUAL;            // =
+        case VK_OEM_COMMA:        return KEY_ID_COMMA;            // ,
+        case VK_OEM_PERIOD:        return KEY_ID_DOT;              // .
+        case VK_OEM_MINUS:        return KEY_ID_DASH;             // -
+        case VK_OEM_PLUS:        return KEY_ID_EQUAL;            // =
 
         case VK_NUMLOCK:        return KEY_ID_NUMLOCK;                
         case VK_SCROLL:         return KEY_ID_SCROLL_LOCK;      
@@ -395,41 +395,41 @@ namespace TrivialOpenGL {
         case KEY_ID_F22:                    return VK_F22;            
         case KEY_ID_F23:                    return VK_F23;            
         case KEY_ID_F24:                    return VK_F24;            
-        case KEY_ID_0:	                    return '0';               
-        case KEY_ID_1:	                    return '1';               
-        case KEY_ID_2:	                    return '2';               
-        case KEY_ID_3:	                    return '3';               
-        case KEY_ID_4:	                    return '4';               
-        case KEY_ID_5:	                    return '5';               
-        case KEY_ID_6:	                    return '6';               
-        case KEY_ID_7:	                    return '7';               
-        case KEY_ID_8:	                    return '8';               
-        case KEY_ID_9:	                    return '9';               
-        case KEY_ID_A:	                    return 'A';               
-        case KEY_ID_B:	                    return 'B';               
-        case KEY_ID_C:	                    return 'C';               
-        case KEY_ID_D:	                    return 'D';               
-        case KEY_ID_E:	                    return 'E';               
-        case KEY_ID_F:	                    return 'F';               
-        case KEY_ID_G:	                    return 'G';               
-        case KEY_ID_H:	                    return 'H';               
-        case KEY_ID_I:	                    return 'I';               
-        case KEY_ID_J:	                    return 'J';               
-        case KEY_ID_K:	                    return 'K';               
-        case KEY_ID_L:	                    return 'L';               
-        case KEY_ID_M:	                    return 'M';               
-        case KEY_ID_N:	                    return 'N';               
-        case KEY_ID_O:	                    return 'O';               
-        case KEY_ID_P:	                    return 'P';               
-        case KEY_ID_Q:	                    return 'Q';               
-        case KEY_ID_R:	                    return 'R';               
-        case KEY_ID_S:	                    return 'S';               
-        case KEY_ID_T:	                    return 'T';               
-        case KEY_ID_U:	                    return 'U';               
-        case KEY_ID_V:	                    return 'V';               
-        case KEY_ID_W:	                    return 'W';               
-        case KEY_ID_X:	                    return 'X';               
-        case KEY_ID_Y:	                    return 'Y';               
+        case KEY_ID_0:                        return '0';               
+        case KEY_ID_1:                        return '1';               
+        case KEY_ID_2:                        return '2';               
+        case KEY_ID_3:                        return '3';               
+        case KEY_ID_4:                        return '4';               
+        case KEY_ID_5:                        return '5';               
+        case KEY_ID_6:                        return '6';               
+        case KEY_ID_7:                        return '7';               
+        case KEY_ID_8:                        return '8';               
+        case KEY_ID_9:                        return '9';               
+        case KEY_ID_A:                        return 'A';               
+        case KEY_ID_B:                        return 'B';               
+        case KEY_ID_C:                        return 'C';               
+        case KEY_ID_D:                        return 'D';               
+        case KEY_ID_E:                        return 'E';               
+        case KEY_ID_F:                        return 'F';               
+        case KEY_ID_G:                        return 'G';               
+        case KEY_ID_H:                        return 'H';               
+        case KEY_ID_I:                        return 'I';               
+        case KEY_ID_J:                        return 'J';               
+        case KEY_ID_K:                        return 'K';               
+        case KEY_ID_L:                        return 'L';               
+        case KEY_ID_M:                        return 'M';               
+        case KEY_ID_N:                        return 'N';               
+        case KEY_ID_O:                        return 'O';               
+        case KEY_ID_P:                        return 'P';               
+        case KEY_ID_Q:                        return 'Q';               
+        case KEY_ID_R:                        return 'R';               
+        case KEY_ID_S:                        return 'S';               
+        case KEY_ID_T:                        return 'T';               
+        case KEY_ID_U:                        return 'U';               
+        case KEY_ID_V:                        return 'V';               
+        case KEY_ID_W:                        return 'W';               
+        case KEY_ID_X:                        return 'X';               
+        case KEY_ID_Y:                        return 'Y';               
         case KEY_ID_Z:                      return 'Z';               
 
         case KEY_ID_SEMICOLON:              return VK_OEM_1;          
@@ -439,10 +439,10 @@ namespace TrivialOpenGL {
         case KEY_ID_BACK_SLASH:             return VK_OEM_5;          
         case KEY_ID_CLOSE_BRACKET:          return VK_OEM_6;          
         case KEY_ID_APOSTROPHE:             return VK_OEM_7;          
-        case KEY_ID_COMMA:                  return VK_OEM_COMMA;	    
-        case KEY_ID_DOT:                    return VK_OEM_PERIOD;	    
-        case KEY_ID_DASH:                   return VK_OEM_MINUS;	    
-        case KEY_ID_EQUAL:                  return VK_OEM_PLUS;	    
+        case KEY_ID_COMMA:                  return VK_OEM_COMMA;        
+        case KEY_ID_DOT:                    return VK_OEM_PERIOD;        
+        case KEY_ID_DASH:                   return VK_OEM_MINUS;        
+        case KEY_ID_EQUAL:                  return VK_OEM_PLUS;        
 
         case KEY_ID_NUMLOCK:                return VK_NUMLOCK;        
         case KEY_ID_SCROLL_LOCK:            return VK_SCROLL;   
@@ -665,41 +665,41 @@ namespace TrivialOpenGL {
         TOGL_CASE_STR(KEY_ID_F22);                    
         TOGL_CASE_STR(KEY_ID_F23);                    
         TOGL_CASE_STR(KEY_ID_F24);   
-        TOGL_CASE_STR(KEY_ID_0);	
-        TOGL_CASE_STR(KEY_ID_1);	
-        TOGL_CASE_STR(KEY_ID_2);	
-        TOGL_CASE_STR(KEY_ID_3);	
-        TOGL_CASE_STR(KEY_ID_4);	
-        TOGL_CASE_STR(KEY_ID_5);	
-        TOGL_CASE_STR(KEY_ID_6);	
-        TOGL_CASE_STR(KEY_ID_7);	
-        TOGL_CASE_STR(KEY_ID_8);	
-        TOGL_CASE_STR(KEY_ID_9);	
-        TOGL_CASE_STR(KEY_ID_A);	
-        TOGL_CASE_STR(KEY_ID_B);	
-        TOGL_CASE_STR(KEY_ID_C);	
-        TOGL_CASE_STR(KEY_ID_D);	
-        TOGL_CASE_STR(KEY_ID_E);	
-        TOGL_CASE_STR(KEY_ID_F);	
-        TOGL_CASE_STR(KEY_ID_G);	
-        TOGL_CASE_STR(KEY_ID_H);	
-        TOGL_CASE_STR(KEY_ID_I);	
-        TOGL_CASE_STR(KEY_ID_J);	
-        TOGL_CASE_STR(KEY_ID_K);	
-        TOGL_CASE_STR(KEY_ID_L);	
-        TOGL_CASE_STR(KEY_ID_M);	
-        TOGL_CASE_STR(KEY_ID_N);	
-        TOGL_CASE_STR(KEY_ID_O);	
-        TOGL_CASE_STR(KEY_ID_P);	
-        TOGL_CASE_STR(KEY_ID_Q);	
-        TOGL_CASE_STR(KEY_ID_R);	
-        TOGL_CASE_STR(KEY_ID_S);	
-        TOGL_CASE_STR(KEY_ID_T);	
-        TOGL_CASE_STR(KEY_ID_U);	
-        TOGL_CASE_STR(KEY_ID_V);	
-        TOGL_CASE_STR(KEY_ID_W);	
-        TOGL_CASE_STR(KEY_ID_X);	
-        TOGL_CASE_STR(KEY_ID_Y);	
+        TOGL_CASE_STR(KEY_ID_0);    
+        TOGL_CASE_STR(KEY_ID_1);    
+        TOGL_CASE_STR(KEY_ID_2);    
+        TOGL_CASE_STR(KEY_ID_3);    
+        TOGL_CASE_STR(KEY_ID_4);    
+        TOGL_CASE_STR(KEY_ID_5);    
+        TOGL_CASE_STR(KEY_ID_6);    
+        TOGL_CASE_STR(KEY_ID_7);    
+        TOGL_CASE_STR(KEY_ID_8);    
+        TOGL_CASE_STR(KEY_ID_9);    
+        TOGL_CASE_STR(KEY_ID_A);    
+        TOGL_CASE_STR(KEY_ID_B);    
+        TOGL_CASE_STR(KEY_ID_C);    
+        TOGL_CASE_STR(KEY_ID_D);    
+        TOGL_CASE_STR(KEY_ID_E);    
+        TOGL_CASE_STR(KEY_ID_F);    
+        TOGL_CASE_STR(KEY_ID_G);    
+        TOGL_CASE_STR(KEY_ID_H);    
+        TOGL_CASE_STR(KEY_ID_I);    
+        TOGL_CASE_STR(KEY_ID_J);    
+        TOGL_CASE_STR(KEY_ID_K);    
+        TOGL_CASE_STR(KEY_ID_L);    
+        TOGL_CASE_STR(KEY_ID_M);    
+        TOGL_CASE_STR(KEY_ID_N);    
+        TOGL_CASE_STR(KEY_ID_O);    
+        TOGL_CASE_STR(KEY_ID_P);    
+        TOGL_CASE_STR(KEY_ID_Q);    
+        TOGL_CASE_STR(KEY_ID_R);    
+        TOGL_CASE_STR(KEY_ID_S);    
+        TOGL_CASE_STR(KEY_ID_T);    
+        TOGL_CASE_STR(KEY_ID_U);    
+        TOGL_CASE_STR(KEY_ID_V);    
+        TOGL_CASE_STR(KEY_ID_W);    
+        TOGL_CASE_STR(KEY_ID_X);    
+        TOGL_CASE_STR(KEY_ID_Y);    
         TOGL_CASE_STR(KEY_ID_Z);
 
         TOGL_CASE_STR(KEY_ID_SEMICOLON);

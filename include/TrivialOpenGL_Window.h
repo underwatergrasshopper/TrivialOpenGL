@@ -1599,7 +1599,7 @@ namespace TrivialOpenGL {
                 }
             }
 
-            return 0;	
+            return 0;    
         }
 
         // Used for debugging.
@@ -1647,12 +1647,12 @@ namespace TrivialOpenGL {
         case WM_SYSCOMMAND:
             if (m_data.is_auto_sleep_blocked) {
                 switch (w_param) {
-                case SC_SCREENSAVE:	    // Blocks screen saver.
+                case SC_SCREENSAVE:        // Blocks screen saver.
                 case SC_MONITORPOWER:   // Blocks entering to power save mode.
-                    return 0;						
+                    return 0;                        
                 }
             }
-            break;								
+            break;                                
  
         case WM_TIMER:
             if (w_param == DEFAULT_TIMER_ID) {
