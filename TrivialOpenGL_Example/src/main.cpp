@@ -751,7 +751,7 @@ int main(int argc, char *argv[]) {
                 "6 - SetArea(window_area/draw_area)\n"
                 "7 - SetArea(desktop_area_no_taskbar)\n"
                 "8 - SetArea(screen_area)\n"
-                "C - Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.width) + ")\n"
+                "C - Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.height) + ")\n"
                 "Arrow Left     - MoveBy(-30, 0)\n"
                 "Arrow Right    - MoveBy(30, 0)\n"
                 "X - RequestClose()\n"
@@ -897,15 +897,16 @@ int main(int argc, char *argv[]) {
                 std::string() +
                 "X - Exit\n"
                 "R - Redraw\n"
-                "C - Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.width) + ") (as window size)\n"
-                "V - Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.width) + ") (as draw area size)\n"
+                "C - Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.height) + ") (as window size)\n"
+                "V - Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.height) + ") (as draw area size)\n"
                 "F - Background -> Foreground -> Minimize -> Center -> Hide -> Show (wait until finish)\n"
                 "Arrows - Move\n"
-                "0 - Hide -> Show -> Hide -> SetSize -> Hide -> Minimize -> Hide -> Maximize (wait until finish)\n"
+                "0 - Hide -> Show -> Hide -> SetSize -> Hide -> Minimize -> Hide -> Maximize -> Hide ->\n"
+                "    Windowed Full Screen -> Hide -> Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.height) + ") (wait until finish)\n"
                 "1 - Hide -> Show\n"
                 "2 - Minimize -> Center\n"
                 "W - Minimize -> MoveBy (should not restore from minimize)\n"
-                "3 - Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.width) + ")\n"
+                "3 - Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.height) + ")\n"
                 "4 - Maximize\n"
                 "5 - GoWindowedFullScreen\n"
                 "6 - Hide -> GoWindowedFullScreen\n"
@@ -1035,47 +1036,40 @@ int main(int argc, char *argv[]) {
                         puts("--- Show --");
                         TOGL::ToWindow().Hide();
                         PrintWindowStates();
-
                     });
-
+                    
                     s_actions.Add(1, [](){
-
                         puts("---");
                         TOGL::ToWindow().Show(); 
                         PrintWindowStates();
                     });
-
+                    
                     s_actions.Add(1, [](){
-
                         puts("--- Restore ---");
                         TOGL::ToWindow().Hide();
                         PrintWindowStates();
                     });
-
+                    
                     s_actions.Add(1, [](){
-
                         puts("---");
-                        TOGL::ToWindow().SetSize(s_resolution); 
+                        TOGL::ToWindow().SetSize(s_resolution, TOGL::ToWindow().GetStyle() & TOGL::StyleBit::DRAW_AREA_SIZE); 
                         PrintWindowStates();
                     });
-
+                    
                     s_actions.Add(1, [](){
-
                         puts("--- Minimize ---");
                         TOGL::ToWindow().Hide();
                         PrintWindowStates();
                     });
-
+                    
                     s_actions.Add(1, [](){
-
                         puts("---");
                         TOGL::ToWindow().Minimize(); 
                         PrintWindowStates();
-
+                    
                     });
 
                     s_actions.Add(1, [](){
-
                         puts("--- Maximize ---");
                         TOGL::ToWindow().Hide();
                         PrintWindowStates();
@@ -1083,9 +1077,34 @@ int main(int argc, char *argv[]) {
                     });
 
                     s_actions.Add(1, [](){
-
                         puts("---");
                         TOGL::ToWindow().Maximize(); 
+                        PrintWindowStates();
+                    });
+
+                    s_actions.Add(1, [](){
+                        puts("--- Windowed Full Screen ---");
+                        TOGL::ToWindow().Hide();
+                        PrintWindowStates();
+
+                    });
+
+                    s_actions.Add(1, [](){
+                        puts("---");
+                        TOGL::ToWindow().GoWindowedFullScreen(); 
+                        PrintWindowStates();
+                    });
+
+                    s_actions.Add(1, [](){
+                        puts("--- Center ---");
+                        TOGL::ToWindow().Hide();
+                        PrintWindowStates();
+
+                    });
+
+                    s_actions.Add(1, [](){
+                        puts("---");
+                        TOGL::ToWindow().Center(s_resolution); 
                         PrintWindowStates();
 
                         puts("Finished");

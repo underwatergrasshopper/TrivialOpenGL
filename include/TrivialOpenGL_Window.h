@@ -273,6 +273,10 @@ namespace TrivialOpenGL {
 
         // ---
 
+        StyleBit::Field GetStyle() const {
+            return m_data.style;
+        }
+
         PointI GetCursorPosInDrawArea() const;
 
         void SetLogLevel(uint32_t log_level);
@@ -362,6 +366,7 @@ namespace TrivialOpenGL {
         void Draw();
 
         AreaIU16 GenerateWindowArea(const AreaI& area);
+        void Restore();
         void SetArea(const AreaIU16& area, AreaPartId area_part_id, bool is_client_area);
 
         void Create(HWND window_handle);
@@ -637,6 +642,8 @@ namespace TrivialOpenGL {
 
         AreaIU16 window_area = AreaIU16({}, size);
 
+        Restore();
+
         if (is_draw_area_size) {
             window_area = GetWindowAreaFromDrawArea(window_area, m_window_style);
             window_area = m_window_area_corrector.RemoveInvisibleFrameFrom(window_area, m_window_handle);
@@ -727,6 +734,15 @@ namespace TrivialOpenGL {
 
             SetWindowLongPtrW(m_window_handle, GWL_STYLE,   m_window_style);
             SetWindowLongPtrW(m_window_handle, GWL_EXSTYLE, m_window_extended_style);
+            ShowWindow(m_window_handle, SW_NORMAL);
+
+            Pop(m_is_enable_change_state_at_resize);
+            Pop(m_is_enable_do_on_resize);
+        } else if (m_state == WindowState::MAXIMIZED) {
+            Push(m_is_enable_do_on_resize, false);
+            Push(m_is_enable_change_state_at_resize, false);
+
+            ShowWindow(m_window_handle, SW_RESTORE);
 
             Pop(m_is_enable_change_state_at_resize);
             Pop(m_is_enable_do_on_resize);
@@ -736,6 +752,10 @@ namespace TrivialOpenGL {
     }
 
     inline void Window::Maximize() {
+        if (!m_is_visible) {
+            ShowWindow(m_window_handle, SW_SHOW);
+        }
+
         if (m_state == WindowState::WINDOWED_FULL_SCREENED) {
             Push(m_is_enable_do_on_resize, false);
             Push(m_is_enable_change_state_at_resize, false);
@@ -745,12 +765,11 @@ namespace TrivialOpenGL {
 
             Pop(m_is_enable_change_state_at_resize);
             Pop(m_is_enable_do_on_resize);
+        } else if (m_state == WindowState::MINIMIZED) {
+            ShowWindow(m_window_handle, SW_RESTORE);
         }
 
-
         if (m_data.style & StyleBit::DRAW_AREA_ONLY) {
-            SetState(WindowState::MAXIMIZED);
-
             const SizeU16 work_area_size = GetDesktopAreaSizeNoTaskBar();
 
             Push(m_is_enable_change_state_at_resize, false);
@@ -758,12 +777,18 @@ namespace TrivialOpenGL {
             SetWindowPos(m_window_handle, HWND_TOP, 0, 0, work_area_size.width, work_area_size.height, SWP_SHOWWINDOW);
 
             Pop(m_is_enable_change_state_at_resize);
+
+            SetState(WindowState::MAXIMIZED);
         } else {
             ShowWindow(m_window_handle, SW_MAXIMIZE);
         }
     }
 
     inline void Window::GoWindowedFullScreen() {
+        if (!m_is_visible) {
+            ShowWindow(m_window_handle, SW_SHOW);
+        }
+
         Push(m_is_enable_do_on_resize, false);
         Push(m_is_enable_change_state_at_resize, false);
 
@@ -783,8 +808,6 @@ namespace TrivialOpenGL {
 
         const AreaIU16 screen_area = MakeAreaIU16(screen_rectangle);
 
-        SetState(WindowState::WINDOWED_FULL_SCREENED);
-
         Push(m_is_enable_change_state_at_resize, false);
         m_is_apply_fake_width = true;
 
@@ -792,6 +815,8 @@ namespace TrivialOpenGL {
 
         m_is_apply_fake_width = false;
         Pop(m_is_enable_change_state_at_resize);
+
+        SetState(WindowState::WINDOWED_FULL_SCREENED);
     }
 
     inline WindowState Window::GetState() const {
@@ -960,6 +985,38 @@ namespace TrivialOpenGL {
 
         return window_area;
     }
+
+    inline void Window::Restore() {
+        if (IsMaximized(m_window_handle)) {
+            if (m_prev_state == WindowState::WINDOWED_FULL_SCREENED) {
+                Push(m_is_enable_do_on_resize, false);
+                Push(m_is_enable_change_state_at_resize, false);
+
+                ShowWindow(m_window_handle, SW_RESTORE);
+
+                Pop(m_is_enable_change_state_at_resize);
+                Pop(m_is_enable_do_on_resize);
+            } else {
+                ShowWindow(m_window_handle, SW_RESTORE);
+            }
+        }
+
+        if (IsMinimized(m_window_handle)) {
+            ShowWindow(m_window_handle, SW_RESTORE);
+        }
+      
+        if (m_state == WindowState::WINDOWED_FULL_SCREENED) {
+            Push(m_is_enable_do_on_resize, false);
+            Push(m_is_enable_change_state_at_resize, false);
+
+            SetWindowLongPtrW(m_window_handle, GWL_STYLE,   m_window_style);
+            SetWindowLongPtrW(m_window_handle, GWL_EXSTYLE, m_window_extended_style);
+            ShowWindow(m_window_handle, SW_NORMAL);
+
+            Pop(m_is_enable_change_state_at_resize);
+            Pop(m_is_enable_do_on_resize);
+        } 
+    }
     
     inline void Window::SetArea(const AreaIU16& area, AreaPartId area_part_id, bool is_draw_area) {
         auto GetFlags = [](AreaPartId area_part_id) -> UINT {
@@ -975,35 +1032,11 @@ namespace TrivialOpenGL {
         const bool is_skip = IsMinimized(m_window_handle) && area_part_id == AreaPartId::POSITION_OFFSET;
 
         if (!is_skip) {
-            if (IsMaximized(m_window_handle)) {
-                if (m_prev_state == WindowState::WINDOWED_FULL_SCREENED) {
-                    Push(m_is_enable_do_on_resize, false);
-                    Push(m_is_enable_change_state_at_resize, false);
-
-                    ShowWindow(m_window_handle, SW_RESTORE);
-
-                    Pop(m_is_enable_change_state_at_resize);
-                    Pop(m_is_enable_do_on_resize);
-                } else {
-                    ShowWindow(m_window_handle, SW_RESTORE);
-                }
+            if (!m_is_visible) {
+                ShowWindow(m_window_handle, SW_SHOW);
             }
 
-            if (IsMinimized(m_window_handle)) {
-                ShowWindow(m_window_handle, SW_RESTORE);
-            }
-
-            if (m_state == WindowState::WINDOWED_FULL_SCREENED) {
-                Push(m_is_enable_do_on_resize, false);
-                Push(m_is_enable_change_state_at_resize, false);
-
-                SetWindowLongPtrW(m_window_handle, GWL_STYLE,   m_window_style);
-                SetWindowLongPtrW(m_window_handle, GWL_EXSTYLE, m_window_extended_style);
-                ShowWindow(m_window_handle, SW_NORMAL);
-
-                Pop(m_is_enable_change_state_at_resize);
-                Pop(m_is_enable_do_on_resize);
-            } 
+            Restore();
   
             AreaIU16 raw_area;
 
@@ -1016,6 +1049,9 @@ namespace TrivialOpenGL {
             } else {
                 raw_area = m_window_area_corrector.AddInvisibleFrameTo(area, m_window_handle);
             }
+
+            //togl_print_i32(raw_area.width);
+            //togl_print_i32(raw_area.height);
 
             // TODO: Solve redundant call of WM_SIZE when window restores from minimized 
             // and there is difference in window area between current one and previous one.
@@ -1435,6 +1471,16 @@ namespace TrivialOpenGL {
 
             m_is_visible = true;
 
+            if (m_data.do_on_resize) {
+                if (m_is_enable_do_on_resize) {
+                    if (m_is_apply_fake_width) {
+                        m_data.do_on_resize(LOWORD(l_param) - WIDTH_CORRECTION_TO_FAKE, HIWORD(l_param));
+                    } else {
+                        m_data.do_on_resize(LOWORD(l_param), HIWORD(l_param));
+                    }
+                }
+            }
+
             if (m_is_enable_change_state_at_resize) {
                 switch (w_param) {
                 case SIZE_MAXIMIZED:  
@@ -1446,16 +1492,6 @@ namespace TrivialOpenGL {
                 case SIZE_RESTORED:    
                     SetState(WindowState::NORMAL);
                     break;
-                }
-            }
-
-            if (m_data.do_on_resize) {
-                if (m_is_enable_do_on_resize) {
-                    if (m_is_apply_fake_width) {
-                        m_data.do_on_resize(LOWORD(l_param) - WIDTH_CORRECTION_TO_FAKE, HIWORD(l_param));
-                    } else {
-                        m_data.do_on_resize(LOWORD(l_param), HIWORD(l_param));
-                    }
                 }
             }
 
