@@ -14,7 +14,7 @@ namespace TrivialOpenGL {
         KEY_ID_UNKNOWN              = 0,
 
         // Same id as ascii. Literals can be used instead of key id. For example: '0', '1', ..., '0', 'A', 'B', ..., 'Z'.
-        KEY_ID_0                    = '0',
+        KEY_ID_0                    = '0',  // same id as ascii code for characters: 0-9
         KEY_ID_1,
         KEY_ID_2,
         KEY_ID_3,
@@ -25,7 +25,7 @@ namespace TrivialOpenGL {
         KEY_ID_8,
         KEY_ID_9,
 
-        KEY_ID_A                    = 'A',
+        KEY_ID_A                    = 'A', // same id as ascii code for characters: A-Z
         KEY_ID_B,
         KEY_ID_C,
         KEY_ID_D,
@@ -52,7 +52,7 @@ namespace TrivialOpenGL {
         KEY_ID_Y,
         KEY_ID_Z,
 
-        KEY_ID_ESCAPE               = 256, // out of ascii scope, so no id collision
+        KEY_ID_ESCAPE               = 256, // out of ascii scope, no id collision with ascii code
         KEY_ID_ENTER,  
         KEY_ID_CAPS_LOCK,   
         KEY_ID_TAB,    
@@ -144,17 +144,6 @@ namespace TrivialOpenGL {
         KEY_ID_X2_MOUSE_BUTTON,
     };
 
-    struct VirtualKeyData {
-        // For more info check lParam for WM_KEYDOWN and WM_KEYUP on msdn.
-        uint32_t	count		    : 16,
-                    scan_code       : 8,
-                    is_ext          : 1,
-                    reserved1       : 4,
-                    context_code    : 1,
-                    prev_state      : 1,
-                    trans_state     : 1;
-    };
-
     enum KeyboardSide {
         KEYBOARD_SIDE_NONE       = 0,
         KEYBOARD_SIDE_LEFT       = 1,
@@ -175,35 +164,51 @@ namespace TrivialOpenGL {
         KeyboardSide    keyboard_side   = KEYBOARD_SIDE_NONE;
     };
 
-    bool IsKeyToggled(KeyId key_id);
-
-    KeyboardSide GetKeyboardSide(KeyId key_id, const VirtualKeyData& virtual_key_data);
-    int GetVirtualKeyCode(KeyId key_id);
-
-    std::string KeyboardSideToStr(KeyboardSide side);
     std::string KeyIdToStr(KeyId key_id);
-    std::string VK_CodeToStr(int vk_code); 
+    std::string KeyboardSideToStr(KeyboardSide side);
     std::string ExtraToStr(const Extra& extra);
 
+    bool IsKeyToggled(KeyId key_id);
+    
     //--------------------------------------------------------------------------
-
-    inline bool IsKeyToggled(KeyId key_id) {
-        enum { TOGGLE_BIT = 0x0001 };
-        return GetKeyState(GetVirtualKeyCode(key_id)) & TOGGLE_BIT;
-    }
-
-    class InnerKeySupport {
+    
+    // Content this class is for this library inner purpose only.
+    class InnerKey {
     public:
         friend class Window;
+        friend bool IsKeyToggled(KeyId key_id);
+
     private:
+        struct VirtualKeyData {
+            // For more info check lParam for WM_KEYDOWN and WM_KEYUP on msdn.
+            uint32_t	count		    : 16,
+                        scan_code       : 8,
+                        is_ext          : 1,
+                        reserved1       : 4,
+                        context_code    : 1,
+                        prev_state      : 1,
+                        trans_state     : 1;
+        };
+
         static KeyId GetKeyId(WPARAM w_param);
         static KeyId GetMouseKeyId(UINT message, WPARAM w_param);
         static std::string WinApiKeyDataToStr(WPARAM w_param, LPARAM l_param);
         static std::string WinApiMouseButtonToStr(WPARAM w_param, LPARAM l_param);
         static bool IsMouseButtonDown(UINT message);
+
+        static KeyboardSide GetKeyboardSide(KeyId key_id, const VirtualKeyData& virtual_key_data);
+        static int GetVirtualKeyCode(KeyId key_id);
+        static std::string VK_CodeToStr(int vk_code); 
     };
 
-    inline KeyId InnerKeySupport::GetKeyId(WPARAM w_param) {
+    //--------------------------------------------------------------------------
+
+    inline bool IsKeyToggled(KeyId key_id) {
+        enum { TOGGLE_BIT = 0x0001 };
+        return GetKeyState(InnerKey::GetVirtualKeyCode(key_id)) & TOGGLE_BIT;
+    }
+
+    inline KeyId InnerKey::GetKeyId(WPARAM w_param) {
         switch (w_param) {
         case VK_CANCEL:         return KEY_ID_BREAK;                  
         case VK_BACK:           return KEY_ID_BACKSPACE;              
@@ -324,7 +329,7 @@ namespace TrivialOpenGL {
         return KEY_ID_UNKNOWN;
     }
 
-    inline int GetVirtualKeyCode(KeyId key_id) {
+    inline int InnerKey::GetVirtualKeyCode(KeyId key_id) {
         switch (key_id) {
         case KEY_ID_BREAK:                  return VK_CANCEL;                           
         case KEY_ID_BACKSPACE:              return VK_BACK;           
@@ -447,7 +452,7 @@ namespace TrivialOpenGL {
         }
     }
 
-    inline KeyId InnerKeySupport::GetMouseKeyId(UINT message, WPARAM w_param) {
+    inline KeyId InnerKey::GetMouseKeyId(UINT message, WPARAM w_param) {
         switch (message) {
         case WM_LBUTTONDOWN:    
         case WM_LBUTTONUP:      
@@ -471,7 +476,7 @@ namespace TrivialOpenGL {
         return KEY_ID_UNKNOWN;
     }
 
-    inline bool InnerKeySupport::IsMouseButtonDown(UINT message) {
+    inline bool InnerKey::IsMouseButtonDown(UINT message) {
         switch (message) {
         case WM_LBUTTONDOWN:    
         case WM_RBUTTONDOWN:    
@@ -483,7 +488,7 @@ namespace TrivialOpenGL {
         return false;
     }
 
-    inline KeyboardSide GetKeyboardSide(KeyId key_id, const VirtualKeyData& virtual_key_data) {
+    inline KeyboardSide InnerKey::GetKeyboardSide(KeyId key_id, const VirtualKeyData& virtual_key_data) {
         switch(key_id) {
         case KEY_ID_SHIFT: {
             const int vk_code_ext = MapVirtualKeyA(virtual_key_data.scan_code, MAPVK_VSC_TO_VK_EX);
@@ -503,98 +508,92 @@ namespace TrivialOpenGL {
         } // switch
     };
 
-#ifdef TOGL_INNER_CASE_STR
-#error TOGL_INNER_CASE_STR is already defined.
-#endif
-
-#define TOGL_INNER_CASE_STR(name) case name: return #name
-
-    inline std::string VK_CodeToStr(int vk_code) {
+    inline std::string InnerKey::VK_CodeToStr(int vk_code) {
         switch (vk_code) {
-        TOGL_INNER_CASE_STR(VK_CANCEL);        
-        TOGL_INNER_CASE_STR(VK_BACK);          
-        TOGL_INNER_CASE_STR(VK_TAB);           
-        TOGL_INNER_CASE_STR(VK_RETURN);        
-        TOGL_INNER_CASE_STR(VK_SHIFT);         
-        TOGL_INNER_CASE_STR(VK_CONTROL);       
-        TOGL_INNER_CASE_STR(VK_MENU);          
-        TOGL_INNER_CASE_STR(VK_PAUSE);         
-        TOGL_INNER_CASE_STR(VK_CAPITAL);       
-        TOGL_INNER_CASE_STR(VK_ESCAPE);        
-        TOGL_INNER_CASE_STR(VK_SPACE);         
-        TOGL_INNER_CASE_STR(VK_PRIOR);         
-        TOGL_INNER_CASE_STR(VK_NEXT);          
-        TOGL_INNER_CASE_STR(VK_END);           
-        TOGL_INNER_CASE_STR(VK_HOME);          
-        TOGL_INNER_CASE_STR(VK_LEFT);          
-        TOGL_INNER_CASE_STR(VK_UP);            
-        TOGL_INNER_CASE_STR(VK_RIGHT);         
-        TOGL_INNER_CASE_STR(VK_DOWN);          
-        TOGL_INNER_CASE_STR(VK_PRINT);         
-        TOGL_INNER_CASE_STR(VK_SNAPSHOT);      
-        TOGL_INNER_CASE_STR(VK_INSERT);        
-        TOGL_INNER_CASE_STR(VK_DELETE);        
-        TOGL_INNER_CASE_STR(VK_NUMPAD0);       
-        TOGL_INNER_CASE_STR(VK_NUMPAD1);       
-        TOGL_INNER_CASE_STR(VK_NUMPAD2);       
-        TOGL_INNER_CASE_STR(VK_NUMPAD3);       
-        TOGL_INNER_CASE_STR(VK_NUMPAD4);       
-        TOGL_INNER_CASE_STR(VK_NUMPAD5);       
-        TOGL_INNER_CASE_STR(VK_NUMPAD6);       
-        TOGL_INNER_CASE_STR(VK_NUMPAD7);       
-        TOGL_INNER_CASE_STR(VK_NUMPAD8);       
-        TOGL_INNER_CASE_STR(VK_NUMPAD9);       
-        TOGL_INNER_CASE_STR(VK_MULTIPLY);      
-        TOGL_INNER_CASE_STR(VK_ADD);           
-        TOGL_INNER_CASE_STR(VK_SEPARATOR);     
-        TOGL_INNER_CASE_STR(VK_SUBTRACT);      
-        TOGL_INNER_CASE_STR(VK_DECIMAL);       
-        TOGL_INNER_CASE_STR(VK_DIVIDE);        
-        TOGL_INNER_CASE_STR(VK_F1);            
-        TOGL_INNER_CASE_STR(VK_F2);            
-        TOGL_INNER_CASE_STR(VK_F3);            
-        TOGL_INNER_CASE_STR(VK_F4);            
-        TOGL_INNER_CASE_STR(VK_F5);            
-        TOGL_INNER_CASE_STR(VK_F6);            
-        TOGL_INNER_CASE_STR(VK_F7);            
-        TOGL_INNER_CASE_STR(VK_F8);            
-        TOGL_INNER_CASE_STR(VK_F9);            
-        TOGL_INNER_CASE_STR(VK_F10);           
-        TOGL_INNER_CASE_STR(VK_F11);           
-        TOGL_INNER_CASE_STR(VK_F12);           
-        TOGL_INNER_CASE_STR(VK_F13);           
-        TOGL_INNER_CASE_STR(VK_F14);           
-        TOGL_INNER_CASE_STR(VK_F15);           
-        TOGL_INNER_CASE_STR(VK_F16);           
-        TOGL_INNER_CASE_STR(VK_F17);           
-        TOGL_INNER_CASE_STR(VK_F18);           
-        TOGL_INNER_CASE_STR(VK_F19);           
-        TOGL_INNER_CASE_STR(VK_F20);           
-        TOGL_INNER_CASE_STR(VK_F21);           
-        TOGL_INNER_CASE_STR(VK_F22);           
-        TOGL_INNER_CASE_STR(VK_F23);           
-        TOGL_INNER_CASE_STR(VK_F24);   
+        TOGL_CASE_STR(VK_CANCEL);        
+        TOGL_CASE_STR(VK_BACK);          
+        TOGL_CASE_STR(VK_TAB);           
+        TOGL_CASE_STR(VK_RETURN);        
+        TOGL_CASE_STR(VK_SHIFT);         
+        TOGL_CASE_STR(VK_CONTROL);       
+        TOGL_CASE_STR(VK_MENU);          
+        TOGL_CASE_STR(VK_PAUSE);         
+        TOGL_CASE_STR(VK_CAPITAL);       
+        TOGL_CASE_STR(VK_ESCAPE);        
+        TOGL_CASE_STR(VK_SPACE);         
+        TOGL_CASE_STR(VK_PRIOR);         
+        TOGL_CASE_STR(VK_NEXT);          
+        TOGL_CASE_STR(VK_END);           
+        TOGL_CASE_STR(VK_HOME);          
+        TOGL_CASE_STR(VK_LEFT);          
+        TOGL_CASE_STR(VK_UP);            
+        TOGL_CASE_STR(VK_RIGHT);         
+        TOGL_CASE_STR(VK_DOWN);          
+        TOGL_CASE_STR(VK_PRINT);         
+        TOGL_CASE_STR(VK_SNAPSHOT);      
+        TOGL_CASE_STR(VK_INSERT);        
+        TOGL_CASE_STR(VK_DELETE);        
+        TOGL_CASE_STR(VK_NUMPAD0);       
+        TOGL_CASE_STR(VK_NUMPAD1);       
+        TOGL_CASE_STR(VK_NUMPAD2);       
+        TOGL_CASE_STR(VK_NUMPAD3);       
+        TOGL_CASE_STR(VK_NUMPAD4);       
+        TOGL_CASE_STR(VK_NUMPAD5);       
+        TOGL_CASE_STR(VK_NUMPAD6);       
+        TOGL_CASE_STR(VK_NUMPAD7);       
+        TOGL_CASE_STR(VK_NUMPAD8);       
+        TOGL_CASE_STR(VK_NUMPAD9);       
+        TOGL_CASE_STR(VK_MULTIPLY);      
+        TOGL_CASE_STR(VK_ADD);           
+        TOGL_CASE_STR(VK_SEPARATOR);     
+        TOGL_CASE_STR(VK_SUBTRACT);      
+        TOGL_CASE_STR(VK_DECIMAL);       
+        TOGL_CASE_STR(VK_DIVIDE);        
+        TOGL_CASE_STR(VK_F1);            
+        TOGL_CASE_STR(VK_F2);            
+        TOGL_CASE_STR(VK_F3);            
+        TOGL_CASE_STR(VK_F4);            
+        TOGL_CASE_STR(VK_F5);            
+        TOGL_CASE_STR(VK_F6);            
+        TOGL_CASE_STR(VK_F7);            
+        TOGL_CASE_STR(VK_F8);            
+        TOGL_CASE_STR(VK_F9);            
+        TOGL_CASE_STR(VK_F10);           
+        TOGL_CASE_STR(VK_F11);           
+        TOGL_CASE_STR(VK_F12);           
+        TOGL_CASE_STR(VK_F13);           
+        TOGL_CASE_STR(VK_F14);           
+        TOGL_CASE_STR(VK_F15);           
+        TOGL_CASE_STR(VK_F16);           
+        TOGL_CASE_STR(VK_F17);           
+        TOGL_CASE_STR(VK_F18);           
+        TOGL_CASE_STR(VK_F19);           
+        TOGL_CASE_STR(VK_F20);           
+        TOGL_CASE_STR(VK_F21);           
+        TOGL_CASE_STR(VK_F22);           
+        TOGL_CASE_STR(VK_F23);           
+        TOGL_CASE_STR(VK_F24);   
 
-        TOGL_INNER_CASE_STR(VK_OEM_1); 
-        TOGL_INNER_CASE_STR(VK_OEM_2); 
-        TOGL_INNER_CASE_STR(VK_OEM_3); 
-        TOGL_INNER_CASE_STR(VK_OEM_4); 
-        TOGL_INNER_CASE_STR(VK_OEM_5); 
-        TOGL_INNER_CASE_STR(VK_OEM_6); 
-        TOGL_INNER_CASE_STR(VK_OEM_7); 
-        TOGL_INNER_CASE_STR(VK_OEM_COMMA); 
-        TOGL_INNER_CASE_STR(VK_OEM_PERIOD); 
-        TOGL_INNER_CASE_STR(VK_OEM_MINUS); 
-        TOGL_INNER_CASE_STR(VK_OEM_PLUS); 
+        TOGL_CASE_STR(VK_OEM_1); 
+        TOGL_CASE_STR(VK_OEM_2); 
+        TOGL_CASE_STR(VK_OEM_3); 
+        TOGL_CASE_STR(VK_OEM_4); 
+        TOGL_CASE_STR(VK_OEM_5); 
+        TOGL_CASE_STR(VK_OEM_6); 
+        TOGL_CASE_STR(VK_OEM_7); 
+        TOGL_CASE_STR(VK_OEM_COMMA); 
+        TOGL_CASE_STR(VK_OEM_PERIOD); 
+        TOGL_CASE_STR(VK_OEM_MINUS); 
+        TOGL_CASE_STR(VK_OEM_PLUS); 
 
-        TOGL_INNER_CASE_STR(VK_NUMLOCK);       
-        TOGL_INNER_CASE_STR(VK_SCROLL);        
-        TOGL_INNER_CASE_STR(VK_LSHIFT);        
-        TOGL_INNER_CASE_STR(VK_RSHIFT);        
-        TOGL_INNER_CASE_STR(VK_LCONTROL);      
-        TOGL_INNER_CASE_STR(VK_RCONTROL);      
-        TOGL_INNER_CASE_STR(VK_LMENU);         
-        TOGL_INNER_CASE_STR(VK_RMENU);   
+        TOGL_CASE_STR(VK_NUMLOCK);       
+        TOGL_CASE_STR(VK_SCROLL);        
+        TOGL_CASE_STR(VK_LSHIFT);        
+        TOGL_CASE_STR(VK_RSHIFT);        
+        TOGL_CASE_STR(VK_LCONTROL);      
+        TOGL_CASE_STR(VK_RCONTROL);      
+        TOGL_CASE_STR(VK_LMENU);         
+        TOGL_CASE_STR(VK_RMENU);   
         }
         if ((vk_code >= '0' && vk_code <= '9') || (vk_code >= 'A' && vk_code <= 'Z')) return std::string(1, (char)vk_code); 
         return std::string() + "(" + std::to_string(vk_code) + ")";
@@ -602,143 +601,141 @@ namespace TrivialOpenGL {
 
     inline std::string KeyIdToStr(KeyId key_id) {
         switch (key_id) {
-        TOGL_INNER_CASE_STR(KEY_ID_UNKNOWN);  
-        TOGL_INNER_CASE_STR(KEY_ID_BREAK);                  
-        TOGL_INNER_CASE_STR(KEY_ID_BACKSPACE);              
-        TOGL_INNER_CASE_STR(KEY_ID_TAB);                    
-        TOGL_INNER_CASE_STR(KEY_ID_ENTER);                  
-        TOGL_INNER_CASE_STR(KEY_ID_SHIFT);                  
-        TOGL_INNER_CASE_STR(KEY_ID_CONTROL);                
-        TOGL_INNER_CASE_STR(KEY_ID_ALT);                    
-        TOGL_INNER_CASE_STR(KEY_ID_PAUSE);                  
-        TOGL_INNER_CASE_STR(KEY_ID_CAPS_LOCK);              
-        TOGL_INNER_CASE_STR(KEY_ID_ESCAPE);                 
-        TOGL_INNER_CASE_STR(KEY_ID_SPACE);                  
-        TOGL_INNER_CASE_STR(KEY_ID_PAGE_UP);                
-        TOGL_INNER_CASE_STR(KEY_ID_PAGE_DOWN);              
-        TOGL_INNER_CASE_STR(KEY_ID_END);                    
-        TOGL_INNER_CASE_STR(KEY_ID_HOME);                   
-        TOGL_INNER_CASE_STR(KEY_ID_ARROW_LEFT);             
-        TOGL_INNER_CASE_STR(KEY_ID_ARROW_UP);               
-        TOGL_INNER_CASE_STR(KEY_ID_ARROW_RIGHT);            
-        TOGL_INNER_CASE_STR(KEY_ID_ARROW_DOWN);             
-        TOGL_INNER_CASE_STR(KEY_ID_PRINT);                  
-        TOGL_INNER_CASE_STR(KEY_ID_PRINT_SCREEN);           
-        TOGL_INNER_CASE_STR(KEY_ID_INSERT);                 
-        TOGL_INNER_CASE_STR(KEY_ID_DELETE);                 
-        TOGL_INNER_CASE_STR(KEY_ID_NUMPAD_0);               
-        TOGL_INNER_CASE_STR(KEY_ID_NUMPAD_1);               
-        TOGL_INNER_CASE_STR(KEY_ID_NUMPAD_2);               
-        TOGL_INNER_CASE_STR(KEY_ID_NUMPAD_3);               
-        TOGL_INNER_CASE_STR(KEY_ID_NUMPAD_4);               
-        TOGL_INNER_CASE_STR(KEY_ID_NUMPAD_5);               
-        TOGL_INNER_CASE_STR(KEY_ID_NUMPAD_6);               
-        TOGL_INNER_CASE_STR(KEY_ID_NUMPAD_7);               
-        TOGL_INNER_CASE_STR(KEY_ID_NUMPAD_8);               
-        TOGL_INNER_CASE_STR(KEY_ID_NUMPAD_9);               
-        TOGL_INNER_CASE_STR(KEY_ID_NUMPAD_MULTIPLY);        
-        TOGL_INNER_CASE_STR(KEY_ID_NUMPAD_ADD);             
-        TOGL_INNER_CASE_STR(KEY_ID_NUMPAD_SEPARATOR);       
-        TOGL_INNER_CASE_STR(KEY_ID_NUMPAD_SUBTRACT);        
-        TOGL_INNER_CASE_STR(KEY_ID_NUMPAD_DECIMAL);         
-        TOGL_INNER_CASE_STR(KEY_ID_NUMPAD_DIVIDE);          
-        TOGL_INNER_CASE_STR(KEY_ID_F1);                     
-        TOGL_INNER_CASE_STR(KEY_ID_F2);                     
-        TOGL_INNER_CASE_STR(KEY_ID_F3);                     
-        TOGL_INNER_CASE_STR(KEY_ID_F4);                     
-        TOGL_INNER_CASE_STR(KEY_ID_F5);                     
-        TOGL_INNER_CASE_STR(KEY_ID_F6);                     
-        TOGL_INNER_CASE_STR(KEY_ID_F7);                     
-        TOGL_INNER_CASE_STR(KEY_ID_F8);                     
-        TOGL_INNER_CASE_STR(KEY_ID_F9);                     
-        TOGL_INNER_CASE_STR(KEY_ID_F10);                    
-        TOGL_INNER_CASE_STR(KEY_ID_F11);                    
-        TOGL_INNER_CASE_STR(KEY_ID_F12);                    
-        TOGL_INNER_CASE_STR(KEY_ID_F13);                    
-        TOGL_INNER_CASE_STR(KEY_ID_F14);                    
-        TOGL_INNER_CASE_STR(KEY_ID_F15);                    
-        TOGL_INNER_CASE_STR(KEY_ID_F16);                    
-        TOGL_INNER_CASE_STR(KEY_ID_F17);                    
-        TOGL_INNER_CASE_STR(KEY_ID_F18);                    
-        TOGL_INNER_CASE_STR(KEY_ID_F19);                    
-        TOGL_INNER_CASE_STR(KEY_ID_F20);                    
-        TOGL_INNER_CASE_STR(KEY_ID_F21);                    
-        TOGL_INNER_CASE_STR(KEY_ID_F22);                    
-        TOGL_INNER_CASE_STR(KEY_ID_F23);                    
-        TOGL_INNER_CASE_STR(KEY_ID_F24);   
-        TOGL_INNER_CASE_STR(KEY_ID_0);	
-        TOGL_INNER_CASE_STR(KEY_ID_1);	
-        TOGL_INNER_CASE_STR(KEY_ID_2);	
-        TOGL_INNER_CASE_STR(KEY_ID_3);	
-        TOGL_INNER_CASE_STR(KEY_ID_4);	
-        TOGL_INNER_CASE_STR(KEY_ID_5);	
-        TOGL_INNER_CASE_STR(KEY_ID_6);	
-        TOGL_INNER_CASE_STR(KEY_ID_7);	
-        TOGL_INNER_CASE_STR(KEY_ID_8);	
-        TOGL_INNER_CASE_STR(KEY_ID_9);	
-        TOGL_INNER_CASE_STR(KEY_ID_A);	
-        TOGL_INNER_CASE_STR(KEY_ID_B);	
-        TOGL_INNER_CASE_STR(KEY_ID_C);	
-        TOGL_INNER_CASE_STR(KEY_ID_D);	
-        TOGL_INNER_CASE_STR(KEY_ID_E);	
-        TOGL_INNER_CASE_STR(KEY_ID_F);	
-        TOGL_INNER_CASE_STR(KEY_ID_G);	
-        TOGL_INNER_CASE_STR(KEY_ID_H);	
-        TOGL_INNER_CASE_STR(KEY_ID_I);	
-        TOGL_INNER_CASE_STR(KEY_ID_J);	
-        TOGL_INNER_CASE_STR(KEY_ID_K);	
-        TOGL_INNER_CASE_STR(KEY_ID_L);	
-        TOGL_INNER_CASE_STR(KEY_ID_M);	
-        TOGL_INNER_CASE_STR(KEY_ID_N);	
-        TOGL_INNER_CASE_STR(KEY_ID_O);	
-        TOGL_INNER_CASE_STR(KEY_ID_P);	
-        TOGL_INNER_CASE_STR(KEY_ID_Q);	
-        TOGL_INNER_CASE_STR(KEY_ID_R);	
-        TOGL_INNER_CASE_STR(KEY_ID_S);	
-        TOGL_INNER_CASE_STR(KEY_ID_T);	
-        TOGL_INNER_CASE_STR(KEY_ID_U);	
-        TOGL_INNER_CASE_STR(KEY_ID_V);	
-        TOGL_INNER_CASE_STR(KEY_ID_W);	
-        TOGL_INNER_CASE_STR(KEY_ID_X);	
-        TOGL_INNER_CASE_STR(KEY_ID_Y);	
-        TOGL_INNER_CASE_STR(KEY_ID_Z);
+        TOGL_CASE_STR(KEY_ID_UNKNOWN);  
+        TOGL_CASE_STR(KEY_ID_BREAK);                  
+        TOGL_CASE_STR(KEY_ID_BACKSPACE);              
+        TOGL_CASE_STR(KEY_ID_TAB);                    
+        TOGL_CASE_STR(KEY_ID_ENTER);                  
+        TOGL_CASE_STR(KEY_ID_SHIFT);                  
+        TOGL_CASE_STR(KEY_ID_CONTROL);                
+        TOGL_CASE_STR(KEY_ID_ALT);                    
+        TOGL_CASE_STR(KEY_ID_PAUSE);                  
+        TOGL_CASE_STR(KEY_ID_CAPS_LOCK);              
+        TOGL_CASE_STR(KEY_ID_ESCAPE);                 
+        TOGL_CASE_STR(KEY_ID_SPACE);                  
+        TOGL_CASE_STR(KEY_ID_PAGE_UP);                
+        TOGL_CASE_STR(KEY_ID_PAGE_DOWN);              
+        TOGL_CASE_STR(KEY_ID_END);                    
+        TOGL_CASE_STR(KEY_ID_HOME);                   
+        TOGL_CASE_STR(KEY_ID_ARROW_LEFT);             
+        TOGL_CASE_STR(KEY_ID_ARROW_UP);               
+        TOGL_CASE_STR(KEY_ID_ARROW_RIGHT);            
+        TOGL_CASE_STR(KEY_ID_ARROW_DOWN);             
+        TOGL_CASE_STR(KEY_ID_PRINT);                  
+        TOGL_CASE_STR(KEY_ID_PRINT_SCREEN);           
+        TOGL_CASE_STR(KEY_ID_INSERT);                 
+        TOGL_CASE_STR(KEY_ID_DELETE);                 
+        TOGL_CASE_STR(KEY_ID_NUMPAD_0);               
+        TOGL_CASE_STR(KEY_ID_NUMPAD_1);               
+        TOGL_CASE_STR(KEY_ID_NUMPAD_2);               
+        TOGL_CASE_STR(KEY_ID_NUMPAD_3);               
+        TOGL_CASE_STR(KEY_ID_NUMPAD_4);               
+        TOGL_CASE_STR(KEY_ID_NUMPAD_5);               
+        TOGL_CASE_STR(KEY_ID_NUMPAD_6);               
+        TOGL_CASE_STR(KEY_ID_NUMPAD_7);               
+        TOGL_CASE_STR(KEY_ID_NUMPAD_8);               
+        TOGL_CASE_STR(KEY_ID_NUMPAD_9);               
+        TOGL_CASE_STR(KEY_ID_NUMPAD_MULTIPLY);        
+        TOGL_CASE_STR(KEY_ID_NUMPAD_ADD);             
+        TOGL_CASE_STR(KEY_ID_NUMPAD_SEPARATOR);       
+        TOGL_CASE_STR(KEY_ID_NUMPAD_SUBTRACT);        
+        TOGL_CASE_STR(KEY_ID_NUMPAD_DECIMAL);         
+        TOGL_CASE_STR(KEY_ID_NUMPAD_DIVIDE);          
+        TOGL_CASE_STR(KEY_ID_F1);                     
+        TOGL_CASE_STR(KEY_ID_F2);                     
+        TOGL_CASE_STR(KEY_ID_F3);                     
+        TOGL_CASE_STR(KEY_ID_F4);                     
+        TOGL_CASE_STR(KEY_ID_F5);                     
+        TOGL_CASE_STR(KEY_ID_F6);                     
+        TOGL_CASE_STR(KEY_ID_F7);                     
+        TOGL_CASE_STR(KEY_ID_F8);                     
+        TOGL_CASE_STR(KEY_ID_F9);                     
+        TOGL_CASE_STR(KEY_ID_F10);                    
+        TOGL_CASE_STR(KEY_ID_F11);                    
+        TOGL_CASE_STR(KEY_ID_F12);                    
+        TOGL_CASE_STR(KEY_ID_F13);                    
+        TOGL_CASE_STR(KEY_ID_F14);                    
+        TOGL_CASE_STR(KEY_ID_F15);                    
+        TOGL_CASE_STR(KEY_ID_F16);                    
+        TOGL_CASE_STR(KEY_ID_F17);                    
+        TOGL_CASE_STR(KEY_ID_F18);                    
+        TOGL_CASE_STR(KEY_ID_F19);                    
+        TOGL_CASE_STR(KEY_ID_F20);                    
+        TOGL_CASE_STR(KEY_ID_F21);                    
+        TOGL_CASE_STR(KEY_ID_F22);                    
+        TOGL_CASE_STR(KEY_ID_F23);                    
+        TOGL_CASE_STR(KEY_ID_F24);   
+        TOGL_CASE_STR(KEY_ID_0);	
+        TOGL_CASE_STR(KEY_ID_1);	
+        TOGL_CASE_STR(KEY_ID_2);	
+        TOGL_CASE_STR(KEY_ID_3);	
+        TOGL_CASE_STR(KEY_ID_4);	
+        TOGL_CASE_STR(KEY_ID_5);	
+        TOGL_CASE_STR(KEY_ID_6);	
+        TOGL_CASE_STR(KEY_ID_7);	
+        TOGL_CASE_STR(KEY_ID_8);	
+        TOGL_CASE_STR(KEY_ID_9);	
+        TOGL_CASE_STR(KEY_ID_A);	
+        TOGL_CASE_STR(KEY_ID_B);	
+        TOGL_CASE_STR(KEY_ID_C);	
+        TOGL_CASE_STR(KEY_ID_D);	
+        TOGL_CASE_STR(KEY_ID_E);	
+        TOGL_CASE_STR(KEY_ID_F);	
+        TOGL_CASE_STR(KEY_ID_G);	
+        TOGL_CASE_STR(KEY_ID_H);	
+        TOGL_CASE_STR(KEY_ID_I);	
+        TOGL_CASE_STR(KEY_ID_J);	
+        TOGL_CASE_STR(KEY_ID_K);	
+        TOGL_CASE_STR(KEY_ID_L);	
+        TOGL_CASE_STR(KEY_ID_M);	
+        TOGL_CASE_STR(KEY_ID_N);	
+        TOGL_CASE_STR(KEY_ID_O);	
+        TOGL_CASE_STR(KEY_ID_P);	
+        TOGL_CASE_STR(KEY_ID_Q);	
+        TOGL_CASE_STR(KEY_ID_R);	
+        TOGL_CASE_STR(KEY_ID_S);	
+        TOGL_CASE_STR(KEY_ID_T);	
+        TOGL_CASE_STR(KEY_ID_U);	
+        TOGL_CASE_STR(KEY_ID_V);	
+        TOGL_CASE_STR(KEY_ID_W);	
+        TOGL_CASE_STR(KEY_ID_X);	
+        TOGL_CASE_STR(KEY_ID_Y);	
+        TOGL_CASE_STR(KEY_ID_Z);
 
-        TOGL_INNER_CASE_STR(KEY_ID_SEMICOLON);
-        TOGL_INNER_CASE_STR(KEY_ID_FORWARD_SLASH);
-        TOGL_INNER_CASE_STR(KEY_ID_ACUTE);
-        TOGL_INNER_CASE_STR(KEY_ID_OPEN_BRACKET);
-        TOGL_INNER_CASE_STR(KEY_ID_BACK_SLASH);
-        TOGL_INNER_CASE_STR(KEY_ID_CLOSE_BRACKET);
-        TOGL_INNER_CASE_STR(KEY_ID_APOSTROPHE);
-        TOGL_INNER_CASE_STR(KEY_ID_COMMA);
-        TOGL_INNER_CASE_STR(KEY_ID_DOT);
-        TOGL_INNER_CASE_STR(KEY_ID_DASH);
-        TOGL_INNER_CASE_STR(KEY_ID_EQUAL);
+        TOGL_CASE_STR(KEY_ID_SEMICOLON);
+        TOGL_CASE_STR(KEY_ID_FORWARD_SLASH);
+        TOGL_CASE_STR(KEY_ID_ACUTE);
+        TOGL_CASE_STR(KEY_ID_OPEN_BRACKET);
+        TOGL_CASE_STR(KEY_ID_BACK_SLASH);
+        TOGL_CASE_STR(KEY_ID_CLOSE_BRACKET);
+        TOGL_CASE_STR(KEY_ID_APOSTROPHE);
+        TOGL_CASE_STR(KEY_ID_COMMA);
+        TOGL_CASE_STR(KEY_ID_DOT);
+        TOGL_CASE_STR(KEY_ID_DASH);
+        TOGL_CASE_STR(KEY_ID_EQUAL);
 
-        TOGL_INNER_CASE_STR(KEY_ID_NUMLOCK);                
-        TOGL_INNER_CASE_STR(KEY_ID_SCROLL_LOCK);   
+        TOGL_CASE_STR(KEY_ID_NUMLOCK);                
+        TOGL_CASE_STR(KEY_ID_SCROLL_LOCK);   
               
-        TOGL_INNER_CASE_STR(KEY_ID_LEFT_MOUSE_BUTTON);   
-        TOGL_INNER_CASE_STR(KEY_ID_MIDDLE_MOUSE_BUTTON);   
-        TOGL_INNER_CASE_STR(KEY_ID_RIGHT_MOUSE_BUTTON);   
-        TOGL_INNER_CASE_STR(KEY_ID_X1_MOUSE_BUTTON);   
-        TOGL_INNER_CASE_STR(KEY_ID_X2_MOUSE_BUTTON);   
+        TOGL_CASE_STR(KEY_ID_LEFT_MOUSE_BUTTON);   
+        TOGL_CASE_STR(KEY_ID_MIDDLE_MOUSE_BUTTON);   
+        TOGL_CASE_STR(KEY_ID_RIGHT_MOUSE_BUTTON);   
+        TOGL_CASE_STR(KEY_ID_X1_MOUSE_BUTTON);   
+        TOGL_CASE_STR(KEY_ID_X2_MOUSE_BUTTON);   
         }
         return std::string() + "(" + std::to_string(key_id) + ")";
     }
 
     inline std::string KeyboardSideToStr(KeyboardSide side) {
         switch(side) {
-        TOGL_INNER_CASE_STR(KEYBOARD_SIDE_NONE);
-        TOGL_INNER_CASE_STR(KEYBOARD_SIDE_LEFT);
-        TOGL_INNER_CASE_STR(KEYBOARD_SIDE_RIGHT);
+        TOGL_CASE_STR(KEYBOARD_SIDE_NONE);
+        TOGL_CASE_STR(KEYBOARD_SIDE_LEFT);
+        TOGL_CASE_STR(KEYBOARD_SIDE_RIGHT);
         }
         return "?";
     }
 
-#undef TOGL_INNER_CASE_STR
-
-    inline std::string InnerKeySupport::WinApiKeyDataToStr(WPARAM w_param, LPARAM l_param) {
+    inline std::string InnerKey::WinApiKeyDataToStr(WPARAM w_param, LPARAM l_param) {
         const VirtualKeyData& virtual_key_data = *((const VirtualKeyData*)(&l_param));
 
         auto PadWithSpaces = [](const std::string& text, uint32_t num_of_spaces) {
@@ -763,7 +760,7 @@ namespace TrivialOpenGL {
         return text;
     }
 
-    inline std::string InnerKeySupport::WinApiMouseButtonToStr(WPARAM w_param, LPARAM l_param) {
+    inline std::string InnerKey::WinApiMouseButtonToStr(WPARAM w_param, LPARAM l_param) {
         const int x = GET_X_LPARAM(l_param);
         const int y = GET_Y_LPARAM(l_param);
 
@@ -787,10 +784,11 @@ namespace TrivialOpenGL {
     inline std::string ExtraToStr(const Extra& extra) {
         std::string text;
 
-        text += " count=" + std::to_string(extra.count);
-        text += " x=" + std::to_string(extra.x);
-        text += " y=" + std::to_string(extra.y);
-        text += " side=" + KeyboardSideToStr(extra.keyboard_side);
+        text += "{count=" + std::to_string(extra.count);
+        text += ", x=" + std::to_string(extra.x);
+        text += ", y=" + std::to_string(extra.y);
+        text += ", side=" + KeyboardSideToStr(extra.keyboard_side);
+        text += "}";
 
         return text;
     };

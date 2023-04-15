@@ -421,13 +421,13 @@ namespace TrivialOpenGL {
 
         uint64_t        m_dbg_message_id;
 
-        WindowAreaCorrector m_window_area_corrector;
+        InnerUtility::WindowAreaCorrector   m_window_area_corrector;
 
-        std::map<bool*, std::stack<bool>> m_on_off_stack_map;
+        std::map<bool*, std::stack<bool>>   m_on_off_stack_map;
 
-        wchar_t         m_char_utf16[MAX_NUM_OF_UTF16_CODE_UNITS];
+        wchar_t                             m_char_utf16[MAX_NUM_OF_UTF16_CODE_UNITS];
 
-        TextDrawer      m_text_drawer;
+        InnerUtility::TextDrawer            m_text_drawer;
     };
 
 } // namespace TrivialOpenGL
@@ -1205,9 +1205,9 @@ namespace TrivialOpenGL {
 
     inline void Window::HandleDoOnKeyboardKey(WPARAM w_param, LPARAM l_param) {
         if (m_data.do_on_key) {
-            const VirtualKeyData& virtual_key_data = *((const VirtualKeyData*)(&l_param));
+            const InnerKey::VirtualKeyData& virtual_key_data = *((const InnerKey::VirtualKeyData*)(&l_param));
 
-            const KeyId key_id = InnerKeySupport::GetKeyId(w_param);
+            const KeyId key_id = InnerKey::GetKeyId(w_param);
             const bool is_down = virtual_key_data.trans_state == 0;
 
             Extra extra = {};
@@ -1217,7 +1217,7 @@ namespace TrivialOpenGL {
             extra.x = pos.x;
             extra.y = pos.y;
 
-            extra.keyboard_side = GetKeyboardSide(key_id, virtual_key_data);
+            extra.keyboard_side = InnerKey::GetKeyboardSide(key_id, virtual_key_data);
 
             m_data.do_on_key(key_id, is_down, extra);
         }
@@ -1225,10 +1225,10 @@ namespace TrivialOpenGL {
 
 
     inline void Window::HandleDoOnMouseKey(UINT message, WPARAM w_param, LPARAM l_param) {
-        const bool is_down = InnerKeySupport::IsMouseButtonDown(message);
+        const bool is_down = InnerKey::IsMouseButtonDown(message);
 
         if (m_data.do_on_key) {
-            const KeyId key_id = InnerKeySupport::GetMouseKeyId(message, w_param);
+            const KeyId key_id = InnerKey::GetMouseKeyId(message, w_param);
 
             Extra extra = {};
             extra.count         = 1;
@@ -1619,7 +1619,7 @@ namespace TrivialOpenGL {
             if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_KEYDOWN   ";
 
-                dbg_msg += InnerKeySupport::WinApiKeyDataToStr(w_param, l_param);
+                dbg_msg += InnerKey::WinApiKeyDataToStr(w_param, l_param);
 
                 LogDebug(dbg_msg);
             }
@@ -1630,7 +1630,7 @@ namespace TrivialOpenGL {
             if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_KEYUP     ";
 
-                dbg_msg += InnerKeySupport::WinApiKeyDataToStr(w_param, l_param);
+                dbg_msg += InnerKey::WinApiKeyDataToStr(w_param, l_param);
 
                 LogDebug(dbg_msg);
             }
@@ -1641,7 +1641,7 @@ namespace TrivialOpenGL {
             if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_SYSKEYDOWN";
 
-                dbg_msg += InnerKeySupport::WinApiKeyDataToStr(w_param, l_param);
+                dbg_msg += InnerKey::WinApiKeyDataToStr(w_param, l_param);
 
                 LogDebug(dbg_msg);
             }
@@ -1652,7 +1652,7 @@ namespace TrivialOpenGL {
             if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_SYSKEYUP  ";
 
-                dbg_msg += InnerKeySupport::WinApiKeyDataToStr(w_param, l_param);
+                dbg_msg += InnerKey::WinApiKeyDataToStr(w_param, l_param);
 
                 LogDebug(dbg_msg);
             }
@@ -1719,7 +1719,7 @@ namespace TrivialOpenGL {
             if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_LBUTTONDOWN";
 
-                dbg_msg += InnerKeySupport::WinApiMouseButtonToStr(w_param, l_param);
+                dbg_msg += InnerKey::WinApiMouseButtonToStr(w_param, l_param);
 
                 LogDebug(dbg_msg);
             }
@@ -1730,7 +1730,7 @@ namespace TrivialOpenGL {
             if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_LBUTTONUP";
 
-                dbg_msg += InnerKeySupport::WinApiMouseButtonToStr(w_param, l_param);
+                dbg_msg += InnerKey::WinApiMouseButtonToStr(w_param, l_param);
 
                 LogDebug(dbg_msg);
             }
@@ -1741,7 +1741,7 @@ namespace TrivialOpenGL {
             if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_RBUTTONDOWN";
 
-                dbg_msg += InnerKeySupport::WinApiMouseButtonToStr(w_param, l_param);
+                dbg_msg += InnerKey::WinApiMouseButtonToStr(w_param, l_param);
 
                 LogDebug(dbg_msg);
             }
@@ -1752,7 +1752,7 @@ namespace TrivialOpenGL {
             if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_RBUTTONUP";
 
-                dbg_msg += InnerKeySupport::WinApiMouseButtonToStr(w_param, l_param);
+                dbg_msg += InnerKey::WinApiMouseButtonToStr(w_param, l_param);
 
                 LogDebug(dbg_msg);
             }
@@ -1763,7 +1763,7 @@ namespace TrivialOpenGL {
             if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_MBUTTONDOWN";
 
-                dbg_msg += InnerKeySupport::WinApiMouseButtonToStr(w_param, l_param);
+                dbg_msg += InnerKey::WinApiMouseButtonToStr(w_param, l_param);
 
                 LogDebug(dbg_msg);
             }
@@ -1774,7 +1774,7 @@ namespace TrivialOpenGL {
             if (m_data.special_debug.is_notify_key_message) {
                 std::string dbg_msg = "WM_MBUTTONUP";
 
-                dbg_msg += InnerKeySupport::WinApiMouseButtonToStr(w_param, l_param);
+                dbg_msg += InnerKey::WinApiMouseButtonToStr(w_param, l_param);
 
                 LogDebug(dbg_msg);
             }
@@ -1788,7 +1788,7 @@ namespace TrivialOpenGL {
                 if (HIWORD(w_param) == XBUTTON1) dbg_msg += " X1";
                 if (HIWORD(w_param) == XBUTTON2) dbg_msg += " X2";
 
-                dbg_msg += InnerKeySupport::WinApiMouseButtonToStr(w_param, l_param);
+                dbg_msg += InnerKey::WinApiMouseButtonToStr(w_param, l_param);
 
                 LogDebug(dbg_msg);
             }
@@ -1802,7 +1802,7 @@ namespace TrivialOpenGL {
                 if (HIWORD(w_param) == XBUTTON1) dbg_msg += " X1";
                 if (HIWORD(w_param) == XBUTTON2) dbg_msg += " X2";
 
-                dbg_msg += InnerKeySupport::WinApiMouseButtonToStr(w_param, l_param);
+                dbg_msg += InnerKey::WinApiMouseButtonToStr(w_param, l_param);
 
                 LogDebug(dbg_msg);
             }

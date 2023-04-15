@@ -25,6 +25,8 @@
 // Declarations
 //==============================================================================
 
+#define TOGL_CASE_STR(name) case name: return #name
+
 namespace TrivialOpenGL {
 
     //--------------------------------------------------------------------------
@@ -405,314 +407,294 @@ namespace TrivialOpenGL {
     void SetCustomLogFunction(CustomLogFnP_T custom_log);
 
     //--------------------------------------------------------------------------
-    // WindowAreaCorrector
+    // Common
     //--------------------------------------------------------------------------
-    
-    // Corrects window position and size to remove invisible window frame in Windows 10. 
-    class WindowAreaCorrector {
+
+    AreaIU16 GetDesktopAreaNoTaskBar();
+    SizeU16 GetDesktopAreaSizeNoTaskBar();
+    SizeU16 GetScreenSize();
+    PointI GetCursorPosInScreen();
+
+    //--------------------------------------------------------------------------
+
+    std::vector<std::string> Split(const std::string& text, char c);
+
+    //--------------------------------------------------------------------------
+    // InnerUtility
+    //--------------------------------------------------------------------------
+
+    // Content this class is for this library inner purpose only.
+    class InnerUtility {
     public:
-        WindowAreaCorrector() {
-            m_dwmapi_lib_handle = LoadLibraryA("Dwmapi.dll");
-            if (m_dwmapi_lib_handle) {
-                m_dwm_get_window_attribute          = (decltype(m_dwm_get_window_attribute)) GetProcAddress(m_dwmapi_lib_handle, "DwmGetWindowAttribute");
-            } else {
-                m_dwm_get_window_attribute          = nullptr;
-            }
-        }
+        friend class Window;
 
-        virtual ~WindowAreaCorrector() {
-            FreeLibrary(m_dwmapi_lib_handle);
-        }
-
-        void DisableComposition() {
-            enum {
-                TOGL_DWM_EC_DISABLECOMPOSITION  = 0,
-                TOGL_DWM_EC_ENABLECOMPOSITION   = 1,
-            };
-            HRESULT (*DwmEnableComposition)(UINT uCompositionAction) = (decltype(DwmEnableComposition)) GetProcAddress(m_dwmapi_lib_handle, "DwmEnableComposition");
-
-            DwmEnableComposition(TOGL_DWM_EC_DISABLECOMPOSITION);
-        }
-
-        AreaIU16 Get(HWND window_handle) const {
-            AreaIU16 area = {};
-
-            if (m_dwm_get_window_attribute) {
-                RECT window_rect;
-                GetWindowRect(window_handle, &window_rect);
-
-                // Added TOGL_ prefix.
-                enum { TOGL_DWMWA_EXTENDED_FRAME_BOUNDS = 9 };
-                RECT actual_window_rect;
-
-                // Note: To return correct values, must be called after ShowWindow(window_handle, SW_SHOW).
-                m_dwm_get_window_attribute(window_handle, TOGL_DWMWA_EXTENDED_FRAME_BOUNDS, &actual_window_rect, sizeof(RECT));
-
-                RECT frame = {};
-                frame.left      = actual_window_rect.left   - window_rect.left;
-                frame.top       = actual_window_rect.top    - window_rect.top;
-                frame.right     = window_rect.right         - actual_window_rect.right;
-                frame.bottom    = window_rect.bottom        - actual_window_rect.bottom;
-
-                area = AreaIU16(- frame.left, -frame.top, uint16_t(frame.left + frame.right), uint16_t(frame.top + frame.bottom));
-            }
-
-            return area;
-        }
-
-        // area         - Window area without invisible frame.
-        AreaIU16 AddInvisibleFrameTo(const AreaIU16& area, HWND window_hangle) const {
-            const AreaIU16 correction = Get(window_hangle);
-            return AreaIU16(
-                area.x      + correction.x,
-                area.y      + correction.y,
-                area.width  + correction.width,
-                area.height + correction.height
-            );
-        }
-
-        // size         - Window size without invisible frame.
-        SizeU16 AddInvisibleFrameTo(const SizeU16& size, HWND window_hangle) const {
-            const AreaIU16 correction = Get(window_hangle);
-            return SizeU16(
-                size.width  + correction.width,
-                size.height + correction.height
-            );
-        }
-
-        // pos          - Window position without invisible frame.
-        PointI AddInvisibleFrameTo(const PointI& pos, HWND window_hangle) const {
-            const AreaIU16 correction = Get(window_hangle);
-            return {
-                pos.x + correction.x,
-                pos.y + correction.y,
-            };
-        }
-
-        // area         - Window area with invisible frame.
-        AreaIU16 RemoveInvisibleFrameFrom(const AreaIU16& area, HWND window_hangle) const {
-            const AreaIU16 correction = Get(window_hangle);
-            return AreaIU16(
-                area.x      - correction.x,
-                area.y      - correction.y,
-                area.width  - correction.width,
-                area.height - correction.height
-            );
-        }
-
-        // size         - Window size with invisible frame.
-        SizeU16 RemoveInvisibleFrameFrom(const SizeU16& size, HWND window_hangle) const {
-            const AreaIU16 correction = Get(window_hangle);
-            return SizeU16(
-                size.width  - correction.width,
-                size.height - correction.height
-            );
-        }
-
-        // pos          - Window position with invisible frame.
-        PointI RemoveInvisibleFrameFrom(const PointI& pos, HWND window_hangle) const {
-            const AreaIU16 correction = Get(window_hangle);
-            return {
-                pos.x - correction.x,
-                pos.y - correction.y,
-            };
-        }
     private:
-        HMODULE  m_dwmapi_lib_handle;
-
-        struct MARGINS {
-            int cxLeftWidth;
-            int cxRightWidth;
-            int cyTopHeight;
-            int cyBottomHeight;
-        };
-        
-        HRESULT (*m_dwm_get_window_attribute)(HWND hwnd, DWORD dwAttribute, PVOID pvAttribute, DWORD cbAttribute);
-    };
-
-    //--------------------------------------------------------------------------
-    // WindowAreaCorrector
-    //--------------------------------------------------------------------------
-
-    class TextDrawer {
-    public:
-        TextDrawer() {
-            m_device_context_handle = NULL;
-            m_font_handle           = NULL;
-            m_list_base             = 0;
-        }
-        virtual ~TextDrawer() {}
-
-        // device_context_handle    - Must still exist for each call of RenderText.
-        // name                     - Font name.
-        // size                     - Height of characters in pixels.
-        bool LoadFont(HDC device_context_handle, const std::string& name, uint16_t size, bool is_bold = false) {
-            UnloadFont();
-
-            m_device_context_handle = device_context_handle;
-
-            m_font_handle = CreateFontA(
-                size,                    
-                0, 0, 0,                            
-                is_bold ? FW_BOLD : FW_NORMAL,
-                FALSE, FALSE, FALSE,
-                ANSI_CHARSET,
-                OUT_TT_PRECIS,
-                CLIP_DEFAULT_PRECIS,
-                ANTIALIASED_QUALITY,
-                FF_DONTCARE | DEFAULT_PITCH,
-                name.c_str());  
-
-            if (m_font_handle) {
-                HFONT old_font_handle = (HFONT)SelectObject(m_device_context_handle, m_font_handle); 
-
-                m_list_base = glGenLists(PRINT_LIST_LEN);
-                if (m_list_base) {
-                    bool is_success = wglUseFontBitmapsA(m_device_context_handle, 0, PRINT_LIST_LEN, m_list_base);
-                    // Workaround for strange behavior. For POPUP window first call of wglUseFontBitmapsA fail with GetError() = 0.
-                    // Second call, right after first, seams to succeed.
-                    if (!is_success) is_success = wglUseFontBitmapsA(m_device_context_handle, 0, PRINT_LIST_LEN, m_list_base);
-
-                    if (!is_success) {
-                        m_err_msg = "Error: Can not font bitmap.";
-                    }
+        //--------------------------------------------------------------------------
+        // WindowAreaCorrector
+        //--------------------------------------------------------------------------
+    
+        // Corrects window position and size to remove invisible window frame in Windows 10. 
+        class WindowAreaCorrector {
+        public:
+            WindowAreaCorrector() {
+                m_dwmapi_lib_handle = LoadLibraryA("Dwmapi.dll");
+                if (m_dwmapi_lib_handle) {
+                    m_dwm_get_window_attribute          = (decltype(m_dwm_get_window_attribute)) GetProcAddress(m_dwmapi_lib_handle, "DwmGetWindowAttribute");
                 } else {
-                    m_err_msg = "Error: Can not generate display list.";
+                    m_dwm_get_window_attribute          = nullptr;
+                }
+            }
+
+            virtual ~WindowAreaCorrector() {
+                FreeLibrary(m_dwmapi_lib_handle);
+            }
+
+            void DisableComposition() {
+                enum {
+                    TOGL_DWM_EC_DISABLECOMPOSITION  = 0,
+                    TOGL_DWM_EC_ENABLECOMPOSITION   = 1,
+                };
+                HRESULT (*DwmEnableComposition)(UINT uCompositionAction) = (decltype(DwmEnableComposition)) GetProcAddress(m_dwmapi_lib_handle, "DwmEnableComposition");
+
+                DwmEnableComposition(TOGL_DWM_EC_DISABLECOMPOSITION);
+            }
+
+            AreaIU16 Get(HWND window_handle) const {
+                AreaIU16 area = {};
+
+                if (m_dwm_get_window_attribute) {
+                    RECT window_rect;
+                    GetWindowRect(window_handle, &window_rect);
+
+                    // Added TOGL_ prefix.
+                    enum { TOGL_DWMWA_EXTENDED_FRAME_BOUNDS = 9 };
+                    RECT actual_window_rect;
+
+                    // Note: To return correct values, must be called after ShowWindow(window_handle, SW_SHOW).
+                    m_dwm_get_window_attribute(window_handle, TOGL_DWMWA_EXTENDED_FRAME_BOUNDS, &actual_window_rect, sizeof(RECT));
+
+                    RECT frame = {};
+                    frame.left      = actual_window_rect.left   - window_rect.left;
+                    frame.top       = actual_window_rect.top    - window_rect.top;
+                    frame.right     = window_rect.right         - actual_window_rect.right;
+                    frame.bottom    = window_rect.bottom        - actual_window_rect.bottom;
+
+                    area = AreaIU16(- frame.left, -frame.top, uint16_t(frame.left + frame.right), uint16_t(frame.top + frame.bottom));
                 }
 
-                SelectObject(m_device_context_handle, old_font_handle);
-            } else {
-                m_err_msg = "Error: Can not create font.";
+                return area;
             }
 
-            if (!IsOk()) {
-                UnloadFont();
+            // area         - Window area without invisible frame.
+            AreaIU16 AddInvisibleFrameTo(const AreaIU16& area, HWND window_hangle) const {
+                const AreaIU16 correction = Get(window_hangle);
+                return AreaIU16(
+                    area.x      + correction.x,
+                    area.y      + correction.y,
+                    area.width  + correction.width,
+                    area.height + correction.height
+                );
             }
 
-            return IsOk();
-        }
-
-        void UnloadFont() {
-            m_err_msg = "";
-
-            if (m_list_base) {
-                glDeleteLists(m_list_base, PRINT_LIST_LEN);
-                m_list_base = 0;
-            }
-            if (m_font_handle) {
-                DeleteObject(m_font_handle);
-                m_font_handle = NULL;
+            // size         - Window size without invisible frame.
+            SizeU16 AddInvisibleFrameTo(const SizeU16& size, HWND window_hangle) const {
+                const AreaIU16 correction = Get(window_hangle);
+                return SizeU16(
+                    size.width  + correction.width,
+                    size.height + correction.height
+                );
             }
 
-            m_device_context_handle = NULL;
-        }
-
-        void RenderText(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text) {
-            if (m_list_base) {
-                glPushAttrib(GL_ENABLE_BIT);
-                glPushAttrib(GL_COLOR_BUFFER_BIT);
-                glPushAttrib(GL_LIST_BIT);
-
-                glEnable(GL_BLEND);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
-                
-                glColor4ub(r, g, b, a);
-                glRasterPos2i(x, y);
-
-                glListBase(m_list_base);
-                glCallLists((GLsizei)text.length(), GL_UNSIGNED_BYTE, text.c_str());
-
-                glPopAttrib();
-                glPopAttrib();
-                glPopAttrib();
+            // pos          - Window position without invisible frame.
+            PointI AddInvisibleFrameTo(const PointI& pos, HWND window_hangle) const {
+                const AreaIU16 correction = Get(window_hangle);
+                return {
+                    pos.x + correction.x,
+                    pos.y + correction.y,
+                };
             }
-        }
 
-        SizeU16 GetTextSize(const std::string& text) const {
-            if (m_font_handle) {
-                HFONT old_font_handle = (HFONT)SelectObject(m_device_context_handle, m_font_handle); 
-
-                SIZE size = {};
-                BOOL is_success = GetTextExtentPoint32A(m_device_context_handle, text.c_str(), (int)text.length(), &size);
-
-                SelectObject(m_device_context_handle, old_font_handle);
-
-                if (is_success) return SizeU16((uint16_t)size.cx, (uint16_t)size.cy);
+            // area         - Window area with invisible frame.
+            AreaIU16 RemoveInvisibleFrameFrom(const AreaIU16& area, HWND window_hangle) const {
+                const AreaIU16 correction = Get(window_hangle);
+                return AreaIU16(
+                    area.x      - correction.x,
+                    area.y      - correction.y,
+                    area.width  - correction.width,
+                    area.height - correction.height
+                );
             }
-            return {};
-        }
 
-        bool IsOk() const {
-            return m_err_msg.empty();
-        }
+            // size         - Window size with invisible frame.
+            SizeU16 RemoveInvisibleFrameFrom(const SizeU16& size, HWND window_hangle) const {
+                const AreaIU16 correction = Get(window_hangle);
+                return SizeU16(
+                    size.width  - correction.width,
+                    size.height - correction.height
+                );
+            }
 
-        std::string GetErrMsg() const {
-            return m_err_msg;
-        }
+            // pos          - Window position with invisible frame.
+            PointI RemoveInvisibleFrameFrom(const PointI& pos, HWND window_hangle) const {
+                const AreaIU16 correction = Get(window_hangle);
+                return {
+                    pos.x - correction.x,
+                    pos.y - correction.y,
+                };
+            }
+        private:
+            HMODULE  m_dwmapi_lib_handle;
 
-    private:
-        enum { 
-            PRINT_LIST_LEN      = 256,      // Size for full ascii table.
+            struct MARGINS {
+                int cxLeftWidth;
+                int cxRightWidth;
+                int cyTopHeight;
+                int cyBottomHeight;
+            };
+        
+            HRESULT (*m_dwm_get_window_attribute)(HWND hwnd, DWORD dwAttribute, PVOID pvAttribute, DWORD cbAttribute);
         };
 
-        // No Copy
-        TextDrawer(const TextDrawer&) = delete;
-        TextDrawer& operator=(const TextDrawer&) = delete;
+        //--------------------------------------------------------------------------
+        // TextDrawer
+        //--------------------------------------------------------------------------
 
-        HDC         m_device_context_handle;    // not own
-        HFONT       m_font_handle;
-        GLint       m_list_base;
-
-        std::string m_err_msg;
-    };
-
-    inline int PointsToPixels(HDC hdc, int size) {
-        return MulDiv(size, GetDeviceCaps(hdc, LOGPIXELSY), 72);
-    }
-
-    //--------------------------------------------------------------------------
-
-    inline AreaIU16 GetDesktopAreaNoTaskBar() {
-        RECT rc;
-        SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, 0);
-        return MakeAreaIU16(rc);
-    }
-
-    inline SizeU16 GetDesktopAreaSizeNoTaskBar() {
-        return GetDesktopAreaNoTaskBar().GetSize();
-    }
-
-    inline SizeU16 GetScreenSize() {
-        return SizeU16(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
-    }
-
-    inline PointI GetCursorPosInScreen() {
-        POINT pos;
-        if (GetCursorPos(&pos)) {
-            return {pos.x, pos.y};
-        }
-        return {};
-    }
-
-    //--------------------------------------------------------------------------
-
-    inline std::vector<std::string> Split(const std::string& text, char c) {
-        std::string temp = text;
-        std::vector<std::string> list;
-
-        while (true) {
-            size_t pos = temp.find(c, 0);
-
-            if (pos == std::string::npos) {
-                list.push_back(temp);
-                break;
-            } else {
-                list.push_back(temp.substr(0, pos));
-                temp = temp.substr(pos + 1);
+        class TextDrawer {
+        public:
+            TextDrawer() {
+                m_device_context_handle = NULL;
+                m_font_handle           = NULL;
+                m_list_base             = 0;
             }
+            virtual ~TextDrawer() {}
+
+            // device_context_handle    - Must still exist for each call of RenderText.
+            // name                     - Font name.
+            // size                     - Height of characters in pixels.
+            bool LoadFont(HDC device_context_handle, const std::string& name, uint16_t size, bool is_bold = false) {
+                UnloadFont();
+
+                m_device_context_handle = device_context_handle;
+
+                m_font_handle = CreateFontA(
+                    size,                    
+                    0, 0, 0,                            
+                    is_bold ? FW_BOLD : FW_NORMAL,
+                    FALSE, FALSE, FALSE,
+                    ANSI_CHARSET,
+                    OUT_TT_PRECIS,
+                    CLIP_DEFAULT_PRECIS,
+                    ANTIALIASED_QUALITY,
+                    FF_DONTCARE | DEFAULT_PITCH,
+                    name.c_str());  
+
+                if (m_font_handle) {
+                    HFONT old_font_handle = (HFONT)SelectObject(m_device_context_handle, m_font_handle); 
+
+                    m_list_base = glGenLists(PRINT_LIST_LEN);
+                    if (m_list_base) {
+                        bool is_success = wglUseFontBitmapsA(m_device_context_handle, 0, PRINT_LIST_LEN, m_list_base);
+                        // Workaround for strange behavior. For POPUP window first call of wglUseFontBitmapsA fail with GetError() = 0.
+                        // Second call, right after first, seams to succeed.
+                        if (!is_success) is_success = wglUseFontBitmapsA(m_device_context_handle, 0, PRINT_LIST_LEN, m_list_base);
+
+                        if (!is_success) {
+                            m_err_msg = "Error: Can not font bitmap.";
+                        }
+                    } else {
+                        m_err_msg = "Error: Can not generate display list.";
+                    }
+
+                    SelectObject(m_device_context_handle, old_font_handle);
+                } else {
+                    m_err_msg = "Error: Can not create font.";
+                }
+
+                if (!IsOk()) {
+                    UnloadFont();
+                }
+
+                return IsOk();
+            }
+
+            void UnloadFont() {
+                m_err_msg = "";
+
+                if (m_list_base) {
+                    glDeleteLists(m_list_base, PRINT_LIST_LEN);
+                    m_list_base = 0;
+                }
+                if (m_font_handle) {
+                    DeleteObject(m_font_handle);
+                    m_font_handle = NULL;
+                }
+
+                m_device_context_handle = NULL;
+            }
+
+            void RenderText(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text) {
+                if (m_list_base) {
+                    glPushAttrib(GL_ENABLE_BIT);
+                    glPushAttrib(GL_COLOR_BUFFER_BIT);
+                    glPushAttrib(GL_LIST_BIT);
+
+                    glEnable(GL_BLEND);
+                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
+                
+                    glColor4ub(r, g, b, a);
+                    glRasterPos2i(x, y);
+
+                    glListBase(m_list_base);
+                    glCallLists((GLsizei)text.length(), GL_UNSIGNED_BYTE, text.c_str());
+
+                    glPopAttrib();
+                    glPopAttrib();
+                    glPopAttrib();
+                }
+            }
+
+            SizeU16 GetTextSize(const std::string& text) const {
+                if (m_font_handle) {
+                    HFONT old_font_handle = (HFONT)SelectObject(m_device_context_handle, m_font_handle); 
+
+                    SIZE size = {};
+                    BOOL is_success = GetTextExtentPoint32A(m_device_context_handle, text.c_str(), (int)text.length(), &size);
+
+                    SelectObject(m_device_context_handle, old_font_handle);
+
+                    if (is_success) return SizeU16((uint16_t)size.cx, (uint16_t)size.cy);
+                }
+                return {};
+            }
+
+            bool IsOk() const {
+                return m_err_msg.empty();
+            }
+
+            std::string GetErrMsg() const {
+                return m_err_msg;
+            }
+
+        private:
+            enum { 
+                PRINT_LIST_LEN      = 256,      // Size for full ascii table.
+            };
+
+            // No Copy
+            TextDrawer(const TextDrawer&) = delete;
+            TextDrawer& operator=(const TextDrawer&) = delete;
+
+            HDC         m_device_context_handle;    // not own
+            HFONT       m_font_handle;
+            GLint       m_list_base;
+
+            std::string m_err_msg;
+        };
+
+        inline int PointsToPixels(HDC hdc, int size) {
+            return MulDiv(size, GetDeviceCaps(hdc, LOGPIXELSY), 72);
         }
-        return list;
-    }
+    };
 
 } // namespace TrivialOpenGL
 
@@ -830,6 +812,52 @@ namespace TrivialOpenGL {
 
     inline void SetCustomLogFunction(CustomLogFnP_T custom_log) {
         Global<CustomLogFnP_T>::To() = custom_log;
+    }
+
+    //--------------------------------------------------------------------------
+    // Common
+    //--------------------------------------------------------------------------
+
+    inline AreaIU16 GetDesktopAreaNoTaskBar() {
+        RECT rc;
+        SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, 0);
+        return MakeAreaIU16(rc);
+    }
+
+    inline SizeU16 GetDesktopAreaSizeNoTaskBar() {
+        return GetDesktopAreaNoTaskBar().GetSize();
+    }
+
+    inline SizeU16 GetScreenSize() {
+        return SizeU16(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+    }
+
+    inline PointI GetCursorPosInScreen() {
+        POINT pos;
+        if (GetCursorPos(&pos)) {
+            return {pos.x, pos.y};
+        }
+        return {};
+    }
+
+    //--------------------------------------------------------------------------
+
+    inline std::vector<std::string> Split(const std::string& text, char c) {
+        std::string temp = text;
+        std::vector<std::string> list;
+
+        while (true) {
+            size_t pos = temp.find(c, 0);
+
+            if (pos == std::string::npos) {
+                list.push_back(temp);
+                break;
+            } else {
+                list.push_back(temp.substr(0, pos));
+                temp = temp.substr(pos + 1);
+            }
+        }
+        return list;
     }
 } // namespace TrivialOpenGL 
 
