@@ -675,6 +675,10 @@ namespace TrivialOpenGL {
     }
     
     inline AreaIU16 Window::GetArea() const {
+        if (m_state == WindowState::MINIMIZED) {
+            return AreaIU16(0, 0, 0, 0);
+        }
+
         AreaIU16 area = GetWindowArea(m_window_handle);
     
         // Workaround.
@@ -693,6 +697,10 @@ namespace TrivialOpenGL {
     
     inline AreaIU16 Window::GetDrawArea() const {
         RECT r;
+        if (m_state == WindowState::MINIMIZED) {
+            return AreaIU16(0, 0, 0, 0);
+        }
+
         if (GetClientRect(m_window_handle, &r) && ClientToScreen(m_window_handle, (POINT*)&r) && ClientToScreen(m_window_handle, (POINT*)&r.right)) {
             AreaIU16 area = MakeAreaIU16(r);
     
