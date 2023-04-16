@@ -542,7 +542,7 @@ namespace TrivialOpenGL {
     // Option
     //--------------------------------------------------------------------------
 
-    void Window::SetOption(WindowOption window_option, bool is_enabled) {
+    inline void Window::SetOption(WindowOption window_option, bool is_enabled) {
         switch (window_option) {
         case WINDOW_OPTION_AUTO_SLEEP_MODE:
             m_data.is_auto_sleep_blocked = !is_enabled;
@@ -550,7 +550,7 @@ namespace TrivialOpenGL {
         }
     }
 
-    bool Window::IsEnabled(WindowOption window_option) const {
+    inline bool Window::IsEnabled(WindowOption window_option) const {
         switch (window_option) {
         case WINDOW_OPTION_AUTO_SLEEP_MODE: return !m_data.is_auto_sleep_blocked;
         }

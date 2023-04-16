@@ -602,7 +602,7 @@ void TestTOGL_Split() {
 int main(int argc, char *argv[]) {
     std::set<std::string> flags;
 
-    for (size_t index = 0; index < argc; ++index) {
+    for (size_t index = 0; index < size_t(argc); ++index) {
         flags.insert(argv[index]);
     }
 
