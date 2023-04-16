@@ -9,7 +9,6 @@
 #include <set>
 
 #include <TimeLapse.h>
-
 #include <TrivialOpenGL.h>
 
 #include "Resource.h"
@@ -530,7 +529,7 @@ void DisplayCharsets() {
 }
 
 void DisplayUnicodeRangesForCurrentFont(HDC device_context_handle) {
-    TEXTMETRIC metric;
+    TEXTMETRICW metric;
     GetTextMetricsW(device_context_handle, &metric);
     togl_print_i32(metric.tmFirstChar);
     togl_print_i32(metric.tmLastChar);
@@ -588,7 +587,7 @@ public:
 
         DisplayUnicodeRangesForCurrentFont(m_device_contect_handle);
 
-        TEXTMETRIC metric;
+        TEXTMETRICW metric;
         GetTextMetricsW(m_device_contect_handle, &metric);
         m_list_range = metric.tmLastChar;
         togl_print_i32(m_list_range);
