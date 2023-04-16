@@ -110,6 +110,8 @@ public:
     }
 
     void Animate() {
+        glClear(GL_COLOR_BUFFER_BIT);
+        
         m_time_lapse.Update();
         m_accumulator += m_time_lapse.Get();
 
@@ -463,6 +465,132 @@ private:
     char                    m_buffer[BUFFER_SIZE];
 };
 
+
+//------------------------------------------------------------------------------
+
+
+template <typename Type>
+void DisplayBits(const Type& value) {
+    enum {
+        NUM_OF_BITS_IN_BYTE = 8,
+    };
+    const Type num_of_bits = sizeof(Type) * NUM_OF_BITS_IN_BYTE;
+
+    for (uint32_t ix = 0; ix < num_of_bits; ++ix) {
+        if (ix != 0 && ix % 4 == 0) printf("%s", "`");
+
+        bool is = value & Type(1 << (num_of_bits - (ix + 1)));
+        printf("%s", is ? "1" : "0");
+    }
+}
+
+constexpr auto DisplayBits8  = DisplayBits<uint8_t>;
+constexpr auto DisplayBits16 = DisplayBits<uint16_t>;
+constexpr auto DisplayBits32 = DisplayBits<uint32_t>;
+
+#define DISPLAY_BITS_32(variable) { printf("%32s ", #variable); DisplayBits32(variable); puts(""); } (void)0
+
+class TestFont {
+public:
+    TestFont() {
+        m_font_handle = NULL;
+    }
+    virtual ~TestFont() {}
+
+    void Create(uint32_t width, uint32_t height) {
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, width, 0, height, 1, -1);
+
+        glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
+
+        // ---
+
+        m_font_handle = CreateFontA(
+            16,                    
+            0, 0, 0,                            
+            FW_NORMAL,
+            FALSE, FALSE, FALSE,
+            DEFAULT_CHARSET,
+            OUT_TT_PRECIS,
+            CLIP_DEFAULT_PRECIS,
+            ANTIALIASED_QUALITY,
+            FF_DONTCARE | DEFAULT_PITCH,
+            "Courier New");
+
+        // ---
+
+        DISPLAY_BITS_32(ANSI_CHARSET);
+        DISPLAY_BITS_32(DEFAULT_CHARSET);
+        DISPLAY_BITS_32(SYMBOL_CHARSET);
+        DISPLAY_BITS_32(SHIFTJIS_CHARSET);
+        DISPLAY_BITS_32(HANGEUL_CHARSET);
+        DISPLAY_BITS_32(HANGUL_CHARSET);
+        DISPLAY_BITS_32(GB2312_CHARSET);
+        DISPLAY_BITS_32(CHINESEBIG5_CHARSET);
+        DISPLAY_BITS_32(OEM_CHARSET);
+        DISPLAY_BITS_32(JOHAB_CHARSET);
+        DISPLAY_BITS_32(HEBREW_CHARSET);
+        DISPLAY_BITS_32(ARABIC_CHARSET);
+        DISPLAY_BITS_32(GREEK_CHARSET);
+        DISPLAY_BITS_32(TURKISH_CHARSET);
+        DISPLAY_BITS_32(VIETNAMESE_CHARSET);
+        DISPLAY_BITS_32(THAI_CHARSET);
+        DISPLAY_BITS_32(EASTEUROPE_CHARSET);
+        DISPLAY_BITS_32(RUSSIAN_CHARSET);
+        puts("");
+        DISPLAY_BITS_32(FS_LATIN1);
+        DISPLAY_BITS_32(FS_LATIN2);
+        DISPLAY_BITS_32(FS_CYRILLIC);
+        DISPLAY_BITS_32(FS_GREEK);
+        DISPLAY_BITS_32(FS_TURKISH); 
+        DISPLAY_BITS_32(FS_HEBREW);
+        DISPLAY_BITS_32(FS_ARABIC);
+        DISPLAY_BITS_32(FS_BALTIC);
+    }
+    void Destroy() {
+        DeleteObject(m_font_handle);
+    }
+    void Render() {
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glMatrixMode(GL_MODELVIEW);
+        glLoadIdentity();
+
+        DrawTriangle(100, 100, 100, 0);
+
+        HWND window_handle = GetForegroundWindow();
+        HDC device_contect_handle = GetDC(window_handle);
+
+
+        HFONT prev_font = (HFONT)SelectObject(device_contect_handle, m_font_handle); 
+
+        // ---
+
+        wglUseFontBitmapsW(device_contect_handle, 0, 0x02AF, 1000); 
+
+        glListBase(1000); 
+
+        glColor3f(1, 1, 1);
+        glRasterPos2i(100, 100);
+
+        wchar_t text[] = L"\u015B Hello Windows OpenGL World";
+
+        glCallLists((GLsizei)wcslen(text), GL_UNSIGNED_SHORT, text);
+
+
+        // ---
+
+        SelectObject(device_contect_handle, prev_font); 
+
+        ReleaseDC(window_handle, device_contect_handle);
+
+    }
+private:
+    HFONT m_font_handle;
+};
+
+static TestFont s_test_font;
 
 //------------------------------------------------------------------------------
 
@@ -1494,6 +1622,48 @@ int main(int argc, char *argv[]) {
 
         data.do_on_time = [](uint32_t time_interval) {
             printf("Do On Time (%dms)\n", time_interval);
+        };
+
+        data.do_on_key = [](TOGL::KeyId key_id, bool is_down, const TOGL::Extra& extra) {
+            if (key_id == 'X' && !is_down) TOGL::ToWindow().RequestClose();
+        };
+
+        return TOGL::Run(data);
+
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // test_font
+    ////////////////////////////////////////////////////////////////////////////////
+    
+    example_manager.AddExample("test_font", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        auto IsOption = [&options](const std::string& option) { return options.find(option) != options.end(); };
+
+        s_resolution = {800, 400};
+
+        TOGL::Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example ";
+        data.window_name        += name;
+        data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
+        data.icon_resource_id   = ICON_ID;
+        data.log_level          = TOGL::LOG_LEVEL_DEBUG;
+        
+        data.do_on_create = []() {
+            s_test_font.Create(s_resolution.width, s_resolution.height);
+        };
+
+        data.do_on_destroy = []() {
+            s_test_font.Destroy();
+        };
+
+        data.draw = []() {
+            
+            s_test_font.Render();
+        };
+
+        data.do_on_resize = [](uint16_t width, uint16_t height) {
+            glViewport(0, 0, width, height);
         };
 
         data.do_on_key = [](TOGL::KeyId key_id, bool is_down, const TOGL::Extra& extra) {
