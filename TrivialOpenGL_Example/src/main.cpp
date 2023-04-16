@@ -529,6 +529,28 @@ void DisplayCharsets() {
     DISPLAY_BITS_32(FS_SYMBOL); 
 }
 
+void DisplayUnicodeRangesForCurrentFont(HDC device_context_handle) {
+    TEXTMETRIC metric;
+    GetTextMetricsW(device_context_handle, &metric);
+    togl_print_i32(metric.tmFirstChar);
+    togl_print_i32(metric.tmLastChar);
+    togl_print_i32(metric.tmCharSet);
+
+    DWORD buffer_size = GetFontUnicodeRanges(device_context_handle, NULL);
+    BYTE* buffer = new BYTE[buffer_size];
+
+    GLYPHSET* glyphset = (GLYPHSET*)buffer;
+    GetFontUnicodeRanges(device_context_handle, glyphset);
+
+    for (uint32_t ix = 0; ix < glyphset->cRanges; ++ix) {
+        const uint32_t from = glyphset->ranges[ix].wcLow;
+        const uint32_t to = from + glyphset->ranges[ix].cGlyphs - 1;
+        printf("[%04X..%04X]\n", from, to);
+    }
+
+    delete[] buffer;
+}
+
 class TestFont {
 public:
 
@@ -543,41 +565,37 @@ public:
     virtual ~TestFont() {}
 
     void Create(uint32_t width, uint32_t height) {
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(0, width, 0, height, 1, -1);
-
-        glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
-
-        // ---
+        m_window_handle             = GetForegroundWindow();
+        m_device_contect_handle     = GetDC(m_window_handle);
 
         m_font_handle = CreateFontW(
             32,                    
             0, 0, 0,                            
             FW_NORMAL,
             FALSE, FALSE, FALSE,
-            ANSI_CHARSET, // CHINESEBIG5_CHARSET, //DEFAULT_CHARSET,
+
+            // ANSI_CHARSET - for W version of function should by unicode to range 0020..FFFC (hex)
+            // CHINESEBIG5_CHARSET
+            ANSI_CHARSET,               
+
             OUT_TT_PRECIS,
             CLIP_DEFAULT_PRECIS,
             ANTIALIASED_QUALITY,
             FF_DONTCARE | DEFAULT_PITCH,
             L"Courier New");
 
-        m_window_handle             = GetForegroundWindow();
-        m_device_contect_handle     = GetDC(m_window_handle);
-
         HFONT prev_font = (HFONT)SelectObject(m_device_contect_handle, m_font_handle); 
+
+        DisplayUnicodeRangesForCurrentFont(m_device_contect_handle);
 
         TEXTMETRIC metric;
         GetTextMetricsW(m_device_contect_handle, &metric);
-        togl_print_i32(metric.tmFirstChar);
-        togl_print_i32(metric.tmLastChar);
-        togl_print_i32(metric.tmCharSet);
-
         m_list_range = metric.tmLastChar;
+        togl_print_i32(m_list_range);
 
         m_list_base = glGenLists(m_list_range);
         togl_print_i32(m_list_base);
+
         bool is_success = wglUseFontBitmapsW(m_device_contect_handle, 0, m_list_range, m_list_base);
         togl_print_i32(is_success);
 
@@ -585,13 +603,19 @@ public:
 
         // ---
 
-        //DisplayCharsets(); // prints bitfields
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, width, 0, height, 1, -1);
+
+        glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
     }
+
     void Destroy() {
         glDeleteLists(m_list_base, m_list_range);
         ReleaseDC(m_window_handle, m_device_contect_handle);
         DeleteObject(m_font_handle);
     }
+
     void Render() {
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -609,17 +633,16 @@ public:
 
         glListBase(m_list_base);
 
-        // unicode would like be ...
-        //char32_t text[] = U"\u015B Some Text \U00024B62";
+        // for unicode would be something like ...
+        //const char32_t text[] = U"\u015B Some Text \U00024B62";
         //glCallLists((GLsizei)sizeof(text), GL_UNSIGNED_INT, text);
 
-        wchar_t text[] = L"\u015B Some text";
+        const wchar_t text[] = L"\u015B Some text \u0444 \uFEA2 \uFF86 \uAC37";
         glCallLists((GLsizei)wcslen(text), GL_UNSIGNED_SHORT, text);
 
         glPopAttrib();
-
-
     }
+
 private:
     HFONT   m_font_handle;
     HWND    m_window_handle;
