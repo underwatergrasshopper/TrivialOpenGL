@@ -490,10 +490,55 @@ constexpr auto DisplayBits32 = DisplayBits<uint32_t>;
 
 #define DISPLAY_BITS_32(variable) { printf("%32s ", #variable); DisplayBits32(variable); puts(""); } (void)0
 
+
+void DisplayCharsets() {
+    DISPLAY_BITS_32(ANSI_CHARSET);
+    DISPLAY_BITS_32(DEFAULT_CHARSET);
+    DISPLAY_BITS_32(SYMBOL_CHARSET);
+    DISPLAY_BITS_32(SHIFTJIS_CHARSET);
+    DISPLAY_BITS_32(HANGEUL_CHARSET);
+    DISPLAY_BITS_32(HANGUL_CHARSET);
+    DISPLAY_BITS_32(GB2312_CHARSET);
+    DISPLAY_BITS_32(CHINESEBIG5_CHARSET);
+    DISPLAY_BITS_32(OEM_CHARSET);
+    DISPLAY_BITS_32(JOHAB_CHARSET);
+    DISPLAY_BITS_32(HEBREW_CHARSET);
+    DISPLAY_BITS_32(ARABIC_CHARSET);
+    DISPLAY_BITS_32(GREEK_CHARSET);
+    DISPLAY_BITS_32(TURKISH_CHARSET);
+    DISPLAY_BITS_32(VIETNAMESE_CHARSET);
+    DISPLAY_BITS_32(THAI_CHARSET);
+    DISPLAY_BITS_32(EASTEUROPE_CHARSET);
+    DISPLAY_BITS_32(RUSSIAN_CHARSET);
+    puts("");
+    DISPLAY_BITS_32(FS_LATIN1);
+    DISPLAY_BITS_32(FS_LATIN2);
+    DISPLAY_BITS_32(FS_CYRILLIC);
+    DISPLAY_BITS_32(FS_GREEK);
+    DISPLAY_BITS_32(FS_TURKISH); 
+    DISPLAY_BITS_32(FS_HEBREW);
+    DISPLAY_BITS_32(FS_ARABIC);
+    DISPLAY_BITS_32(FS_BALTIC);
+    DISPLAY_BITS_32(FS_VIETNAMESE);
+    DISPLAY_BITS_32(FS_THAI);
+    DISPLAY_BITS_32(FS_JISJAPAN);   
+    DISPLAY_BITS_32(FS_CHINESESIMP);
+    DISPLAY_BITS_32(FS_WANSUNG);    
+    DISPLAY_BITS_32(FS_CHINESETRAD);
+    DISPLAY_BITS_32(FS_JOHAB);      
+    DISPLAY_BITS_32(FS_SYMBOL); 
+}
+
 class TestFont {
 public:
+
     TestFont() {
-        m_font_handle = NULL;
+        m_font_handle               = NULL;
+        m_window_handle             = NULL;
+        m_device_contect_handle     = NULL;
+
+        m_list_range                = 0;
+        m_list_base                 = 0;
     }
     virtual ~TestFont() {}
 
@@ -506,49 +551,45 @@ public:
 
         // ---
 
-        m_font_handle = CreateFontA(
-            16,                    
+        m_font_handle = CreateFontW(
+            32,                    
             0, 0, 0,                            
             FW_NORMAL,
             FALSE, FALSE, FALSE,
-            DEFAULT_CHARSET,
+            ANSI_CHARSET, // CHINESEBIG5_CHARSET, //DEFAULT_CHARSET,
             OUT_TT_PRECIS,
             CLIP_DEFAULT_PRECIS,
             ANTIALIASED_QUALITY,
             FF_DONTCARE | DEFAULT_PITCH,
-            "Courier New");
+            L"Courier New");
+
+        m_window_handle             = GetForegroundWindow();
+        m_device_contect_handle     = GetDC(m_window_handle);
+
+        HFONT prev_font = (HFONT)SelectObject(m_device_contect_handle, m_font_handle); 
+
+        TEXTMETRIC metric;
+        GetTextMetricsW(m_device_contect_handle, &metric);
+        togl_print_i32(metric.tmFirstChar);
+        togl_print_i32(metric.tmLastChar);
+        togl_print_i32(metric.tmCharSet);
+
+        m_list_range = metric.tmLastChar;
+
+        m_list_base = glGenLists(m_list_range);
+        togl_print_i32(m_list_base);
+        bool is_success = wglUseFontBitmapsW(m_device_contect_handle, 0, m_list_range, m_list_base);
+        togl_print_i32(is_success);
+
+        SelectObject(m_device_contect_handle, prev_font); 
 
         // ---
 
-        DISPLAY_BITS_32(ANSI_CHARSET);
-        DISPLAY_BITS_32(DEFAULT_CHARSET);
-        DISPLAY_BITS_32(SYMBOL_CHARSET);
-        DISPLAY_BITS_32(SHIFTJIS_CHARSET);
-        DISPLAY_BITS_32(HANGEUL_CHARSET);
-        DISPLAY_BITS_32(HANGUL_CHARSET);
-        DISPLAY_BITS_32(GB2312_CHARSET);
-        DISPLAY_BITS_32(CHINESEBIG5_CHARSET);
-        DISPLAY_BITS_32(OEM_CHARSET);
-        DISPLAY_BITS_32(JOHAB_CHARSET);
-        DISPLAY_BITS_32(HEBREW_CHARSET);
-        DISPLAY_BITS_32(ARABIC_CHARSET);
-        DISPLAY_BITS_32(GREEK_CHARSET);
-        DISPLAY_BITS_32(TURKISH_CHARSET);
-        DISPLAY_BITS_32(VIETNAMESE_CHARSET);
-        DISPLAY_BITS_32(THAI_CHARSET);
-        DISPLAY_BITS_32(EASTEUROPE_CHARSET);
-        DISPLAY_BITS_32(RUSSIAN_CHARSET);
-        puts("");
-        DISPLAY_BITS_32(FS_LATIN1);
-        DISPLAY_BITS_32(FS_LATIN2);
-        DISPLAY_BITS_32(FS_CYRILLIC);
-        DISPLAY_BITS_32(FS_GREEK);
-        DISPLAY_BITS_32(FS_TURKISH); 
-        DISPLAY_BITS_32(FS_HEBREW);
-        DISPLAY_BITS_32(FS_ARABIC);
-        DISPLAY_BITS_32(FS_BALTIC);
+        //DisplayCharsets(); // prints bitfields
     }
     void Destroy() {
+        glDeleteLists(m_list_base, m_list_range);
+        ReleaseDC(m_window_handle, m_device_contect_handle);
         DeleteObject(m_font_handle);
     }
     void Render() {
@@ -559,38 +600,65 @@ public:
 
         DrawTriangle(100, 100, 100, 0);
 
-        HWND window_handle = GetForegroundWindow();
-        HDC device_contect_handle = GetDC(window_handle);
-
-
-        HFONT prev_font = (HFONT)SelectObject(device_contect_handle, m_font_handle); 
-
         // ---
 
-        wglUseFontBitmapsW(device_contect_handle, 0, 0x02AF, 1000); 
-
-        glListBase(1000); 
-
+        glPushAttrib(GL_LIST_BIT);
+    
         glColor3f(1, 1, 1);
         glRasterPos2i(100, 100);
 
-        wchar_t text[] = L"\u015B Hello Windows OpenGL World";
+        glListBase(m_list_base);
 
+        // unicode would like be ...
+        //char32_t text[] = U"\u015B Some Text \U00024B62";
+        //glCallLists((GLsizei)sizeof(text), GL_UNSIGNED_INT, text);
+
+        wchar_t text[] = L"\u015B Some text";
         glCallLists((GLsizei)wcslen(text), GL_UNSIGNED_SHORT, text);
 
+        glPopAttrib();
 
-        // ---
-
-        SelectObject(device_contect_handle, prev_font); 
-
-        ReleaseDC(window_handle, device_contect_handle);
 
     }
 private:
-    HFONT m_font_handle;
+    HFONT   m_font_handle;
+    HWND    m_window_handle;
+    HDC     m_device_contect_handle;
+
+    GLsizei m_list_range;
+    GLint   m_list_base;
 };
 
 static TestFont s_test_font;
+
+//------------------------------------------------------------------------------
+
+class FPS {
+public:
+    FPS() {
+        m_frame_count   = 0;
+        m_fps           = 0;
+
+        m_time_lapse.Reset();
+    }
+    virtual ~FPS() {}
+
+    uint32_t Measure() {
+        m_frame_count += 1;
+        if (m_time_lapse.UpdateIfAbove(1.0)) {
+              m_fps = uint32_t(m_frame_count / m_time_lapse.Get());
+              m_frame_count = 0; 
+        }
+        return m_fps;
+    }
+
+private:
+    uint32_t        m_frame_count;
+    uint32_t        m_fps;
+    TimeLapseF64    m_time_lapse;
+};
+
+static FPS s_fps;
 
 //------------------------------------------------------------------------------
 
@@ -871,6 +939,7 @@ int main(int argc, char *argv[]) {
 
             DrawInfoText(
                 std::string() +
+                "FPS: " + std::to_string(s_fps.Measure()) + "\n"
                 "1 - MoveTo(0, 0)\n"
                 "2 - MoveTo(10, 100)\n"
                 "3 - SetSize(400, 200)\n"
@@ -1023,6 +1092,7 @@ int main(int argc, char *argv[]) {
 
             DrawInfoText(
                 std::string() +
+                "FPS: " + std::to_string(s_fps.Measure()) + "\n"
                 "X - Exit\n"
                 "R - Redraw\n"
                 "C - Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.height) + ") (as window size)\n"
@@ -1482,6 +1552,8 @@ int main(int argc, char *argv[]) {
         data.draw = []() {
             s_test_image.Animate();
             DrawInfoText(
+                std::string() +
+                "FPS: " + std::to_string(s_fps.Measure()) + "\n"
                 "S - Enable/Disable display mouse move data\n"
                 "D - Switch Log Level Debug/Info\n"
                 "I - Display Keyboard and Mouse State Info\n"

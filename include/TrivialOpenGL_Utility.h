@@ -591,12 +591,12 @@ namespace TrivialOpenGL {
                 if (m_font_handle) {
                     HFONT old_font_handle = (HFONT)SelectObject(m_device_context_handle, m_font_handle); 
 
-                    m_list_base = glGenLists(PRINT_LIST_LEN);
+                    m_list_base = glGenLists(LIST_RANGE);
                     if (m_list_base) {
-                        bool is_success = wglUseFontBitmapsA(m_device_context_handle, 0, PRINT_LIST_LEN, m_list_base);
+                        bool is_success = wglUseFontBitmapsA(m_device_context_handle, 0, LIST_RANGE, m_list_base);
                         // Workaround for strange behavior. For POPUP window first call of wglUseFontBitmapsA fail with GetError() = 0.
                         // Second call, right after first, seams to succeed.
-                        if (!is_success) is_success = wglUseFontBitmapsA(m_device_context_handle, 0, PRINT_LIST_LEN, m_list_base);
+                        if (!is_success) is_success = wglUseFontBitmapsA(m_device_context_handle, 0, LIST_RANGE, m_list_base);
 
                         if (!is_success) {
                             m_err_msg = "Error: Can not font bitmap.";
@@ -621,7 +621,7 @@ namespace TrivialOpenGL {
                 m_err_msg = "";
 
                 if (m_list_base) {
-                    glDeleteLists(m_list_base, PRINT_LIST_LEN);
+                    glDeleteLists(m_list_base, LIST_RANGE);
                     m_list_base = 0;
                 }
                 if (m_font_handle) {
@@ -677,7 +677,7 @@ namespace TrivialOpenGL {
 
         private:
             enum { 
-                PRINT_LIST_LEN      = 256,      // Size for full ascii table.
+                LIST_RANGE = 128,      // Full ASCII table.
             };
 
             // No Copy
