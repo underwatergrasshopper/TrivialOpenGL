@@ -28,6 +28,20 @@
 #define TOGL_CASE_STR(name) case name: return #name
 
 namespace TrivialOpenGL {
+    //--------------------------------------------------------------------------
+    // Font
+    //--------------------------------------------------------------------------
+    enum FontStyle {
+        FONT_STYLE_NORMAL,
+        FONT_STYLE_BOLD,
+    };
+
+    enum FontCharSet {
+        FONT_CHAR_SET_ASCII,
+
+        // Note: Font might not have all glyphs from this range.
+        FONT_CHAR_SET_UNICODE_0000_FFFF,
+    };
 
     //--------------------------------------------------------------------------
     // Version
@@ -565,38 +579,43 @@ namespace TrivialOpenGL {
                 m_device_context_handle = NULL;
                 m_font_handle           = NULL;
                 m_list_base             = 0;
+                m_list_range            = 0;
             }
             virtual ~TextDrawer() {}
 
             // device_context_handle    - Must still exist for each call of RenderText.
-            // name                     - Font name.
+            // name                     - Font name. Encoding Format: ASCII.
             // size                     - Height of characters in pixels.
-            bool LoadFont(HDC device_context_handle, const std::string& name, uint16_t size, bool is_bold = false) {
+            bool LoadFont(HDC device_context_handle, const std::string& name, uint16_t size, FontStyle style, FontCharSet char_set) {
                 UnloadFont();
 
                 m_device_context_handle = device_context_handle;
 
-                m_font_handle = CreateFontA(
+                m_font_handle = CreateFontW(
                     size,                    
                     0, 0, 0,                            
-                    is_bold ? FW_BOLD : FW_NORMAL,
+                    (style == FONT_STYLE_BOLD) ? FW_BOLD : FW_NORMAL,
                     FALSE, FALSE, FALSE,
                     ANSI_CHARSET,
                     OUT_TT_PRECIS,
                     CLIP_DEFAULT_PRECIS,
                     ANTIALIASED_QUALITY,
                     FF_DONTCARE | DEFAULT_PITCH,
-                    name.c_str());  
+                    ToUTF16(name).c_str());  
+                
 
                 if (m_font_handle) {
                     HFONT old_font_handle = (HFONT)SelectObject(m_device_context_handle, m_font_handle); 
 
-                    m_list_base = glGenLists(LIST_RANGE);
+                    m_list_range = GetListRange(char_set);
+
+                    m_list_base = glGenLists(m_list_range);
                     if (m_list_base) {
-                        bool is_success = wglUseFontBitmapsA(m_device_context_handle, 0, LIST_RANGE, m_list_base);
+                        bool is_success = wglUseFontBitmapsW(m_device_context_handle, 0, m_list_range, m_list_base);
+
                         // Workaround for strange behavior. For POPUP window first call of wglUseFontBitmapsA fail with GetError() = 0.
                         // Second call, right after first, seams to succeed.
-                        if (!is_success) is_success = wglUseFontBitmapsA(m_device_context_handle, 0, LIST_RANGE, m_list_base);
+                        if (!is_success) is_success = wglUseFontBitmapsA(m_device_context_handle, 0, m_list_range, m_list_base);
 
                         if (!is_success) {
                             m_err_msg = "Error: Can not font bitmap.";
@@ -621,7 +640,7 @@ namespace TrivialOpenGL {
                 m_err_msg = "";
 
                 if (m_list_base) {
-                    glDeleteLists(m_list_base, LIST_RANGE);
+                    glDeleteLists(m_list_base, m_list_range);
                     m_list_base = 0;
                 }
                 if (m_font_handle) {
@@ -632,7 +651,8 @@ namespace TrivialOpenGL {
                 m_device_context_handle = NULL;
             }
 
-            void RenderText(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text) {
+            // text - Encoding Format: ASCII.
+            void RenderTextASCII(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text) {
                 if (m_list_base) {
                     glPushAttrib(GL_ENABLE_BIT);
                     glPushAttrib(GL_COLOR_BUFFER_BIT);
@@ -646,6 +666,30 @@ namespace TrivialOpenGL {
 
                     glListBase(m_list_base);
                     glCallLists((GLsizei)text.length(), GL_UNSIGNED_BYTE, text.c_str());
+
+                    glPopAttrib();
+                    glPopAttrib();
+                    glPopAttrib();
+                }
+            }
+
+            // text - Encoding Format: UTF8.
+            void RenderText(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text) {
+                if (m_list_base) {
+                    glPushAttrib(GL_ENABLE_BIT);
+                    glPushAttrib(GL_COLOR_BUFFER_BIT);
+                    glPushAttrib(GL_LIST_BIT);
+
+                    glEnable(GL_BLEND);
+                    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
+                
+                    glColor4ub(r, g, b, a);
+                    glRasterPos2i(x, y);
+
+                    glListBase(m_list_base);
+
+                    const std::wstring text_utf16 = ToUTF16(text);
+                    glCallLists((GLsizei)text_utf16.length(), GL_UNSIGNED_SHORT, text_utf16.c_str());
 
                     glPopAttrib();
                     glPopAttrib();
@@ -677,16 +721,25 @@ namespace TrivialOpenGL {
 
         private:
             enum { 
-                LIST_RANGE = 128,      // Full ASCII table.
+                ASCII_LIST_RANGE = 128,      // Full ASCII table.
+                UNICODE_0000_FFFF_LIST
             };
 
             // No Copy
             TextDrawer(const TextDrawer&) = delete;
             TextDrawer& operator=(const TextDrawer&) = delete;
 
+            static GLsizei GetListRange(FontCharSet font_char_set) {
+                switch (font_char_set) {
+                case FONT_CHAR_SET_ASCII:               return 128;     // 0x80
+                case FONT_CHAR_SET_UNICODE_0000_FFFF:   return 65535;   // 0xFFFF
+                }
+            }
+
             HDC         m_device_context_handle;    // not own
             HFONT       m_font_handle;
             GLint       m_list_base;
+            GLsizei     m_list_range;
 
             std::string m_err_msg;
         };

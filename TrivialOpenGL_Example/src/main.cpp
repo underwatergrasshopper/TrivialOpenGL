@@ -283,6 +283,9 @@ static bool             s_is_display_mose_move_data;
 
 static DelayedActionManager s_actions;
 
+TOGL::FontStyle         s_font_style    = TOGL::FONT_STYLE_NORMAL;
+TOGL::FontCharSet       s_font_char_set = TOGL::FONT_CHAR_SET_ASCII;
+
 //------------------------------------------------------------------------------
 
 
@@ -914,6 +917,12 @@ int main(int argc, char *argv[]) {
     // move_and_resize
     ////////////////////////////////////////////////////////////////////////////////
 
+    auto Combine = [](const std::set<std::string>& l, const std::set<std::string>& r) {
+        std::set<std::string> temp = l;
+        temp.insert(r.begin(), r.end());
+        return temp;
+    };
+
     const std::set<std::string> all_options = {
         "draw_area_size", "draw_area_only", "redraw_on_change_or_request", "no_resize", "no_maximize",
         "notify_any_message", "notify_draw_call", "notify_mouse_move ", "notify_key_message", "notify_character_message", "no_debug"
@@ -1046,14 +1055,134 @@ int main(int argc, char *argv[]) {
     });
 
     ////////////////////////////////////////////////////////////////////////////////
-    // window_state
+    // font
     ////////////////////////////////////////////////////////////////////////////////
 
-    auto Combine = [](const std::set<std::string>& l, const std::set<std::string>& r) {
-        std::set<std::string> temp = l;
-        temp.insert(r.begin(), r.end());
-        return temp;
-    };
+    example_manager.AddExample("font", Combine(all_options, {"unicode", "bold"}), {}, [](const std::string& name, const std::set<std::string>& options) {
+        auto IsOption = [&options](const std::string& option) { return options.find(option) != options.end(); };
+
+        s_resolution = {600, 300};
+
+        TOGL::Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example ";
+        data.window_name        += name;
+        data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
+        data.icon_resource_id   = ICON_ID;
+
+        if (!IsOption("no_debug"))                      data.log_level = TOGL::LOG_LEVEL_DEBUG;
+
+        if (IsOption("draw_area_size"))                 data.style |= TOGL::StyleBit::DRAW_AREA_SIZE;
+        if (IsOption("draw_area_only"))                 data.style |= TOGL::StyleBit::DRAW_AREA_ONLY;
+        if (IsOption("redraw_on_change_or_request"))    data.style |= TOGL::StyleBit::REDRAW_ON_CHANGE_OR_REQUEST;
+        if (IsOption("no_resize"))                      data.style |= TOGL::StyleBit::NO_RESIZE;
+        if (IsOption("no_maximize"))                    data.style |= TOGL::StyleBit::NO_MAXIMIZE;
+
+        if (IsOption("notify_any_message"))             data.special_debug.is_notify_any_message        = true;
+        if (IsOption("notify_draw_call"))               data.special_debug.is_notify_draw_call          = true;
+        if (IsOption("notify_mouse_move"))              data.special_debug.is_notify_mouse_move         = true;
+        if (IsOption("notify_key_message"))             data.special_debug.is_notify_key_message        = true;
+        if (IsOption("notify_character_message"))       data.special_debug.is_notify_character_message  = true;
+
+        s_font_char_set = IsOption("unicode") ? TOGL::FONT_CHAR_SET_UNICODE_0000_FFFF : TOGL::FONT_CHAR_SET_ASCII;
+        s_font_style    = IsOption("bold") ? TOGL::FONT_STYLE_BOLD : TOGL::FONT_STYLE_NORMAL;
+
+        data.do_on_create = []() {
+            s_test_image.Initialize(TOGL::ToWindow().GetDrawAreaSize());
+
+            if (!TOGL::ToWindow().LoadFont("Courier New", FONT_SIZE, s_font_style, s_font_char_set)) {
+                puts("Error: Can not load font.");
+                puts(TOGL::ToWindow().GetLoadFontErrMsg().c_str());
+            } else {
+                puts("Font loaded.");
+            }
+        };
+
+        data.draw = []() {
+            s_test_image.Animate();
+
+            int y = TOGL::ToWindow().GetDrawArea().height - FONT_SIZE;
+            TOGL::ToWindow().RenderText(50, y, 255, 255, 255, 255, std::string() + "FPS: " + std::to_string(s_fps.Measure()));
+
+            y -= FONT_SIZE;
+            TOGL::ToWindow().RenderTextASCII(50, y, 255, 0, 0, 255, "Some ASCII text.");
+
+            y -= FONT_SIZE;
+            TOGL::ToWindow().RenderText(50, y, 0, 255, 0, 255, u8"Some UNICODE text \u015B \u0444 \uFEA2 \uFF86 \uAC37");
+
+            y -= FONT_SIZE;
+            TOGL::ToWindow().RenderText(50, y, 255, 255, 255, 127, "Some transparent text.");
+        };
+
+        data.do_on_resize = [](uint16_t width, uint16_t height) {
+            s_test_image.Resize(width, height);
+        };
+
+        data.do_on_key = [](TOGL::KeyId key_id, bool is_down, const TOGL::Extra& extra) {
+            auto& window = TOGL::ToWindow();
+
+            if (!is_down) {
+                if (!s_is_client) {
+                    switch (key_id) {
+                    case TOGL::KEY_ID_1:            window.MoveTo(0, 0); break;
+                    case TOGL::KEY_ID_2:            window.MoveTo(10, 100); break;
+
+                    case TOGL::KEY_ID_3:            window.SetSize(400, 200); break;
+                    case TOGL::KEY_ID_4:            window.SetSize(800, 400); break;
+
+                    case TOGL::KEY_ID_5:            window.SetArea(100, 10, 800, 400); break;
+                    case TOGL::KEY_ID_6:            window.SetArea(window.GetArea()); break;
+                    case TOGL::KEY_ID_7:            window.SetArea(TOGL::GetDesktopAreaNoTaskBar()); break;
+                    case TOGL::KEY_ID_8:            window.SetArea({{}, TOGL::GetScreenSize()}); break;
+
+                    case TOGL::KEY_ID_C:            window.Center(s_resolution, s_is_client); break;
+
+                    case TOGL::KEY_ID_ARROW_LEFT:   window.MoveBy(-30, 0); break;
+                    case TOGL::KEY_ID_ARROW_RIGHT:  window.MoveBy(30, 0); break;
+
+                    case TOGL::KEY_ID_X:            window.RequestClose(); break;
+
+                    case TOGL::KEY_ID_I:            DisplayWindowInfo(); break;
+
+                    case TOGL::KEY_ID_T:            s_is_client = !s_is_client; break;
+                    default: break;
+                    }
+                } else {
+                    switch (key_id) {
+                    case TOGL::KEY_ID_1:            window.MoveTo(0, 0, true); break;
+                    case TOGL::KEY_ID_2:            window.MoveTo(10, 100, true); break;
+
+                    case TOGL::KEY_ID_3:            window.SetSize(400, 200, true); break;
+                    case TOGL::KEY_ID_4:            window.SetSize(800, 400, true); break;
+
+                    case TOGL::KEY_ID_5:            window.SetArea(100, 10, 800, 400, false); break;
+                    case TOGL::KEY_ID_6:            window.SetArea(window.GetDrawArea(), false); break;
+                    case TOGL::KEY_ID_7:            window.SetArea(TOGL::GetDesktopAreaNoTaskBar(), false); break;
+                    case TOGL::KEY_ID_8:            window.SetArea({{}, TOGL::GetScreenSize()}, false); break;
+
+                    case TOGL::KEY_ID_C:            window.Center(s_resolution, s_is_client); break;
+
+                    case TOGL::KEY_ID_ARROW_LEFT:   window.MoveBy(-30, 0); break;
+                    case TOGL::KEY_ID_ARROW_RIGHT:  window.MoveBy(30, 0); break;
+
+                    case TOGL::KEY_ID_X:            window.RequestClose(); break;
+
+                    case TOGL::KEY_ID_I:            DisplayWindowInfo(); break;
+
+                    case TOGL::KEY_ID_T:            s_is_client = !s_is_client; break;
+                    default: break;
+                    }
+                }
+            }
+        };
+
+        return TOGL::Run(data);
+
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // window_state
+    ////////////////////////////////////////////////////////////////////////////////
 
     std::set<std::string> window_state_all_options = Combine(all_options, {"full_screen_at_start"});
 

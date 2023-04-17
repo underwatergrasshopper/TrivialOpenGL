@@ -166,7 +166,7 @@ namespace TrivialOpenGL {
         void (*do_on_foreground)(bool is_gain)                              = nullptr;   
 
         // time_interval - in milliseconds
-        void (*do_on_time)(uint32_t time_interval)                           = nullptr;
+        void (*do_on_time)(uint32_t time_interval)                          = nullptr;
     };
 
     // Get access to window singleton.
@@ -284,17 +284,21 @@ namespace TrivialOpenGL {
 
         // ---
 
-        // name     - Font name.
+        // name     - Font name. Encoding Format: ASCII.
         // size     - Height of character in pixels.
-        // is_bold  - If true then rendered text will be bold.
-        bool LoadFont(const std::string& name, uint16_t size, bool is_bold = false);
+        bool LoadFont(const std::string& name, uint16_t size, FontStyle style = FONT_STYLE_NORMAL, FontCharSet char_set = FONT_CHAR_SET_ASCII);
 
         void UnloadFont();
 
         // x, y         - Position of text.
         // r, g, b, a   - Color of text.
-        // text         - Text to be rendered. Special characters are ignored (for example: '\n', '\t').
+        // text         - Text to be rendered. Special characters are ignored (for example: '\n', '\t'). Encoding Format: UTF8.
         void RenderText(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text);
+
+        // x, y         - Position of text.
+        // r, g, b, a   - Color of text.
+        // text         - Text to be rendered. Special characters are ignored (for example: '\n', '\t'). Encoding Format: ASCII.
+        void RenderTextASCII(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text);
 
         std::string GetLoadFontErrMsg() const;
 
@@ -837,8 +841,8 @@ namespace TrivialOpenGL {
 
     //--------------------------------------------------------------------------
 
-    bool Window::LoadFont(const std::string& name, uint16_t size, bool is_bold) {
-        return m_text_drawer.LoadFont(m_device_context_handle, name, size, is_bold);
+    bool Window::LoadFont(const std::string& name, uint16_t size, FontStyle style, FontCharSet char_set) {
+        return m_text_drawer.LoadFont(m_device_context_handle, name, size, style, char_set);
     }
 
     void Window::UnloadFont() {
@@ -847,6 +851,10 @@ namespace TrivialOpenGL {
 
     void Window::RenderText(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text) {
         m_text_drawer.RenderText(x, y, r, g, b, a, text);
+    }
+
+    void Window::RenderTextASCII(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text) {
+        m_text_drawer.RenderTextASCII(x, y, r, g, b, a, text);
     }
 
     std::string Window::GetLoadFontErrMsg() const {
