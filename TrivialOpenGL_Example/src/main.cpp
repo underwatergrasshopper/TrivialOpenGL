@@ -161,6 +161,11 @@ void PrintWindowStates() {
 }
 
 void DisplayWindowInfo() {
+    GLint data[2];
+    glGetIntegerv(GL_MAX_VIEWPORT_DIMS, data);
+    printf("max viewport width: %d\n", data[0]);
+    printf("max viewport height: %d\n", data[1]);
+
     togl_print_i32(GetSystemMetrics(SM_CXMINTRACK));
     togl_print_i32(GetSystemMetrics(SM_CYMINTRACK));
     togl_print_i32(GetSystemMetrics(SM_CXMAXTRACK));
@@ -563,6 +568,8 @@ public:
 
         m_list_range                = 0;
         m_list_base                 = 0;
+
+        m_descent                   = 0;
     }
     virtual ~TestFont() {}
 
@@ -593,7 +600,24 @@ public:
         TEXTMETRICW metric;
         GetTextMetricsW(m_device_contect_handle, &metric);
         m_list_range = metric.tmLastChar;
-        togl_print_i32(m_list_range);
+        m_descent = metric.tmDescent;
+
+        togl_print_i32(metric.tmHeight);
+        togl_print_i32(metric.tmAscent);
+        togl_print_i32(metric.tmDescent);
+        togl_print_i32(metric.tmInternalLeading);
+        togl_print_i32(metric.tmExternalLeading);
+
+        // For outline fonts.
+        //OUTLINETEXTMETRICW ol_metric = {}; 
+        //ol_metric.otmSize = sizeof(OUTLINETEXTMETRICW);
+        //GetOutlineTextMetricsW(m_device_contect_handle, sizeof(OUTLINETEXTMETRICW), &ol_metric);
+        //togl_print_i32(ol_metric.otmAscent);
+        //togl_print_i32(ol_metric.otmDescent);
+        //togl_print_i32(ol_metric.otmMacAscent);
+        //togl_print_i32(ol_metric.otmMacDescent);
+        //togl_print_i32(ol_metric.otmMacLineGap);
+
 
         m_list_base = glGenLists(m_list_range);
         togl_print_i32(m_list_base);
@@ -629,19 +653,34 @@ public:
         // ---
 
         glPushAttrib(GL_LIST_BIT);
-    
-        glColor3f(1, 1, 1);
-        glRasterPos2i(100, 100);
-
         glListBase(m_list_base);
-
+    
         // for unicode would be something like ...
         //const char32_t text[] = U"\u015B Some Text \U00024B62";
         //glCallLists((GLsizei)sizeof(text), GL_UNSIGNED_INT, text);
 
-        const wchar_t text[] = L"\u015B Some text \u0444 \uFEA2 \uFF86 \uAC37";
-        glCallLists((GLsizei)wcslen(text), GL_UNSIGNED_SHORT, text);
+        {
+            glColor3f(1, 1, 1);
+            glRasterPos2i(100, 100);
 
+            const wchar_t text[] = L"\u015B Some text \u0444 \uFEA2 \uFF86 \uAC37";
+            glCallLists((GLsizei)wcslen(text), GL_UNSIGNED_SHORT, text);
+        }
+        {
+            glColor3f(1, 1, 1);
+            glRasterPos2i(0, 50);
+
+            const wchar_t text[] = L"\u015AXj";
+            glCallLists((GLsizei)wcslen(text), GL_UNSIGNED_SHORT, text);
+        }
+
+        {
+            glColor3f(1, 1, 1);
+            glRasterPos2i(0, 0 + m_descent);
+
+            const wchar_t text[] = L"\u015AXj";
+            glCallLists((GLsizei)wcslen(text), GL_UNSIGNED_SHORT, text);
+        }
         glPopAttrib();
     }
 
@@ -652,6 +691,8 @@ private:
 
     GLsizei m_list_range;
     GLint   m_list_base;
+
+    int     m_descent;
 };
 
 static TestFont s_test_font;
@@ -1101,17 +1142,22 @@ int main(int argc, char *argv[]) {
         data.draw = []() {
             s_test_image.Animate();
 
-            int y = TOGL::ToWindow().GetDrawArea().height - FONT_SIZE;
-            TOGL::ToWindow().RenderText(50, y, 255, 255, 255, 255, std::string() + "FPS: " + std::to_string(s_fps.Measure()));
+            TOGL::Window& window = TOGL::ToWindow();
+
+            int y = window.GetDrawArea().height - FONT_SIZE;
+            window.RenderText(50, y, 255, 255, 255, 255, std::string() + "FPS: " + std::to_string(s_fps.Measure()));
 
             y -= FONT_SIZE;
-            TOGL::ToWindow().RenderTextASCII(50, y, 255, 0, 0, 255, "Some ASCII text.");
+            window.RenderTextASCII(50, y, 255, 0, 0, 255, "Some ASCII text.");
 
             y -= FONT_SIZE;
-            TOGL::ToWindow().RenderText(50, y, 0, 255, 0, 255, u8"Some UNICODE text \u015B \u0444 \uFEA2 \uFF86 \uAC37");
+            window.RenderText(50, y, 0, 255, 0, 255, u8"Some UNICODE text \u015B \u0444 \uFEA2 \uFF86 \uAC37 \u015Ajx");
 
             y -= FONT_SIZE;
-            TOGL::ToWindow().RenderText(50, y, 255, 255, 255, 127, "Some transparent text.");
+            window.RenderText(50, y, 255, 255, 255, 127, "Some transparent text.");
+
+            window.RenderText(0, 0, 0, 255, 0, 255, u8"\u015Ajx");
+            window.RenderText(100, window.GetFontDescent(), 0, 255, 0, 255, u8"\u015Ajx"); // do not cut underline of text
         };
 
         data.do_on_resize = [](uint16_t width, uint16_t height) {

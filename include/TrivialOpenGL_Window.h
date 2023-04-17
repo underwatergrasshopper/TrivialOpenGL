@@ -305,6 +305,8 @@ namespace TrivialOpenGL {
         // Special characters are ignored (for example: '\n', '\t').
         SizeU16 GetTextSize(const std::string& text) const;
 
+        uint32_t GetFontDescent() const;
+
         // ---
 
         // Get access to singleton instance.
@@ -863,6 +865,10 @@ namespace TrivialOpenGL {
 
     SizeU16 Window::GetTextSize(const std::string& text) const {
         return m_text_drawer.GetTextSize(text);
+    }
+
+    uint32_t Window::GetFontDescent() const {
+        return m_text_drawer.GetFontDescent();
     }
 
     //--------------------------------------------------------------------------

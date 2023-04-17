@@ -580,6 +580,11 @@ namespace TrivialOpenGL {
                 m_font_handle           = NULL;
                 m_list_base             = 0;
                 m_list_range            = 0;
+
+                m_height                = 0;
+                m_ascent                = 0;
+                m_descent               = 0;
+                m_internal_leading      = 0;
             }
             virtual ~TextDrawer() {}
 
@@ -606,6 +611,13 @@ namespace TrivialOpenGL {
 
                 if (m_font_handle) {
                     HFONT old_font_handle = (HFONT)SelectObject(m_device_context_handle, m_font_handle); 
+
+                    TEXTMETRICW metric;
+                    GetTextMetricsW(m_device_context_handle, &metric);
+                    m_height            = metric.tmHeight;
+                    m_ascent            = metric.tmAscent;
+                    m_descent           = metric.tmDescent;
+                    m_internal_leading  = metric.tmInternalLeading;
 
                     m_list_range = GetListRange(char_set);
 
@@ -711,6 +723,10 @@ namespace TrivialOpenGL {
                 return {};
             }
 
+            uint32_t GetFontDescent() const {
+                return m_descent;
+            }
+
             bool IsOk() const {
                 return m_err_msg.empty();
             }
@@ -740,6 +756,11 @@ namespace TrivialOpenGL {
             HFONT       m_font_handle;
             GLint       m_list_base;
             GLsizei     m_list_range;
+
+            uint32_t    m_height;
+            uint32_t    m_ascent;
+            uint32_t    m_descent;
+            uint32_t    m_internal_leading;
 
             std::string m_err_msg;
         };
