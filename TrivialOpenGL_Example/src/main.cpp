@@ -472,6 +472,82 @@ private:
     char                    m_buffer[BUFFER_SIZE];
 };
 
+//------------------------------------------------------------------------------
+
+// Saves pixel data as BMP image.
+// file_name            - Full file name with bmp extension.
+// pixel_data           - Array of pixels. Each pixel occupies 4 bytes of data. 
+//                        Each byte of pixel corresponds to specific channel (in order): red, green, blue, alpha.
+// width                - Number of pixel in row of image.
+// height               - Number of pixel in column of image.  
+// Returns true if image has been saved to file. 
+bool SaveAsBMP(const std::string& file_name, const uint8_t* pixel_data, uint32_t width, uint32_t height) {
+    bool is_success = false; 
+
+    if (width != 0 && height != 0) {
+        enum {
+            PIXEL_SIZE = 4, // in bytes
+        };
+
+        const uint32_t pixel_data_size      = width * height * PIXEL_SIZE;
+        const uint32_t header_size          = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPV5HEADER);
+        const uint32_t file_size            = header_size + pixel_data_size;
+
+        uint8_t* file_data = new uint8_t[file_size];
+        memset(file_data, 0, file_size);
+
+        BITMAPFILEHEADER* fh = (BITMAPFILEHEADER*) file_data;
+        fh->bfType          = 0x4D42; // bmp file signature = {'B', 'M'}
+        fh->bfSize          = file_size;
+        fh->bfOffBits       = header_size;
+
+        BITMAPV5HEADER* ih = (BITMAPV5HEADER*)(file_data + sizeof(BITMAPFILEHEADER));
+        ih->bV5Size         = sizeof(BITMAPV5HEADER);
+        ih->bV5Width        = width;
+        ih->bV5Height       = height;
+        ih->bV5Planes       = 1;
+        ih->bV5BitCount     = 32;
+        ih->bV5Compression  = BI_BITFIELDS;
+        ih->bV5SizeImage    = pixel_data_size;
+        ih->bV5RedMask      = 0xFF000000;
+        ih->bV5GreenMask    = 0x00FF0000;
+        ih->bV5BlueMask     = 0x0000FF00;
+        ih->bV5AlphaMask    = 0x000000FF;
+        ih->bV5CSType       = LCS_sRGB;
+        ih->bV5Intent       = LCS_GM_GRAPHICS;
+
+        uint8_t* file_pixel_data = (uint8_t*)(file_data + header_size);
+        uint32_t ix = 0;
+
+        const uint32_t row_size = width * PIXEL_SIZE; // in bytes
+
+        for (uint32_t column_ix = 0; column_ix < height; ++column_ix) { // reverse order of rows
+            const uint8_t* column =  pixel_data + row_size * (height - 1 - column_ix);
+
+            for (uint32_t pixel_ix = 0; pixel_ix < width; ++pixel_ix) {
+                const uint8_t* pixel = column + pixel_ix * PIXEL_SIZE;
+
+                // reverse order of channels
+                file_pixel_data[ix++] = pixel[3];
+                file_pixel_data[ix++] = pixel[2];
+                file_pixel_data[ix++] = pixel[1];
+                file_pixel_data[ix++] = pixel[0];
+            }
+        }
+
+        FILE* file = NULL;
+        is_success = _wfopen_s(&file, TOGL::ToUTF16(file_name).c_str(), L"wb") == 0 && file;
+
+        if (is_success) {
+            is_success = fwrite(file_data, 1, file_size, file) == file_size;
+            fclose(file);
+        }
+
+        delete[] file_data;
+    }
+
+    return is_success;
+}
 
 //------------------------------------------------------------------------------
 
@@ -1920,6 +1996,24 @@ int main(int argc, char *argv[]) {
         
         data.do_on_create = []() {
             s_test_font.Create(s_resolution.width, s_resolution.height);
+
+            const uint8_t image[] = {
+                // first row
+                255, 0, 0, 255,         // red
+                255, 255, 0, 255,       // yellow
+                255, 255, 255, 255,     // white
+
+                // second row
+                255, 255, 255, 63,      // very transparent white
+                0, 255, 0, 255,         // green
+                255, 255, 255, 127,     // transparent white
+            };
+
+            if (SaveAsBMP("test.bmp", image, 3, 2)) {
+                puts("Saved to BMP.");
+            } else {
+                puts("Can not save to BMP.");
+            }
         };
 
         data.do_on_destroy = []() {
