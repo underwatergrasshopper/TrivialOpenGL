@@ -799,24 +799,59 @@ namespace TrivialOpenGL {
                     glClear(GL_COLOR_BUFFER_BIT);
 
                     PointI pos = {0, height - m_font_height};
-                    
-                    for (uint32_t code = 0; code < uint32_t(m_list_range); ++code) {
 
-                        const std::wstring c(1, (wchar_t)code);
+                    bool is_all_ranges = true;
+                    if (is_all_ranges) { // should render all available from range 0000h to FFFFh 
+                        for (uint32_t code = 0; code < uint32_t(m_list_range); ++code) {
 
-                        const SizeU16 size = GetTextSize(c);
+                            const std::wstring c(1, (wchar_t)code);
+
+                            const SizeU16 size = GetTextSize(c);
                        
-                        RenderTextUTF16(pos.x, pos.y, 255, 255, 255, 255, c);
+                            RenderTextUTF16(pos.x, pos.y, 255, 255, 255, 255, c);
                     
-                        pos.x += size.width;
-                        if (pos.x >= width) {
-                            pos.x = 0;
-                            pos.y -= m_font_height;
-                        }
+                            pos.x += size.width;
+                            if (pos.x >= width) {
+                                pos.x = 0;
+                                pos.y -= m_font_height;
+                            }
                     
-                        if (pos.y >= height) {
-                            break;
+                            if (pos.y >= height) {
+                                break;
+                            }
                         }
+                    } else {
+                        DWORD buffer_size = GetFontUnicodeRanges(m_device_context_handle, NULL);
+                        BYTE* buffer = new BYTE[buffer_size];
+
+                        GLYPHSET* glyphset = (GLYPHSET*)buffer;
+                        GetFontUnicodeRanges(m_device_context_handle, glyphset);
+
+                        for (uint32_t ix = 0; ix < glyphset->cRanges; ++ix) {
+                            const uint32_t first = glyphset->ranges[ix].wcLow;
+                            const uint32_t last = first + glyphset->ranges[ix].cGlyphs - 1;
+                        
+                            for (uint32_t code = first; code <= last; ++code) {
+
+                                const std::wstring c(1, (wchar_t)code);
+
+                                const SizeU16 size = GetTextSize(c);
+                       
+                                RenderTextUTF16(pos.x, pos.y, 255, 255, 255, 255, c);
+                    
+                                pos.x += size.width;
+                                if (pos.x >= width) {
+                                    pos.x = 0;
+                                    pos.y -= m_font_height;
+                                }
+                    
+                                if (pos.y >= height) {
+                                    break;
+                                }
+                            }
+                        }
+
+                        delete[] buffer;
                     }
 
                     enum { PIXEL_SIZE = 4 }; // in bytes
