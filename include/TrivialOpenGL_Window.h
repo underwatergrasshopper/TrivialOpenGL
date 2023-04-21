@@ -300,6 +300,13 @@ namespace TrivialOpenGL {
         // text         - Text to be rendered. Special characters are ignored (for example: '\n', '\t'). Encoding Format: ASCII.
         void RenderTextASCII(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text);
 
+
+        void SaveFont(const std::string& file_name, uint16_t width, uint16_t height) {
+            m_text_drawer.SaveFont(file_name, width, height);
+        }
+
+        // ---
+
         std::string GetLoadFontErrMsg() const;
 
         // Special characters are ignored (for example: '\n', '\t').

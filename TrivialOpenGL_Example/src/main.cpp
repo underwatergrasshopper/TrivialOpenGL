@@ -481,7 +481,7 @@ private:
 // width                - Number of pixel in row of image.
 // height               - Number of pixel in column of image.  
 // Returns true if image has been saved to file. 
-bool SaveAsBMP(const std::string& file_name, const uint8_t* pixel_data, uint32_t width, uint32_t height) {
+bool SaveAsBMP(const std::string& file_name, const uint8_t* pixel_data, uint32_t width, uint32_t height, bool is_reverse_rows = true) {
     bool is_success = false; 
 
     if (width != 0 && height != 0) {
@@ -522,7 +522,7 @@ bool SaveAsBMP(const std::string& file_name, const uint8_t* pixel_data, uint32_t
         const uint32_t row_size = width * PIXEL_SIZE; // in bytes
 
         for (uint32_t column_ix = 0; column_ix < height; ++column_ix) { // reverse order of rows
-            const uint8_t* column =  pixel_data + row_size * (height - 1 - column_ix);
+            const uint8_t* column =  pixel_data + row_size * (is_reverse_rows ? (height - 1 - column_ix) : column_ix);
 
             for (uint32_t pixel_ix = 0; pixel_ix < width; ++pixel_ix) {
                 const uint8_t* pixel = column + pixel_ix * PIXEL_SIZE;
@@ -1213,25 +1213,26 @@ int main(int argc, char *argv[]) {
             } else {
                 puts("Font loaded.");
             }
+            TOGL::ToWindow().SaveFont("courier_new.bmp", 1024, 1024);
         };
 
         data.draw = []() {
             s_test_image.Animate();
-
+            
             TOGL::Window& window = TOGL::ToWindow();
-
+            
             int y = window.GetDrawArea().height - FONT_SIZE;
             window.RenderText(50, y, 255, 255, 255, 255, std::string() + "FPS: " + std::to_string(s_fps.Measure()));
-
+            
             y -= FONT_SIZE;
             window.RenderTextASCII(50, y, 255, 0, 0, 255, "Some ASCII text.");
-
+            
             y -= FONT_SIZE;
             window.RenderText(50, y, 0, 255, 0, 255, u8"Some UNICODE text \u015B \u0444 \uFEA2 \uFF86 \uAC37 \u015Ajx");
-
+            
             y -= FONT_SIZE;
             window.RenderText(50, y, 255, 255, 255, 127, "Some transparent text.");
-
+            
             window.RenderText(0, 0, 0, 255, 0, 255, u8"\u015Ajx");
             window.RenderText(100, window.GetFontDescent(), 0, 255, 0, 255, u8"\u015Ajx"); // do not cut underline of text
         };
@@ -1243,59 +1244,7 @@ int main(int argc, char *argv[]) {
         data.do_on_key = [](TOGL::KeyId key_id, bool is_down, const TOGL::Extra& extra) {
             auto& window = TOGL::ToWindow();
 
-            if (!is_down) {
-                if (!s_is_client) {
-                    switch (key_id) {
-                    case TOGL::KEY_ID_1:            window.MoveTo(0, 0); break;
-                    case TOGL::KEY_ID_2:            window.MoveTo(10, 100); break;
-
-                    case TOGL::KEY_ID_3:            window.SetSize(400, 200); break;
-                    case TOGL::KEY_ID_4:            window.SetSize(800, 400); break;
-
-                    case TOGL::KEY_ID_5:            window.SetArea(100, 10, 800, 400); break;
-                    case TOGL::KEY_ID_6:            window.SetArea(window.GetArea()); break;
-                    case TOGL::KEY_ID_7:            window.SetArea(TOGL::GetDesktopAreaNoTaskBar()); break;
-                    case TOGL::KEY_ID_8:            window.SetArea({{}, TOGL::GetScreenSize()}); break;
-
-                    case TOGL::KEY_ID_C:            window.Center(s_resolution, s_is_client); break;
-
-                    case TOGL::KEY_ID_ARROW_LEFT:   window.MoveBy(-30, 0); break;
-                    case TOGL::KEY_ID_ARROW_RIGHT:  window.MoveBy(30, 0); break;
-
-                    case TOGL::KEY_ID_X:            window.RequestClose(); break;
-
-                    case TOGL::KEY_ID_I:            DisplayWindowInfo(); break;
-
-                    case TOGL::KEY_ID_T:            s_is_client = !s_is_client; break;
-                    default: break;
-                    }
-                } else {
-                    switch (key_id) {
-                    case TOGL::KEY_ID_1:            window.MoveTo(0, 0, true); break;
-                    case TOGL::KEY_ID_2:            window.MoveTo(10, 100, true); break;
-
-                    case TOGL::KEY_ID_3:            window.SetSize(400, 200, true); break;
-                    case TOGL::KEY_ID_4:            window.SetSize(800, 400, true); break;
-
-                    case TOGL::KEY_ID_5:            window.SetArea(100, 10, 800, 400, false); break;
-                    case TOGL::KEY_ID_6:            window.SetArea(window.GetDrawArea(), false); break;
-                    case TOGL::KEY_ID_7:            window.SetArea(TOGL::GetDesktopAreaNoTaskBar(), false); break;
-                    case TOGL::KEY_ID_8:            window.SetArea({{}, TOGL::GetScreenSize()}, false); break;
-
-                    case TOGL::KEY_ID_C:            window.Center(s_resolution, s_is_client); break;
-
-                    case TOGL::KEY_ID_ARROW_LEFT:   window.MoveBy(-30, 0); break;
-                    case TOGL::KEY_ID_ARROW_RIGHT:  window.MoveBy(30, 0); break;
-
-                    case TOGL::KEY_ID_X:            window.RequestClose(); break;
-
-                    case TOGL::KEY_ID_I:            DisplayWindowInfo(); break;
-
-                    case TOGL::KEY_ID_T:            s_is_client = !s_is_client; break;
-                    default: break;
-                    }
-                }
-            }
+            if (!is_down && key_id == 'X') window.RequestClose();
         };
 
         return TOGL::Run(data);
@@ -2021,7 +1970,6 @@ int main(int argc, char *argv[]) {
         };
 
         data.draw = []() {
-            
             s_test_font.Render();
         };
 

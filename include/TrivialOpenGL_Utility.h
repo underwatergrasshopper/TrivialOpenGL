@@ -21,6 +21,8 @@
 #include <stack>
 #include <vector>
 
+#include "TrivialOpenGL_Debug.h"
+
 //==============================================================================
 // Declarations
 //==============================================================================
@@ -570,12 +572,135 @@ namespace TrivialOpenGL {
         };
 
         //--------------------------------------------------------------------------
+        // PixelDataBuffer
+        //--------------------------------------------------------------------------
+
+        class PixelDataBuffer{
+        public:
+            PixelDataBuffer() {
+                m_fbo           = 0;
+                m_prev_fbo      = 0;
+                m_tex_obj       = 0;
+                m_prev_tex_obj  = 0;
+
+                m_glGenFramebuffersEXT          = nullptr;
+                m_glDeleteFramebuffersEXT       = nullptr;
+                m_glBindFramebufferEXT          = nullptr;
+                m_glFramebufferTexture2DEXT     = nullptr;
+                m_glCheckFramebufferStatusEXT   = nullptr;
+            }
+            virtual ~PixelDataBuffer() {
+
+            }
+
+            void SetUp(uint16_t width, uint16_t height) {
+                Load(m_glGenFramebuffersEXT, "glGenFramebuffersEXT");
+                Load(m_glDeleteFramebuffersEXT, "glDeleteRenderbuffersEXT");
+                Load(m_glBindFramebufferEXT, "glBindFramebufferEXT");
+                Load(m_glFramebufferTexture2DEXT, "glFramebufferTexture2DEXT");
+                Load(m_glCheckFramebufferStatusEXT, "glCheckFramebufferStatusEXT");
+
+                GLint max_viewport_size[2] = {};
+                glGetIntegerv(GL_MAX_VIEWPORT_DIMS, max_viewport_size);
+                GLint max_texture_size = 0;
+                glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
+
+                if (width > max_viewport_size[0] || width > max_texture_size || height > max_viewport_size[1] || height > max_texture_size) {
+                    AddErrMsg(std::string() + "Value of width or/and height are to big. ("
+                        "max_viewport_width=" + std::to_string(max_viewport_size[0]) + 
+                        ", max_viewport_height=" + std::to_string(max_viewport_size[1]) + 
+                        ", max_texture_width=" + std::to_string(max_texture_size) + 
+                        ", max_texture_height=" + std::to_string(max_texture_size) + 
+                        ")"
+                    );
+                }
+
+                if (IsOk()) {
+                    m_glGenFramebuffersEXT(1, &m_fbo);
+                    glGetIntegerv(TOGL_GL_FRAMEBUFFER_BINDING, (GLint*)&m_prev_fbo);
+                    m_glBindFramebufferEXT(TOGL_GL_FRAMEBUFFER_EXT, m_fbo);
+
+                    glGenTextures(1, &m_tex_obj);
+                    glGetIntegerv(GL_TEXTURE_BINDING_2D, (GLint*)&m_prev_tex_obj);
+                    glBindTexture(GL_TEXTURE_2D, m_tex_obj);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+                    m_glFramebufferTexture2DEXT(TOGL_GL_FRAMEBUFFER_EXT, TOGL_GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, m_tex_obj, 0);
+                    
+                    if (m_glCheckFramebufferStatusEXT(TOGL_GL_FRAMEBUFFER_EXT) != TOGL_GL_FRAMEBUFFER_COMPLETE_EXT) {
+                        AddErrMsg("Framebuffer is not complete.");
+                    }
+                }
+            }
+
+            void CleanUp() {
+                m_glFramebufferTexture2DEXT(TOGL_GL_FRAMEBUFFER_EXT, TOGL_GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, 0, 0);
+
+                glBindTexture(GL_TEXTURE_2D, m_prev_tex_obj);
+                m_prev_tex_obj  = 0;
+                glDeleteTextures(1, &m_tex_obj);
+                m_tex_obj       = 0;
+
+                m_glBindFramebufferEXT(TOGL_GL_FRAMEBUFFER_EXT, m_prev_fbo);
+                m_prev_fbo  = 0;
+                m_glDeleteFramebuffersEXT(1, &m_fbo);
+                m_fbo       = 0;
+            }
+
+            bool IsOk() const {
+                return m_err_msg.empty();
+            }
+
+            std::string GetErrMsg() const {
+                return m_err_msg;
+            }
+
+        private:
+            enum {
+                TOGL_GL_FRAMEBUFFER_EXT             = 0x8D40,
+                TOGL_GL_FRAMEBUFFER_BINDING         = 0x8CA6,
+                TOGL_GL_COLOR_ATTACHMENT0_EXT       = 0x8CE0,
+                TOGL_GL_FRAMEBUFFER_COMPLETE_EXT    = 0x8CD5,
+            };
+
+            template <typename Type>
+            void Load(Type& function, const std::string& function_name) {
+                function = (Type)wglGetProcAddress(function_name.c_str());
+                if (!function) {
+                    AddErrMsg(std::string() + "Can not load function: \"" + function_name + "\".");
+                }
+            }
+
+            void AddErrMsg(const std::string& err_msg) {
+                if (!m_err_msg.empty()) m_err_msg += "\n";
+                m_err_msg += std::string() + "PixelDataBuffer Error: " + err_msg;
+            }
+
+            GLuint m_fbo;
+            GLuint m_prev_fbo;
+            GLuint m_tex_obj;
+            GLuint m_prev_tex_obj;
+
+            std::string m_err_msg;
+
+            void (APIENTRY *m_glGenFramebuffersEXT)(GLsizei n, GLuint *framebuffers);
+            void (APIENTRY *m_glDeleteFramebuffersEXT)(GLsizei n, const GLuint *framebuffers);
+            void (APIENTRY *m_glBindFramebufferEXT)(GLenum target, GLuint framebuffer);
+            void (APIENTRY *m_glFramebufferTexture2DEXT)(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
+            GLenum (APIENTRY* m_glCheckFramebufferStatusEXT)(GLenum target);
+        };
+
+        //--------------------------------------------------------------------------
         // TextDrawer
         //--------------------------------------------------------------------------
 
         class TextDrawer {
         public:
             TextDrawer() {
+                m_font_height = 0;
+
                 m_device_context_handle = NULL;
                 m_font_handle           = NULL;
                 m_list_base             = 0;
@@ -591,13 +716,14 @@ namespace TrivialOpenGL {
             // device_context_handle    - Must still exist for each call of RenderText.
             // name                     - Font name. Encoding Format: ASCII.
             // size                     - Height of characters in pixels.
-            bool LoadFont(HDC device_context_handle, const std::string& name, uint16_t size, FontStyle style, FontCharSet char_set) {
+            bool LoadFont(HDC device_context_handle, const std::string& name, uint16_t height, FontStyle style, FontCharSet char_set) {
                 UnloadFont();
 
                 m_device_context_handle = device_context_handle;
+                m_font_height = height;
 
                 m_font_handle = CreateFontW(
-                    size,                    
+                    height,                    
                     0, 0, 0,                            
                     (style == FONT_STYLE_BOLD) ? FW_BOLD : FW_NORMAL,
                     FALSE, FALSE, FALSE,
@@ -648,6 +774,73 @@ namespace TrivialOpenGL {
                 return IsOk();
             }
 
+            void SaveFont(const std::string& file_name, uint16_t width, uint16_t height) {
+                if (m_list_base && m_font_height > 0) {
+                    m_pixel_data_buffer.SetUp(width, height);
+
+                    if (!m_pixel_data_buffer.IsOk()) {
+                        LogFatalError(m_pixel_data_buffer.GetErrMsg());
+                    }
+
+                    glPushAttrib(GL_VIEWPORT_BIT);
+                    glViewport(0, 0, width, height);
+
+                    glPushAttrib(GL_MATRIX_MODE);
+                    glMatrixMode(GL_PROJECTION);
+                    glPushMatrix();
+                    glLoadIdentity();
+                    glOrtho(0, width, 0, height, 1, -1);
+                    glMatrixMode(GL_MODELVIEW);
+                    glPushMatrix();
+                    glLoadIdentity();
+
+                    glPushAttrib(GL_COLOR_BUFFER_BIT);
+                    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+                    glClear(GL_COLOR_BUFFER_BIT);
+
+                    PointI pos = {0, height - m_font_height};
+                    
+                    for (uint32_t code = 0; code < uint32_t(m_list_range); ++code) {
+
+                        const std::wstring c(1, (wchar_t)code);
+
+                        const SizeU16 size = GetTextSize(c);
+                       
+                        RenderTextUTF16(pos.x, pos.y, 255, 255, 255, 255, c);
+                    
+                        pos.x += size.width;
+                        if (pos.x >= width) {
+                            pos.x = 0;
+                            pos.y -= m_font_height;
+                        }
+                    
+                        if (pos.y >= height) {
+                            break;
+                        }
+                    }
+
+                    enum { PIXEL_SIZE = 4 }; // in bytes
+                    const uint32_t data_size = width * height * PIXEL_SIZE;
+                    uint8_t* data = new uint8_t[data_size];
+                    
+                    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
+                    SaveAsBMP(file_name, data, width, height, false);
+                    
+                    delete[] data;
+
+                    glMatrixMode(GL_PROJECTION);
+                    glPopMatrix();
+                    glMatrixMode(GL_MODELVIEW);
+                    glPopMatrix();
+                    
+                    glPopAttrib();
+                    glPopAttrib();
+                    glPopAttrib();
+
+                    m_pixel_data_buffer.CleanUp();
+                }
+            }
+
             void UnloadFont() {
                 m_err_msg = "";
 
@@ -685,8 +878,7 @@ namespace TrivialOpenGL {
                 }
             }
 
-            // text - Encoding Format: UTF8.
-            void RenderText(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text) {
+            void RenderTextUTF16(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::wstring& text) {
                 if (m_list_base) {
                     glPushAttrib(GL_ENABLE_BIT);
                     glPushAttrib(GL_COLOR_BUFFER_BIT);
@@ -699,14 +891,17 @@ namespace TrivialOpenGL {
                     glRasterPos2i(x, y);
 
                     glListBase(m_list_base);
-
-                    const std::wstring text_utf16 = ToUTF16(text);
-                    glCallLists((GLsizei)text_utf16.length(), GL_UNSIGNED_SHORT, text_utf16.c_str());
+                    glCallLists((GLsizei)text.length(), GL_UNSIGNED_SHORT, text.c_str());
 
                     glPopAttrib();
                     glPopAttrib();
                     glPopAttrib();
                 }
+            }
+
+            // text - Encoding Format: UTF8.
+            void RenderText(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text) {
+                RenderTextUTF16(x, y, r, g, b, a, ToUTF16(text));
             }
 
             SizeU16 GetTextSize(const std::string& text) const {
@@ -715,6 +910,34 @@ namespace TrivialOpenGL {
 
                     SIZE size = {};
                     BOOL is_success = GetTextExtentPoint32A(m_device_context_handle, text.c_str(), (int)text.length(), &size);
+
+                    SelectObject(m_device_context_handle, old_font_handle);
+
+                    if (is_success) return SizeU16((uint16_t)size.cx, (uint16_t)size.cy);
+                }
+                return {};
+            }
+
+            SizeU16 GetTextSize(const std::wstring& text) const {
+                if (m_font_handle) {
+                    HFONT old_font_handle = (HFONT)SelectObject(m_device_context_handle, m_font_handle); 
+
+                    SIZE size = {};
+                    BOOL is_success = GetTextExtentPoint32W(m_device_context_handle, text.c_str(), (int)text.length(), &size);
+
+                    SelectObject(m_device_context_handle, old_font_handle);
+
+                    if (is_success) return SizeU16((uint16_t)size.cx, (uint16_t)size.cy);
+                }
+                return {};
+            }
+
+            SizeU16 GetTextSize(wchar_t c) const {
+                if (m_font_handle) {
+                    HFONT old_font_handle = (HFONT)SelectObject(m_device_context_handle, m_font_handle); 
+
+                    SIZE size = {};
+                    BOOL is_success = GetTextExtentPoint32W(m_device_context_handle, &c, 1, &size);
 
                     SelectObject(m_device_context_handle, old_font_handle);
 
@@ -752,6 +975,75 @@ namespace TrivialOpenGL {
                 }
             }
 
+            static bool SaveAsBMP(const std::string& file_name, const uint8_t* pixel_data, uint32_t width, uint32_t height, bool is_reverse_rows = true) {
+                bool is_success = false; 
+
+                if (width != 0 && height != 0) {
+                    enum {
+                        PIXEL_SIZE = 4, // in bytes
+                    };
+
+                    const uint32_t pixel_data_size      = width * height * PIXEL_SIZE;
+                    const uint32_t header_size          = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPV5HEADER);
+                    const uint32_t file_size            = header_size + pixel_data_size;
+
+                    uint8_t* file_data = new uint8_t[file_size];
+                    memset(file_data, 0, file_size);
+
+                    BITMAPFILEHEADER* fh = (BITMAPFILEHEADER*) file_data;
+                    fh->bfType          = 0x4D42; // bmp file signature = {'B', 'M'}
+                    fh->bfSize          = file_size;
+                    fh->bfOffBits       = header_size;
+
+                    BITMAPV5HEADER* ih = (BITMAPV5HEADER*)(file_data + sizeof(BITMAPFILEHEADER));
+                    ih->bV5Size         = sizeof(BITMAPV5HEADER);
+                    ih->bV5Width        = width;
+                    ih->bV5Height       = height;
+                    ih->bV5Planes       = 1;
+                    ih->bV5BitCount     = 32;
+                    ih->bV5Compression  = BI_BITFIELDS;
+                    ih->bV5SizeImage    = pixel_data_size;
+                    ih->bV5RedMask      = 0xFF000000;
+                    ih->bV5GreenMask    = 0x00FF0000;
+                    ih->bV5BlueMask     = 0x0000FF00;
+                    ih->bV5AlphaMask    = 0x000000FF;
+                    ih->bV5CSType       = LCS_sRGB;
+                    ih->bV5Intent       = LCS_GM_GRAPHICS;
+
+                    uint8_t* file_pixel_data = (uint8_t*)(file_data + header_size);
+                    uint32_t ix = 0;
+
+                    const uint32_t row_size = width * PIXEL_SIZE; // in bytes
+
+                    for (uint32_t column_ix = 0; column_ix < height; ++column_ix) { // reverse order of rows
+                        const uint8_t* column =  pixel_data + row_size * (is_reverse_rows ? (height - 1 - column_ix) : column_ix);
+
+                        for (uint32_t pixel_ix = 0; pixel_ix < width; ++pixel_ix) {
+                            const uint8_t* pixel = column + pixel_ix * PIXEL_SIZE;
+
+                            // reverse order of channels
+                            file_pixel_data[ix++] = pixel[3];
+                            file_pixel_data[ix++] = pixel[2];
+                            file_pixel_data[ix++] = pixel[1];
+                            file_pixel_data[ix++] = pixel[0];
+                        }
+                    }
+
+                    FILE* file = NULL;
+                    is_success = _wfopen_s(&file, ToUTF16(file_name).c_str(), L"wb") == 0 && file;
+
+                    if (is_success) {
+                        is_success = fwrite(file_data, 1, file_size, file) == file_size;
+                        fclose(file);
+                    }
+
+                    delete[] file_data;
+                }
+
+                return is_success;
+            }
+
+            uint16_t    m_font_height;
             HDC         m_device_context_handle;    // not own
             HFONT       m_font_handle;
             GLint       m_list_base;
@@ -761,6 +1053,8 @@ namespace TrivialOpenGL {
             uint32_t    m_ascent;
             uint32_t    m_descent;
             uint32_t    m_internal_leading;
+
+            PixelDataBuffer m_pixel_data_buffer;
 
             std::string m_err_msg;
         };
