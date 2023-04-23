@@ -857,9 +857,8 @@ namespace TrivialOpenGL {
 
                     PointI pos = {0, height - m_font_height};
 
-                    const bool is_full_range = true;
+                    const bool is_full_range = false;
                     if (is_full_range) {
-
                         for (uint32_t code = 0; code <= uint32_t(m_list_range); ++code) {
 
                             const std::wstring c(1, (wchar_t)code);
