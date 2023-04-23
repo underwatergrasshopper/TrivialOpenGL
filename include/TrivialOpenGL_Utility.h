@@ -436,6 +436,8 @@ namespace TrivialOpenGL {
     std::vector<std::string> Split(const std::string& text, char c);
 
     //--------------------------------------------------------------------------
+
+    //--------------------------------------------------------------------------
     // InnerUtility
     //--------------------------------------------------------------------------
 
@@ -445,6 +447,18 @@ namespace TrivialOpenGL {
         friend class Window;
 
     private:
+
+        //--------------------------------------------------------------------------
+        // BMP
+        //--------------------------------------------------------------------------
+
+        // width            - At least 1.
+        // height           - At least 1.
+        static bool SaveAsBMP(const std::string& file_name, const uint8_t* pixel_data, uint32_t width, uint32_t height, bool is_reverse_rows = true);
+
+        // Texture both width and height need to be at least 1.
+        static bool SaveTextureAsBMP(const std::string& file_name, GLuint tex_obj);
+
         //--------------------------------------------------------------------------
         // WindowAreaCorrector
         //--------------------------------------------------------------------------
@@ -635,18 +649,28 @@ namespace TrivialOpenGL {
                 }
             }
 
+            // Returned texture object (opengl texture name) needs to be deleted (by glDeleteTextures function).
+            GLint TakeOverTexObj() {
+                m_glFramebufferTexture2DEXT(TOGL_GL_FRAMEBUFFER_EXT, TOGL_GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, 0, 0);
+                glBindTexture(GL_TEXTURE_2D, m_prev_tex_obj);
+
+                GLint tex_obj = m_tex_obj;
+                m_tex_obj = 0;
+                return tex_obj;
+            }
+
             void CleanUp() {
                 m_glFramebufferTexture2DEXT(TOGL_GL_FRAMEBUFFER_EXT, TOGL_GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, 0, 0);
-
                 glBindTexture(GL_TEXTURE_2D, m_prev_tex_obj);
-                m_prev_tex_obj  = 0;
                 glDeleteTextures(1, &m_tex_obj);
-                m_tex_obj       = 0;
 
                 m_glBindFramebufferEXT(TOGL_GL_FRAMEBUFFER_EXT, m_prev_fbo);
-                m_prev_fbo  = 0;
                 m_glDeleteFramebuffersEXT(1, &m_fbo);
-                m_fbo       = 0;
+
+                m_prev_tex_obj  = 0;
+                m_tex_obj       = 0;
+                m_prev_fbo      = 0;
+                m_fbo           = 0;
             }
 
             bool IsOk() const {
@@ -854,14 +878,7 @@ namespace TrivialOpenGL {
                         delete[] buffer;
                     }
 
-                    enum { PIXEL_SIZE = 4 }; // in bytes
-                    const uint32_t data_size = width * height * PIXEL_SIZE;
-                    uint8_t* data = new uint8_t[data_size];
-                    
-                    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data);
-                    SaveAsBMP(file_name, data, width, height, false);
-                    
-                    delete[] data;
+                    GLuint font_tex_obj = m_pixel_data_buffer.TakeOverTexObj();
 
                     glMatrixMode(GL_PROJECTION);
                     glPopMatrix();
@@ -873,6 +890,12 @@ namespace TrivialOpenGL {
                     glPopAttrib();
 
                     m_pixel_data_buffer.CleanUp();
+
+                    // ---
+          
+                    SaveTextureAsBMP(file_name, font_tex_obj);
+
+                    glDeleteTextures(1, &font_tex_obj);
                 }
             }
 
@@ -1010,74 +1033,6 @@ namespace TrivialOpenGL {
                 }
             }
 
-            static bool SaveAsBMP(const std::string& file_name, const uint8_t* pixel_data, uint32_t width, uint32_t height, bool is_reverse_rows = true) {
-                bool is_success = false; 
-
-                if (width != 0 && height != 0) {
-                    enum {
-                        PIXEL_SIZE = 4, // in bytes
-                    };
-
-                    const uint32_t pixel_data_size      = width * height * PIXEL_SIZE;
-                    const uint32_t header_size          = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPV5HEADER);
-                    const uint32_t file_size            = header_size + pixel_data_size;
-
-                    uint8_t* file_data = new uint8_t[file_size];
-                    memset(file_data, 0, file_size);
-
-                    BITMAPFILEHEADER* fh = (BITMAPFILEHEADER*) file_data;
-                    fh->bfType          = 0x4D42; // bmp file signature = {'B', 'M'}
-                    fh->bfSize          = file_size;
-                    fh->bfOffBits       = header_size;
-
-                    BITMAPV5HEADER* ih = (BITMAPV5HEADER*)(file_data + sizeof(BITMAPFILEHEADER));
-                    ih->bV5Size         = sizeof(BITMAPV5HEADER);
-                    ih->bV5Width        = width;
-                    ih->bV5Height       = height;
-                    ih->bV5Planes       = 1;
-                    ih->bV5BitCount     = 32;
-                    ih->bV5Compression  = BI_BITFIELDS;
-                    ih->bV5SizeImage    = pixel_data_size;
-                    ih->bV5RedMask      = 0xFF000000;
-                    ih->bV5GreenMask    = 0x00FF0000;
-                    ih->bV5BlueMask     = 0x0000FF00;
-                    ih->bV5AlphaMask    = 0x000000FF;
-                    ih->bV5CSType       = LCS_sRGB;
-                    ih->bV5Intent       = LCS_GM_GRAPHICS;
-
-                    uint8_t* file_pixel_data = (uint8_t*)(file_data + header_size);
-                    uint32_t ix = 0;
-
-                    const uint32_t row_size = width * PIXEL_SIZE; // in bytes
-
-                    for (uint32_t column_ix = 0; column_ix < height; ++column_ix) { // reverse order of rows
-                        const uint8_t* column =  pixel_data + row_size * (is_reverse_rows ? (height - 1 - column_ix) : column_ix);
-
-                        for (uint32_t pixel_ix = 0; pixel_ix < width; ++pixel_ix) {
-                            const uint8_t* pixel = column + pixel_ix * PIXEL_SIZE;
-
-                            // reverse order of channels
-                            file_pixel_data[ix++] = pixel[3];
-                            file_pixel_data[ix++] = pixel[2];
-                            file_pixel_data[ix++] = pixel[1];
-                            file_pixel_data[ix++] = pixel[0];
-                        }
-                    }
-
-                    FILE* file = NULL;
-                    is_success = _wfopen_s(&file, ToUTF16(file_name).c_str(), L"wb") == 0 && file;
-
-                    if (is_success) {
-                        is_success = fwrite(file_data, 1, file_size, file) == file_size;
-                        fclose(file);
-                    }
-
-                    delete[] file_data;
-                }
-
-                return is_success;
-            }
-
             uint16_t    m_font_height;
             HDC         m_device_context_handle;    // not own
             HFONT       m_font_handle;
@@ -1093,10 +1048,6 @@ namespace TrivialOpenGL {
 
             std::string m_err_msg;
         };
-
-        inline int PointsToPixels(HDC hdc, int size) {
-            return MulDiv(size, GetDeviceCaps(hdc, LOGPIXELSY), 72);
-        }
     };
 
 } // namespace TrivialOpenGL
@@ -1262,6 +1213,109 @@ namespace TrivialOpenGL {
         }
         return list;
     }
+
+    //--------------------------------------------------------------------------
+    // InnerUtility
+    //--------------------------------------------------------------------------
+
+    inline bool InnerUtility::SaveAsBMP(const std::string& file_name, const uint8_t* pixel_data, uint32_t width, uint32_t height, bool is_reverse_rows) {
+        bool is_success = false; 
+
+        if (width > 0 && height > 0) {
+            enum {
+                PIXEL_SIZE = 4, // in bytes
+            };
+
+            const uint32_t pixel_data_size      = width * height * PIXEL_SIZE;
+            const uint32_t header_size          = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPV5HEADER);
+            const uint32_t file_size            = header_size + pixel_data_size;
+
+            uint8_t* file_data = new uint8_t[file_size];
+            memset(file_data, 0, file_size);
+
+            BITMAPFILEHEADER* fh = (BITMAPFILEHEADER*) file_data;
+            fh->bfType          = 0x4D42; // bmp file signature = {'B', 'M'}
+            fh->bfSize          = file_size;
+            fh->bfOffBits       = header_size;
+
+            BITMAPV5HEADER* ih = (BITMAPV5HEADER*)(file_data + sizeof(BITMAPFILEHEADER));
+            ih->bV5Size         = sizeof(BITMAPV5HEADER);
+            ih->bV5Width        = width;
+            ih->bV5Height       = height;
+            ih->bV5Planes       = 1;
+            ih->bV5BitCount     = 32;
+            ih->bV5Compression  = BI_BITFIELDS;
+            ih->bV5SizeImage    = pixel_data_size;
+            ih->bV5RedMask      = 0xFF000000;
+            ih->bV5GreenMask    = 0x00FF0000;
+            ih->bV5BlueMask     = 0x0000FF00;
+            ih->bV5AlphaMask    = 0x000000FF;
+            ih->bV5CSType       = LCS_sRGB;
+            ih->bV5Intent       = LCS_GM_GRAPHICS;
+
+            uint8_t* file_pixel_data = (uint8_t*)(file_data + header_size);
+            uint32_t ix = 0;
+
+            const uint32_t row_size = width * PIXEL_SIZE; // in bytes
+
+            for (uint32_t column_ix = 0; column_ix < height; ++column_ix) {
+                const uint8_t* column =  pixel_data + row_size * (is_reverse_rows ? (height - 1 - column_ix) : column_ix);
+
+                for (uint32_t pixel_ix = 0; pixel_ix < width; ++pixel_ix) {
+                    const uint8_t* pixel = column + pixel_ix * PIXEL_SIZE;
+
+                    // reverse order of channels
+                    file_pixel_data[ix++] = pixel[3];
+                    file_pixel_data[ix++] = pixel[2];
+                    file_pixel_data[ix++] = pixel[1];
+                    file_pixel_data[ix++] = pixel[0];
+                }
+            }
+
+            FILE* file = NULL;
+            is_success = _wfopen_s(&file, ToUTF16(file_name).c_str(), L"wb") == 0 && file;
+
+            if (is_success) {
+                is_success = fwrite(file_data, 1, file_size, file) == file_size;
+                fclose(file);
+            }
+
+            delete[] file_data;
+        }
+
+        return is_success;
+    }
+
+    inline bool InnerUtility::SaveTextureAsBMP(const std::string& file_name, GLuint tex_obj) {
+        bool is_success = false;
+
+        glPushAttrib(GL_TEXTURE_BIT);
+        glBindTexture(GL_TEXTURE_2D, tex_obj);
+
+        GLint width     = 0;
+        GLint height    = 0;
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+
+        if (width > 0 && height > 0) {
+            enum { PIXEL_SIZE = 4 }; // in bytes
+
+            const uint32_t  data_size   = width * height * PIXEL_SIZE;
+            uint8_t*        data        = new uint8_t[data_size];
+                   
+            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+            is_success = SaveAsBMP(file_name, data, width, height, false);
+                    
+            delete[] data;
+        }
+
+        glPopAttrib();
+
+        return is_success;
+    }
+
+
 } // namespace TrivialOpenGL 
 
 #endif // TRIVIALOPENGL_UTILITY_H_
