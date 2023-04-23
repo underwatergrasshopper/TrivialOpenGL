@@ -6,6 +6,7 @@
 #ifndef TRIVIALOPENGL_KEY_H_
 #define TRIVIALOPENGL_KEY_H_
 
+#include "TrivialOpenGL_Headers.h"
 #include "TrivialOpenGL_Utility.h"
 
 namespace TrivialOpenGL {

@@ -155,6 +155,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\TrivialOpenGL.h" />
+    <ClInclude Include="..\include\TrivialOpenGL_Headers.h" />
     <ClInclude Include="..\include\TrivialOpenGL_Utility.h" />
     <ClInclude Include="..\include\TrivialOpenGL_Window.h" />
   </ItemGroup>

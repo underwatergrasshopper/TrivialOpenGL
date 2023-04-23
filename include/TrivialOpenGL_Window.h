@@ -6,12 +6,9 @@
 #ifndef TRIVIALOPENGL_WINDOW_H_
 #define TRIVIALOPENGL_WINDOW_H_
 
-#include <GL\GL.h>
-#include <VersionHelpers.h>
-
+#include "TrivialOpenGL_Headers.h"
 #include "TrivialOpenGL_Utility.h"
 #include "TrivialOpenGL_Key.h"
-#include "TrivialOpenGL_Debug.h"
 
 //==========================================================================
 // Declarations

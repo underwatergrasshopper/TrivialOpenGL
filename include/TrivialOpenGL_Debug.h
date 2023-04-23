@@ -6,8 +6,7 @@
 #ifndef TRIVIALOPENGL_DEBUG_H_
 #define TRIVIALOPENGL_DEBUG_H_
 
-#include <windows.h>
-#include <string>
+#include "TrivialOpenGL_Headers.h"
 
 #define togl_print_i32(variable) { printf(#variable"=%d\n", int(variable)); fflush(stdout); } (void)0
 
