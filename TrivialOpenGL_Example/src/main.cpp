@@ -291,6 +291,8 @@ static DelayedActionManager s_actions;
 TOGL::FontStyle         s_font_style    = TOGL::FONT_STYLE_NORMAL;
 TOGL::FontCharSet       s_font_char_set = TOGL::FONT_CHAR_SET_ASCII;
 
+TOGL::Font              s_font;
+
 //------------------------------------------------------------------------------
 
 
@@ -1213,7 +1215,13 @@ int main(int argc, char *argv[]) {
             } else {
                 puts("Font loaded.");
             }
-            TOGL::ToWindow().SaveFont("courier_new.bmp", 1024, 1024);
+            //TOGL::ToWindow().SaveFont("courier_new.bmp", 1024, 1024);
+
+            s_font.Load("Courier New", FONT_SIZE, TOGL::FONT_SIZE_UNIT_PIXELS, TOGL::FONT_STYLE_NORMAL, TOGL::FONT_CHAR_SET_UNICODE_0000_FFFF);
+
+            if (!s_font.IsOk()) {
+                puts(s_font.GetErrMsg().c_str());
+            }
         };
 
         data.draw = []() {
@@ -1235,6 +1243,15 @@ int main(int argc, char *argv[]) {
             
             window.RenderText(0, 0, 0, 255, 0, 255, u8"\u015Ajx");
             window.RenderText(100, window.GetFontDescent(), 0, 255, 0, 255, u8"\u015Ajx"); // do not cut underline of text
+
+            glColor3f(1, 0.5, 0);
+            glPushMatrix();
+            glTranslatef(50, 100, 0);
+            glScaled(3, 3, 1);
+            //s_font.RenderGlyph(L'\uFFFD');
+            //s_font.RenderGlyph(L'\u25A1');
+            s_font.RenderGlyph('y');
+            glPopMatrix();
         };
 
         data.do_on_resize = [](uint16_t width, uint16_t height) {
@@ -1982,7 +1999,6 @@ int main(int argc, char *argv[]) {
         };
 
         return TOGL::Run(data);
-
     });
 
     //------------------------------------------------------------------------------

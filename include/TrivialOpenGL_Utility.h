@@ -13,6 +13,11 @@
 // Declarations
 //==============================================================================
 
+// Disables copy ability of class.
+#define TOGL_NO_COPY(Class) \
+    Class(const Class&) = delete; \
+    Class& operator=(const Class&) = delete
+
 #define TOGL_CASE_STR(name) case name: return #name
 
 namespace TrivialOpenGL {
@@ -23,14 +28,14 @@ namespace TrivialOpenGL {
         FONT_STYLE_NORMAL,
         FONT_STYLE_BOLD,
     };
-
+    
     enum FontCharSet {
         FONT_CHAR_SET_ASCII,
-
+    
         // Note: Font might not have all glyphs from this range.
         FONT_CHAR_SET_UNICODE_0000_FFFF,
     };
-
+    
     //--------------------------------------------------------------------------
     // Version
     //--------------------------------------------------------------------------
@@ -163,7 +168,7 @@ namespace TrivialOpenGL {
         explicit Size(const Type2& s) : width(s), height(s) {}
 
         template <typename WidthType, typename HeightType>
-        Size(const WidthType& width, const HeightType& height) : width(width), height(height) {}
+        Size(const WidthType& width, const HeightType& height) : width(Type(width)), height(Type(height)) {}
 
         template <typename SizeType>
         explicit Size(const Size<SizeType>& s) : width(s.width), height(s.height) {}
@@ -433,6 +438,7 @@ namespace TrivialOpenGL {
     class InnerUtility {
     public:
         friend class Window;
+        friend class Font;
 
     private:
 
@@ -1036,9 +1042,7 @@ namespace TrivialOpenGL {
                 uint32_t to;
             };
 
-            // No Copy
-            TextDrawer(const TextDrawer&) = delete;
-            TextDrawer& operator=(const TextDrawer&) = delete;
+            TOGL_NO_COPY(TextDrawer);
 
             static GLsizei GetListRange(FontCharSet font_char_set) {
                 switch (font_char_set) {

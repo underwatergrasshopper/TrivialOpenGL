@@ -173,8 +173,17 @@ namespace TrivialOpenGL {
     // Creates and runs window.
     int Run(const Data& data);
 
+    class WindowInnerAccessor {
+    public:
+        friend class Font;
+    protected:
+        virtual ~WindowInnerAccessor() {}
+    private:
+        virtual HWND ToHWND() = 0;
+    };
+
     // It's a singleton.
-    class Window {
+    class Window : public WindowInnerAccessor {
     public:
         friend Global<Window>;
 
@@ -332,8 +341,9 @@ namespace TrivialOpenGL {
         };
 
         Window();
-        Window(const Window&) = delete;
-        Window& operator=(const Window&) = delete;
+        TOGL_NO_COPY(Window);
+
+        HWND ToHWND() override final;
 
         void SetState(WindowState state);
         void Push(bool& value, bool new_value_after_push);
@@ -371,6 +381,8 @@ namespace TrivialOpenGL {
 
         LRESULT InnerWindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
         static LRESULT CALLBACK WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
+
+        
 
         Data            m_data;
 
@@ -1130,6 +1142,10 @@ namespace TrivialOpenGL {
         RECT rect = MakeRECT(draw_area);
         AdjustWindowRect(&rect, window_style, FALSE);
         return MakeAreaIU16(rect);
+    }
+
+    inline HWND Window::ToHWND() {
+        return m_window_handle;
     }
     
     //--------------------------------------------------------------------------

@@ -43,5 +43,8 @@
     <ClInclude Include="include\TrivialOpenGL_Headers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\TrivialOpenGL_Font.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
