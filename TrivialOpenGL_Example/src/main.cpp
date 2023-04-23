@@ -651,7 +651,7 @@ public:
 
     void Create(uint32_t width, uint32_t height) {
         m_window_handle             = GetForegroundWindow();
-        m_device_contect_handle     = GetDC(m_window_handle);
+        m_device_contect_handle     = GetDC(m_window_handle); 
 
         m_font_handle = CreateFontW(
             32,                    
@@ -1228,7 +1228,7 @@ int main(int argc, char *argv[]) {
             window.RenderTextASCII(50, y, 255, 0, 0, 255, "Some ASCII text.");
             
             y -= FONT_SIZE;
-            window.RenderText(50, y, 0, 255, 0, 255, u8"Some UNICODE text \u015B \u0444 \uFEA2 \uFF86 \uAC37 \u015Ajx");
+            window.RenderText(50, y, 0, 255, 0, 255, u8"Some UNICODE text \u015B \u0444 \uFEA2 \uFF86 \uAC37 \u015A \u4B14 jx");
             
             y -= FONT_SIZE;
             window.RenderText(50, y, 255, 255, 255, 127, "Some transparent text.");

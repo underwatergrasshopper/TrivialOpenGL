@@ -173,12 +173,14 @@ namespace TrivialOpenGL {
 
         Size() : width(Type()), height(Type()) {}
 
-        explicit Size(const Type& s) : width(s), height(s) {}
+        template <typename Type2>
+        explicit Size(const Type2& s) : width(s), height(s) {}
 
-        Size(const Type& width, const Type& height) : width(width), height(height) {}
+        template <typename WidthType, typename HeightType>
+        Size(const WidthType& width, const HeightType& height) : width(width), height(height) {}
 
         template <typename SizeType>
-        explicit Size(const Size<SizeType>& s) : width(Type(s.width)), height(Type(s.height)) {}
+        explicit Size(const Size<SizeType>& s) : width(s.width), height(s.height) {}
 
         virtual ~Size() {}
     };
@@ -735,7 +737,9 @@ namespace TrivialOpenGL {
                 m_descent               = 0;
                 m_internal_leading      = 0;
             }
-            virtual ~TextDrawer() {}
+            virtual ~TextDrawer() {
+
+            }
 
             // device_context_handle    - Must still exist for each call of RenderText.
             // name                     - Font name. Encoding Format: ASCII.
@@ -762,6 +766,7 @@ namespace TrivialOpenGL {
                 if (m_font_handle) {
                     HFONT old_font_handle = (HFONT)SelectObject(m_device_context_handle, m_font_handle); 
 
+                    // --- Gets Font Metrics --- //
                     TEXTMETRICW metric;
                     GetTextMetricsW(m_device_context_handle, &metric);
                     m_height            = metric.tmHeight;
@@ -769,8 +774,34 @@ namespace TrivialOpenGL {
                     m_descent           = metric.tmDescent;
                     m_internal_leading  = metric.tmInternalLeading;
 
-                    m_list_range = GetListRange(char_set);
+                    // --- Gets Code Ranges --- //
 
+                    m_code_ranges.clear();
+
+                    DWORD buffer_size = GetFontUnicodeRanges(device_context_handle, NULL);
+                    BYTE* buffer = new BYTE[buffer_size];
+
+                    GLYPHSET* glyphset = (GLYPHSET*)buffer;
+                    GetFontUnicodeRanges(device_context_handle, glyphset);
+                    // debug
+                    //togl_print_i32(glyphset->cbThis);
+                    //togl_print_i32(glyphset->flAccel);
+                    //togl_print_i32(glyphset->cGlyphsSupported);
+                    //togl_print_i32(glyphset->cRanges);
+
+                    for (uint32_t ix = 0; ix < glyphset->cRanges; ++ix) {
+                        const uint32_t from = glyphset->ranges[ix].wcLow;
+                        const uint32_t to = from + glyphset->ranges[ix].cGlyphs - 1;
+                        m_code_ranges.push_back({from, to});
+
+                        //printf("[%04X..%04X]\n", from, to); // debug
+                    }
+
+                    delete[] buffer;
+
+                    // --- Generates Inner Font Bitmap  --- //
+
+                    m_list_range = GetListRange(char_set);
                     m_list_base = glGenLists(m_list_range);
                     if (m_list_base) {
                         bool is_success = wglUseFontBitmapsW(m_device_context_handle, 0, m_list_range, m_list_base);
@@ -785,6 +816,8 @@ namespace TrivialOpenGL {
                     } else {
                         m_err_msg = "Error: Can not generate display list.";
                     }
+
+                    // ---
 
                     SelectObject(m_device_context_handle, old_font_handle);
                 } else {
@@ -824,9 +857,10 @@ namespace TrivialOpenGL {
 
                     PointI pos = {0, height - m_font_height};
 
-                    bool is_all_ranges = true;
-                    if (is_all_ranges) { // should render all available from range 0000h to FFFFh 
-                        for (uint32_t code = 0; code < uint32_t(m_list_range); ++code) {
+                    const bool is_full_range = true;
+                    if (is_full_range) {
+
+                        for (uint32_t code = 0; code <= uint32_t(m_list_range); ++code) {
 
                             const std::wstring c(1, (wchar_t)code);
 
@@ -845,17 +879,8 @@ namespace TrivialOpenGL {
                             }
                         }
                     } else {
-                        DWORD buffer_size = GetFontUnicodeRanges(m_device_context_handle, NULL);
-                        BYTE* buffer = new BYTE[buffer_size];
-
-                        GLYPHSET* glyphset = (GLYPHSET*)buffer;
-                        GetFontUnicodeRanges(m_device_context_handle, glyphset);
-
-                        for (uint32_t ix = 0; ix < glyphset->cRanges; ++ix) {
-                            const uint32_t first = glyphset->ranges[ix].wcLow;
-                            const uint32_t last = first + glyphset->ranges[ix].cGlyphs - 1;
-                        
-                            for (uint32_t code = first; code <= last; ++code) {
+                        for (const CodeRange& code_range : m_code_ranges) {
+                            for (uint32_t code = code_range.from; code <= code_range.to; ++code) {
 
                                 const std::wstring c(1, (wchar_t)code);
 
@@ -874,10 +899,9 @@ namespace TrivialOpenGL {
                                 }
                             }
                         }
-
-                        delete[] buffer;
                     }
 
+ 
                     GLuint font_tex_obj = m_pixel_data_buffer.TakeOverTexObj();
 
                     glMatrixMode(GL_PROJECTION);
@@ -990,7 +1014,7 @@ namespace TrivialOpenGL {
                 return {};
             }
 
-            SizeU16 GetTextSize(wchar_t c) const {
+            SizeU16 GetCharSize(wchar_t c) const {
                 if (m_font_handle) {
                     HFONT old_font_handle = (HFONT)SelectObject(m_device_context_handle, m_font_handle); 
 
@@ -1022,6 +1046,11 @@ namespace TrivialOpenGL {
                 UNICODE_0000_FFFF_LIST
             };
 
+            struct CodeRange {
+                uint32_t from;
+                uint32_t to;
+            };
+
             // No Copy
             TextDrawer(const TextDrawer&) = delete;
             TextDrawer& operator=(const TextDrawer&) = delete;
@@ -1038,6 +1067,8 @@ namespace TrivialOpenGL {
             HFONT       m_font_handle;
             GLint       m_list_base;
             GLsizei     m_list_range;
+
+            std::vector<CodeRange> m_code_ranges;
 
             uint32_t    m_height;
             uint32_t    m_ascent;
