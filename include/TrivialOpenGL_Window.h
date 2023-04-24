@@ -971,7 +971,6 @@ namespace TrivialOpenGL {
                     Draw();
                 }
             }
-
         }
 
         return EXIT_FAILURE;
@@ -1088,9 +1087,6 @@ namespace TrivialOpenGL {
             } else {
                 raw_area = m_window_area_corrector.AddInvisibleFrameTo(area, m_window_handle);
             }
-
-            //togl_print_i32(raw_area.width);
-            //togl_print_i32(raw_area.height);
 
             // TODO: Solve redundant call of WM_SIZE when window restores from minimized 
             // and there is difference in window area between current one and previous one.
