@@ -416,6 +416,25 @@ namespace TrivialOpenGL {
     void SetCustomLogFunction(CustomLogFnP_T custom_log);
 
     //--------------------------------------------------------------------------
+    // BMP
+    //--------------------------------------------------------------------------
+
+    // Saves image pixel data to file as BMP image.
+    // file_name        - Full name with extension of BMP file. Variable encoding format: UTF8.
+    // pixel_data       - Contains array of pixels. Each pixels contains for channel (in order: red, green, blue, alpha). 
+    //                    Each channel occupies one byte (value range: 0 - 255).
+    // width            - Length of single image row in pixels. And also, width of saved image. At least 1. 
+    // height           - Number of rows. And also, height of saved image. At least 1. 
+    // Returns true if image was saved to file.
+    bool SaveAsBMP(const std::string& file_name, const uint8_t* pixel_data, uint32_t width, uint32_t height, bool is_reverse_rows = true);
+
+    // Saves content of OpenGL texture to file as BMP image.
+    // file_name        - Full name with extension of BMP file. Variable encoding format: UTF8.
+    // tex_obj          - OpneGL Texture Object (Name).
+    // Returns true if image was saved to file.
+    bool SaveTextureAsBMP(const std::string& file_name, GLuint tex_obj);
+
+    //--------------------------------------------------------------------------
     // Common
     //--------------------------------------------------------------------------
 
@@ -441,18 +460,6 @@ namespace TrivialOpenGL {
         friend class Font;
 
     private:
-
-        //--------------------------------------------------------------------------
-        // BMP
-        //--------------------------------------------------------------------------
-
-        // width            - At least 1.
-        // height           - At least 1.
-        static bool SaveAsBMP(const std::string& file_name, const uint8_t* pixel_data, uint32_t width, uint32_t height, bool is_reverse_rows = true);
-
-        // Texture both width and height need to be at least 1.
-        static bool SaveTextureAsBMP(const std::string& file_name, GLuint tex_obj);
-
         //--------------------------------------------------------------------------
         // WindowAreaCorrector
         //--------------------------------------------------------------------------
@@ -1226,10 +1233,10 @@ namespace TrivialOpenGL {
     }
 
     //--------------------------------------------------------------------------
-    // InnerUtility
+    // BMP
     //--------------------------------------------------------------------------
 
-    inline bool InnerUtility::SaveAsBMP(const std::string& file_name, const uint8_t* pixel_data, uint32_t width, uint32_t height, bool is_reverse_rows) {
+    inline bool SaveAsBMP(const std::string& file_name, const uint8_t* pixel_data, uint32_t width, uint32_t height, bool is_reverse_rows) {
         bool is_success = false; 
 
         if (width > 0 && height > 0) {
@@ -1297,7 +1304,7 @@ namespace TrivialOpenGL {
         return is_success;
     }
 
-    inline bool InnerUtility::SaveTextureAsBMP(const std::string& file_name, GLuint tex_obj) {
+    inline bool SaveTextureAsBMP(const std::string& file_name, GLuint tex_obj) {
         bool is_success = false;
 
         glPushAttrib(GL_TEXTURE_BIT);

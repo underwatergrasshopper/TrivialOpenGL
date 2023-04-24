@@ -233,6 +233,131 @@ namespace TrivialOpenGL {
             double      y2;
         };
 
+        class FrameBuffer {
+        public:
+            FrameBuffer(uint16_t width, uint16_t height) {
+                Load(m_glGenFramebuffersEXT, "glGenFramebuffersEXT");
+			    Load(m_glDeleteFramebuffersEXT, "glDeleteFramebuffersEXT");
+			    Load(m_glBindFramebufferEXT, "glBindFramebufferEXT");
+			    Load(m_glFramebufferTexture2DEXT, "glFramebufferTexture2DEXT");
+			    Load(m_glCheckFramebufferStatusEXT, "glCheckFramebufferStatusEXT");
+                    
+                m_width     = width;
+                m_height    = height;
+
+			    if (IsOk()) {
+				    GLint max_viewport_size[2] = {};
+                    glGetIntegerv(GL_MAX_VIEWPORT_DIMS, max_viewport_size);
+                    GLint max_texture_size = 0;
+                    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
+
+                    if (width > max_viewport_size[0] || width > max_texture_size || height > max_viewport_size[1] || height > max_texture_size) {
+                        AddErrMsg(std::string() + "Value of width or/and height are to big. ("
+                            "max_viewport_width=" + std::to_string(max_viewport_size[0]) + 
+                            ", max_viewport_height=" + std::to_string(max_viewport_size[1]) + 
+                            ", max_texture_width=" + std::to_string(max_texture_size) + 
+                            ", max_texture_height=" + std::to_string(max_texture_size) + 
+                            ")"
+                        );
+                    }
+			    }
+
+                m_fbo       = 0;
+                m_prev_fbo  = 0;
+
+			    if (IsOk()) {
+                    m_glGenFramebuffersEXT(1, &m_fbo);
+
+                    glGetIntegerv(TOGL_GL_FRAMEBUFFER_BINDING, (GLint*)&m_prev_fbo);
+                    m_glBindFramebufferEXT(TOGL_GL_FRAMEBUFFER_EXT, m_fbo);
+                }
+
+                glPushAttrib(GL_ENABLE_BIT);
+                glPushAttrib(GL_TEXTURE_BIT);
+            }
+
+            virtual ~FrameBuffer() {
+                if (IsOk()) m_glFramebufferTexture2DEXT(TOGL_GL_FRAMEBUFFER_EXT, TOGL_GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, 0, 0);
+
+                glPopAttrib();
+                glPopAttrib();
+
+                if (IsOk()) {
+                    m_glBindFramebufferEXT(TOGL_GL_FRAMEBUFFER_EXT, m_prev_fbo);
+                    m_glDeleteFramebuffersEXT(1, &m_fbo);
+                }
+            }
+
+            GLuint GenAndBindTex() {
+                GLuint tex_obj = 0;
+
+			    if (IsOk()) {
+                    glGenTextures(1, &tex_obj);
+                    glBindTexture(GL_TEXTURE_2D, tex_obj);
+                    glDisable(GL_TEXTURE_2D);
+
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+                    m_glFramebufferTexture2DEXT(TOGL_GL_FRAMEBUFFER_EXT, TOGL_GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, tex_obj, 0);
+                    
+                    if (m_glCheckFramebufferStatusEXT(TOGL_GL_FRAMEBUFFER_EXT) != TOGL_GL_FRAMEBUFFER_COMPLETE_EXT) {
+                        AddErrMsg("Frame buffer is not complete.");
+
+                        m_glFramebufferTexture2DEXT(TOGL_GL_FRAMEBUFFER_EXT, TOGL_GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, 0, 0);
+                        glDeleteTextures(1, &tex_obj);
+                        tex_obj = 0;
+                    } 
+                }
+
+                return tex_obj;
+            }
+
+            bool IsOk() const {
+                return m_err_msg.empty();
+            }
+
+            std::string GetErrMsg() const {
+                return m_err_msg;
+            }
+        private:
+            enum {
+                TOGL_GL_FRAMEBUFFER_EXT             = 0x8D40,
+                TOGL_GL_FRAMEBUFFER_BINDING         = 0x8CA6,
+                TOGL_GL_COLOR_ATTACHMENT0_EXT       = 0x8CE0,
+                TOGL_GL_FRAMEBUFFER_COMPLETE_EXT    = 0x8CD5,
+            };
+
+            void AddErrMsg(const std::string& err_msg) {
+			    if (!m_err_msg.empty()) m_err_msg += "\n";
+			    m_err_msg += "Font FrameBuffer Error: ";
+			    m_err_msg += err_msg;
+		    }
+
+	        template <typename Type>
+            void Load(Type& function, const std::string& function_name) {
+                function = (Type)wglGetProcAddress(function_name.c_str());
+                if (!function) {
+                    AddErrMsg(std::string() + "Can not load function: \"" + function_name + "\".");
+                }
+            }
+
+			void (APIENTRY *m_glGenFramebuffersEXT)(GLsizei n, GLuint *framebuffers);
+            void (APIENTRY *m_glDeleteFramebuffersEXT)(GLsizei n, const GLuint *framebuffers);
+            void (APIENTRY *m_glBindFramebufferEXT)(GLenum target, GLuint framebuffer);
+            void (APIENTRY *m_glFramebufferTexture2DEXT)(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
+            GLenum (APIENTRY* m_glCheckFramebufferStatusEXT)(GLenum target);
+
+            uint16_t    m_width;
+            uint16_t    m_height;
+
+            GLuint      m_fbo;
+            GLuint      m_prev_fbo;
+
+            std::string m_err_msg;
+        };
+
 		void Initialize() {
             m_device_context_handle = NULL;
 			m_info		= {};
@@ -310,10 +435,11 @@ namespace TrivialOpenGL {
                 } else {
                     FillTexture(list_base, list_range, width, height, tex_obj);
                 }
+                
+                togl_glFramebufferTexture2DEXT(TOGL_GL_FRAMEBUFFER_EXT, TOGL_GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, 0, 0);
 
                 glPopAttrib();
 
-                togl_glFramebufferTexture2DEXT(TOGL_GL_FRAMEBUFFER_EXT, TOGL_GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, 0, 0);
                 togl_glBindFramebufferEXT(TOGL_GL_FRAMEBUFFER_EXT, prev_fbo);
                 togl_glDeleteFramebuffersEXT(1, &fbo);
 
