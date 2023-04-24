@@ -112,7 +112,7 @@ namespace TrivialOpenGL {
                     break;
                 }
 
-                for (const auto& code_range : m_code_ranges) printf("[%04X..%04X]\n", code_range.from, code_range.to); // debug
+                //for (const auto& code_range : m_code_ranges) printf("[%04X..%04X]\n", code_range.from, code_range.to); // debug
 
                 delete[] buffer;
 
