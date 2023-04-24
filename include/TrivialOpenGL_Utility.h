@@ -29,11 +29,12 @@ namespace TrivialOpenGL {
         FONT_STYLE_BOLD,
     };
     
+    // Ranges are from unicode space.
     enum FontCharSet {
-        FONT_CHAR_SET_ASCII,
+        FONT_CHAR_SET_ENGLISH,
     
         // Note: Font might not have all glyphs from this range.
-        FONT_CHAR_SET_UNICODE_0000_FFFF,
+        FONT_CHAR_SET_RANGE_0000_FFFF,
     };
     
     //--------------------------------------------------------------------------
@@ -1043,8 +1044,8 @@ namespace TrivialOpenGL {
 
             static GLsizei GetListRange(FontCharSet font_char_set) {
                 switch (font_char_set) {
-                case FONT_CHAR_SET_ASCII:               return 128;     // 0x80
-                case FONT_CHAR_SET_UNICODE_0000_FFFF:   return 65535;   // 0xFFFF
+                case FONT_CHAR_SET_ENGLISH:             return 128;     // 0x80
+                case FONT_CHAR_SET_RANGE_0000_FFFF:   return 65535;   // 0xFFFF
                 }
                 return 0;
             }

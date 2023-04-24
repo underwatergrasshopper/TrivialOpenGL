@@ -289,7 +289,7 @@ static bool             s_is_display_mose_move_data;
 static DelayedActionManager s_actions;
 
 TOGL::FontStyle         s_font_style    = TOGL::FONT_STYLE_NORMAL;
-TOGL::FontCharSet       s_font_char_set = TOGL::FONT_CHAR_SET_ASCII;
+TOGL::FontCharSet       s_font_char_set = TOGL::FONT_CHAR_SET_ENGLISH;
 
 TOGL::Font              s_font;
 
@@ -1203,7 +1203,7 @@ int main(int argc, char *argv[]) {
         if (IsOption("notify_key_message"))             data.special_debug.is_notify_key_message        = true;
         if (IsOption("notify_character_message"))       data.special_debug.is_notify_character_message  = true;
 
-        s_font_char_set = IsOption("unicode") ? TOGL::FONT_CHAR_SET_UNICODE_0000_FFFF : TOGL::FONT_CHAR_SET_ASCII;
+        s_font_char_set = IsOption("unicode") ? TOGL::FONT_CHAR_SET_RANGE_0000_FFFF : TOGL::FONT_CHAR_SET_ENGLISH;
         s_font_style    = IsOption("bold") ? TOGL::FONT_STYLE_BOLD : TOGL::FONT_STYLE_NORMAL;
 
         data.do_on_create = []() {
@@ -1217,11 +1217,13 @@ int main(int argc, char *argv[]) {
             }
             //TOGL::ToWindow().SaveFont("courier_new.bmp", 1024, 1024);
 
-            s_font.Load("Courier New", FONT_SIZE, TOGL::FONT_SIZE_UNIT_PIXELS, TOGL::FONT_STYLE_NORMAL, TOGL::FONT_CHAR_SET_UNICODE_0000_FFFF);
+            s_font.Load("Courier New", FONT_SIZE, TOGL::FONT_SIZE_UNIT_PIXELS, TOGL::FONT_STYLE_NORMAL, TOGL::FONT_CHAR_SET_ENGLISH);
 
             if (!s_font.IsOk()) {
                 puts(s_font.GetErrMsg().c_str());
             }
+
+            s_font.SaveAsBMP("");
         };
 
         data.draw = []() {
@@ -1248,9 +1250,7 @@ int main(int argc, char *argv[]) {
             glPushMatrix();
             glTranslatef(50, 100, 0);
             glScaled(3, 3, 1);
-            //s_font.RenderGlyph(L'\uFFFD');
-            //s_font.RenderGlyph(L'\u25A1');
-            s_font.RenderGlyph('y');
+            s_font.RenderGlyphs(u8"Some text. Xj\u3400\u5016\u9D9B\u0001");
             glPopMatrix();
         };
 

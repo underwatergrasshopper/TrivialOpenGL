@@ -292,7 +292,7 @@ namespace TrivialOpenGL {
 
         // name     - Font name. Encoding Format: ASCII.
         // size     - Height of character in pixels.
-        bool LoadFont(const std::string& name, uint16_t size, FontStyle style = FONT_STYLE_NORMAL, FontCharSet char_set = FONT_CHAR_SET_ASCII);
+        bool LoadFont(const std::string& name, uint16_t size, FontStyle style = FONT_STYLE_NORMAL, FontCharSet char_set = FONT_CHAR_SET_ENGLISH);
 
         void UnloadFont();
 
