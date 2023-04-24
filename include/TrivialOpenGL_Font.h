@@ -446,16 +446,16 @@ namespace TrivialOpenGL {
 			switch (size_unit) {
 			case FONT_SIZE_UNIT_PIXELS: return size;
 			case FONT_SIZE_UNIT_POINTS: return PointsToPixels(size);
-            default:                    return 0;
 			}
+            return 0;
 		}
 
 		static DWORD SolveCreateFontCharSet(FontCharSet char_set) {
 			switch (char_set) {
 			case FONT_CHAR_SET_ASCII:				return ANSI_CHARSET;
 			case FONT_CHAR_SET_UNICODE_0000_FFFF:	return ANSI_CHARSET;
-            default:                                return 0;
 			}
+            return 0;
 		}
 
 		static GLsizei GetListRange(FontCharSet char_set) {
@@ -463,6 +463,7 @@ namespace TrivialOpenGL {
             case FONT_CHAR_SET_ASCII:               return 128;     // 0x80
             case FONT_CHAR_SET_UNICODE_0000_FFFF:   return 65535;   // 0xFFFF
             }
+            return 0;
         }
 
 		template <typename Type>

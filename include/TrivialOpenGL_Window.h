@@ -520,7 +520,7 @@ namespace TrivialOpenGL {
             m_instance_handle,
             NULL
         );
-
+                
         if (!m_window_handle) {
             LogFatalError("Error TOGLW::Window::Run: Cannot create window.");
         }
@@ -534,7 +534,7 @@ namespace TrivialOpenGL {
         ShowWindow(m_window_handle, SW_SHOW);
         SetForegroundWindow(m_window_handle);
         SetFocus(m_window_handle);
-
+        
         // For tests only.
         //m_window_area_corrector.DisableComposition();
 
@@ -1107,7 +1107,7 @@ namespace TrivialOpenGL {
             //}
 
             SetWindowPos(m_window_handle, HWND_TOP, raw_area.x, raw_area.y, raw_area.width, raw_area.height, GetFlags(area_part_id) | SWP_SHOWWINDOW);
-        }
+        }  
     }
 
     //--------------------------------------------------------------------------
@@ -1201,8 +1201,8 @@ namespace TrivialOpenGL {
         // --- Creates OpenGL Rendering Context with required minimum version --- //
 
         if (m_data.opengl_verion.major != DEF && m_data.opengl_verion.minor != DEF) {
-            HGLRC (*wglCreateContextAttribsARB)(HDC hDC, HGLRC hShareContext, const int* attribList) = (decltype(wglCreateContextAttribsARB)) wglGetProcAddress("wglCreateContextAttribsARB");
-            if (wglCreateContextAttribsARB) {
+            HGLRC (WINAPI *togl_wglCreateContextAttribsARB)(HDC hDC, HGLRC hShareContext, const int* attribList) = (decltype(togl_wglCreateContextAttribsARB)) wglGetProcAddress("wglCreateContextAttribsARB");
+            if (togl_wglCreateContextAttribsARB) {
                 enum {
                     // Added prefix TOGL_ to standard OpenGL constants.
                     TOGL_WGL_CONTEXT_MAJOR_VERSION_ARB               = 0x2091,
@@ -1228,7 +1228,7 @@ namespace TrivialOpenGL {
                     0
                 };
 
-                HGLRC rendering_context_handle = wglCreateContextAttribsARB(m_device_context_handle, 0, attribute_list);
+                HGLRC rendering_context_handle = togl_wglCreateContextAttribsARB(m_device_context_handle, 0, attribute_list);
                 if (!rendering_context_handle) {
                     LogFatalError(std::string() + "Window::Create: Can not create OpenGl Rendering Context for version " + std::to_string(m_data.opengl_verion.major) + "." + std::to_string(m_data.opengl_verion.minor) + ".");
                 }
@@ -1245,22 +1245,20 @@ namespace TrivialOpenGL {
         }
 
         // --- Fetch OpenGL Versions --- //
+        enum {
+            // Added prefix TOGL_ to standard OpenGL constants.
+            TOGL_GL_MAJOR_VERSION = 0x821B,
+            TOGL_GL_MINOR_VERSION = 0x821C,
+        };
 
         m_data.opengl_verion = {0, 0};
-        void (*glGetIntegerv)(GLenum pname, GLint* data) = (decltype(glGetIntegerv)) wglGetProcAddress("glGetIntegerv");
-        if (glGetIntegerv) {
-            enum {
-                // Added prefix TOGL_ to standard OpenGL constants.
-                TOGL_GL_MAJOR_VERSION = 0x821B,
-                TOGL_GL_MINOR_VERSION = 0x821C,
-            };
-            glGetIntegerv(TOGL_GL_MAJOR_VERSION, &m_data.opengl_verion.major);
-            glGetIntegerv(TOGL_GL_MINOR_VERSION, &m_data.opengl_verion.minor);
-        } else {
-            sscanf_s((const char*)glGetString(GL_VERSION), "%d.%d", &m_data.opengl_verion.major, &m_data.opengl_verion.minor);
-        }
+
+        glGetIntegerv(TOGL_GL_MAJOR_VERSION, &m_data.opengl_verion.major);
+        glGetIntegerv(TOGL_GL_MINOR_VERSION, &m_data.opengl_verion.minor);
 
         if (m_data.log_level >= LOG_LEVEL_INFO) LogInfo(std::string("OpenGl Version: ") + (const char*)glGetString(GL_VERSION));
+
+        // ---
     }
 
     inline void Window::Destroy() {

@@ -473,16 +473,6 @@ namespace TrivialOpenGL {
                 FreeLibrary(m_dwmapi_lib_handle);
             }
 
-            void DisableComposition() {
-                enum {
-                    TOGL_DWM_EC_DISABLECOMPOSITION  = 0,
-                    TOGL_DWM_EC_ENABLECOMPOSITION   = 1,
-                };
-                HRESULT (*DwmEnableComposition)(UINT uCompositionAction) = (decltype(DwmEnableComposition)) GetProcAddress(m_dwmapi_lib_handle, "DwmEnableComposition");
-
-                DwmEnableComposition(TOGL_DWM_EC_DISABLECOMPOSITION);
-            }
-
             AreaIU16 Get(HWND window_handle) const {
                 AreaIU16 area = {};
 
@@ -576,7 +566,7 @@ namespace TrivialOpenGL {
                 int cyBottomHeight;
             };
         
-            HRESULT (*m_dwm_get_window_attribute)(HWND hwnd, DWORD dwAttribute, PVOID pvAttribute, DWORD cbAttribute);
+            HRESULT (WINAPI *m_dwm_get_window_attribute)(HWND hwnd, DWORD dwAttribute, PVOID pvAttribute, DWORD cbAttribute);
         };
 
         //--------------------------------------------------------------------------
@@ -1049,6 +1039,7 @@ namespace TrivialOpenGL {
                 case FONT_CHAR_SET_ASCII:               return 128;     // 0x80
                 case FONT_CHAR_SET_UNICODE_0000_FFFF:   return 65535;   // 0xFFFF
                 }
+                return 0;
             }
 
             uint16_t    m_font_height;

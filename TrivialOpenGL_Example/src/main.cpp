@@ -808,7 +808,7 @@ static FPS s_fps;
 
 int main(int argc, char *argv[]) {
     std::vector<std::string> arguments;
-    for (size_t index = 1; index < argc; ++index) {
+    for (int index = 1; index < argc; ++index) {
         arguments.push_back(argv[index]);
     }
 
@@ -1263,9 +1263,8 @@ int main(int argc, char *argv[]) {
 
             if (!is_down && key_id == 'X') window.RequestClose();
         };
-
+        
         return TOGL::Run(data);
-
     });
 
     ////////////////////////////////////////////////////////////////////////////////
