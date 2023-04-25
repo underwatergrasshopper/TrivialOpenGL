@@ -196,7 +196,7 @@ namespace TrivialOpenGL {
                     // --- Generates Display Lists and Intermediary Font Bitmaps --- //
                     auto HexToStr = [](uint16_t value) -> std::string {
                         std::stringstream stream;
-                        stream << std::hex << std::setfill('0') << std::setw(4) << std::right << value;
+                        stream << std::hex << std::setfill('0') << std::setw(4) << std::right << std::uppercase << value;
                         return stream.str();
                     };
 
@@ -220,10 +220,6 @@ namespace TrivialOpenGL {
                             AddErrMsg("Error: Can not create intermediary font bitmap for unicode range [" + HexToStr(code_range.from) + ".." + HexToStr(code_range.to) + "].");
                             break;
                         }
-
-                        togl_print_i32(code_range.list_first);
-                        togl_print_i32(code_range.list_range);
-                        togl_print_i32(code_range.list_base);
                     }
 
                     // --- Generate Font Textures --- //
@@ -467,7 +463,7 @@ namespace TrivialOpenGL {
                             pos.x = 0;
 
                             if ((pos.y - m_data.glyph_height) <= 0) {
-                                // run out of space, generate next texture
+                                // run out of space in texture, generate next texture
                                 tex_obj = frame_buffer.GenAndBindTex();
 
                                 if (!frame_buffer.IsOk()) {
