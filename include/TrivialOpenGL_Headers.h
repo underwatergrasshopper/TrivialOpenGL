@@ -21,5 +21,7 @@
 #include <map>
 #include <stack>
 #include <vector>
+#include <sstream>
+#include <iomanip>
 
 #endif // TRIVIALOPENGL_HEADERS_H_
