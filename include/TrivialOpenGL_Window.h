@@ -175,7 +175,7 @@ namespace TrivialOpenGL {
 
     class WindowInnerAccessor {
     public:
-        friend class Font;
+        friend class FontDataGenerator;
     protected:
         virtual ~WindowInnerAccessor() {}
     private:

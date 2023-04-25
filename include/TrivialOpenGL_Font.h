@@ -27,8 +27,18 @@ namespace TrivialOpenGL {
     //    FONT_CHAR_SET_RANGE_0000_FFFF,
     //};
 
+    enum {
+        // "WHITE SQUARE" 
+        // Represents missing glyph in unicode space.
+        CODE_WHITE_SQUARE               = 0x25A1,
+
+        // "REPLACEMENT CHARACTER"
+        // Represent out of range character code from unicode space.
+        CODE_REPLACEMENT_CHARACTER      = 0xFFFD,
+    };
+
     struct FontInfo {
-        std::string     name;
+        std::string     name;       // encoding format: UTF8
         uint32_t        size;
         FontSizeUnit    size_unit;
         FontStyle       style;
@@ -51,38 +61,79 @@ namespace TrivialOpenGL {
         }
     };
 
-    class Font {
+    struct GlyphData {
+        uint16_t    width;      // in pixels
+        GLuint      tex_obj;    // opengl texture object (name)
+
+        // texture coordinates
+        double      x1;
+        double      y1;
+        double      x2;
+        double      y2;
+
+        GlyphData() {
+            width       = 0;
+            tex_obj     = 0;
+                
+            x1          = 0;
+            y1          = 0;
+            x2          = 0;
+            y2          = 0;
+        }
+    };
+
+    struct FontData {
+        FontInfo info;
+
+        uint32_t glyph_height;               // in pixels
+        uint32_t glyph_ascent;               // in pixels
+        uint32_t glyph_descent;              // in pixels
+        uint32_t glyph_internal_leading;     // in pixels
+
+        std::map<uint32_t, GlyphData>   glyphs;     // indexed by character code from unicode space
+        std::vector<GLuint>             tex_objs;   // opengl texture objects (names)
+
+        FontData() {
+            info                    = {};
+
+            glyph_height            = 0;           
+            glyph_ascent            = 0;           
+            glyph_descent           = 0;          
+            glyph_internal_leading  = 0; 
+        }
+    };
+
+    class FontDataGenerator {
     public:
-        Font() {
-            Initialize();
+        FontDataGenerator() {
+            m_device_context_handle = NULL;
         }
-        virtual ~Font() {
-            Unload();
+        virtual ~FontDataGenerator() {
+
         }
 
-        void Load(const std::string& name, uint32_t size, FontSizeUnit size_unit, FontStyle style, FontCharSet char_set) {
-            Unload();
-
-            m_data.info = {name, size, size_unit, style, char_set};
+        FontData Generate(const FontInfo& font_info) {
+            m_data.info     = font_info;
+            m_err_msg       = "";
 
             WindowInnerAccessor& window_inner_accessor = ToWindow();
             HWND window_handle = window_inner_accessor.ToHWND();
 
             m_device_context_handle = GetDC(window_handle);
 
-            m_data.glyph_height = ToPixels(size, size_unit);
+            m_data.glyph_height = ToPixels(font_info.size, font_info.size_unit);
 
             HFONT font_handle = CreateFontW(
                     m_data.glyph_height,                    
                     0, 0, 0,                            
-                    (style == FONT_STYLE_BOLD) ? FW_BOLD : FW_NORMAL,
+                    (font_info.style == FONT_STYLE_BOLD) ? FW_BOLD : FW_NORMAL,
                     FALSE, FALSE, FALSE,
-                    SolveCreateFontCharSet(char_set),
+                    SolveCreateFontCharSet(font_info.char_set),
                     OUT_TT_PRECIS,
                     CLIP_DEFAULT_PRECIS,
                     ANTIALIASED_QUALITY,
                     FF_DONTCARE | DEFAULT_PITCH,
-                    ToUTF16(name).c_str());  
+                    ToUTF16(font_info.name).c_str());  
 
             if (font_handle == NULL) {
                 AddErrMsg("Can not create font source.");
@@ -114,7 +165,7 @@ namespace TrivialOpenGL {
                     //togl_print_i32(glyphset->cRanges);
 
                     // --- Solves Code Ranges --- //
-                    switch (char_set) {
+                    switch (font_info.char_set) {
                     case FONT_CHAR_SET_ENGLISH:
                         m_code_ranges.push_back({0x0020, 0x007E});  
                         m_code_ranges.push_back({CODE_WHITE_SQUARE}); 
@@ -191,96 +242,12 @@ namespace TrivialOpenGL {
 
             ReleaseDC(window_handle, m_device_context_handle);
             m_device_context_handle = NULL;
-        } 
 
-        void Unload() {
-            m_code_ranges.clear();
-            m_data.glyphs.clear();
+            FontData data = m_data;
 
-            for (auto& tex_obj : m_data.tex_objs) {
-                glDeleteTextures(1, &tex_obj);
-            }
-            m_data.tex_objs.clear();
+            m_data = {};
 
-            m_err_msg    = "";
-
-            Initialize();
-        }
-        bool IsLoaded() const {
-            return m_is_loaded;
-        }
-
-        void RenderBegin() {
-            glPushAttrib(GL_TEXTURE_BIT);
-            glPushAttrib(GL_ENABLE_BIT);
-            glPushAttrib(GL_COLOR_BUFFER_BIT);
-            glPushAttrib(GL_LIST_BIT);
-
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
-        }
-
-        void RenderEnd() {
-            glPopAttrib();
-            glPopAttrib();
-            glPopAttrib();
-            glPopAttrib();
-        }
-
-        void RenderGlyph(uint32_t code) {
-            const GlyphData& glyph_data = FindOrAddGlyphData(code);
-
-            if (glyph_data.tex_obj != 0) {
-                glBindTexture(GL_TEXTURE_2D, glyph_data.tex_obj);
-                glEnable(GL_TEXTURE_2D);
-
-                glBegin(GL_TRIANGLE_FAN);
-                glTexCoord2d(glyph_data.x1, glyph_data.y1);
-                glVertex2i(0, 0);
-
-                glTexCoord2d(glyph_data.x2, glyph_data.y1);
-                glVertex2i(glyph_data.width, 0);
-
-                glTexCoord2d(glyph_data.x2, glyph_data.y2);
-                glVertex2i(glyph_data.width, m_data.glyph_height);
-                
-                glTexCoord2d(glyph_data.x1, glyph_data.y2);
-                glVertex2i(0, m_data.glyph_height);
-                glEnd();
-            } else {
-                // Renders replacement for missing glyph.
-                glDisable(GL_TEXTURE_2D);
-
-                glBegin(GL_TRIANGLE_FAN);
-                glVertex2i(0, 0);
-                glVertex2i(glyph_data.width, 0);
-                glVertex2i(glyph_data.width, m_data.glyph_height);
-                glVertex2i(0, m_data.glyph_height);
-                glEnd();
-            }
-        } 
-
-        // Renders array of glyphs. 
-        // Special characters (like '\n', '\t', ... and so on) are interpreted as "unknown characters".
-        // text         - Encoding format: UTF8.
-        void RenderGlyphs(const std::string& text) {
-            const std::wstring text_utf16 = ToUTF16(text);
-
-            RenderBegin();
-            int x = 0;
-            for (const uint32_t& code : text_utf16) {
-                glPushMatrix();
-                glTranslatef(float(x), 0, 0);
-                RenderGlyph(code);
-                x += GetGlyphSize(code).width;
-                glPopMatrix();
-            }
-            RenderEnd();
-        }
-
-        SizeU GetGlyphSize(uint32_t code) {
-            const GlyphData& glyph_data = FindOrAddGlyphData(code);
-            return {glyph_data.width, m_data.glyph_height};
+            return IsOk() ? data : FontData();
         }
 
         bool IsOk() const {
@@ -291,34 +258,7 @@ namespace TrivialOpenGL {
             return m_err_msg;
         }
 
-        void SaveAsBMP(const std::string& path) {
-            std::string file_name_prefix = path;
-
-            if (file_name_prefix.length() > 0 && file_name_prefix[file_name_prefix.length() - 1] != '/' && file_name_prefix[file_name_prefix.length() - 1] != '\\') {
-                file_name_prefix += "/";
-            }
-
-            file_name_prefix += m_data.info.name;
-
-            for (size_t ix = 0; ix < m_data.tex_objs.size(); ++ix) {
-                std::string file_name = file_name_prefix;
-                if (ix > 0) file_name += " (" + std::to_string(ix + 1) + ")";
-                file_name += ".bmp";
-                SaveTextureAsBMP(file_name, m_data.tex_objs[ix]);
-            }
-        }
-
     private:
-        enum {
-            // "WHITE SQUARE" 
-            // Represents missing glyph in unicode space.
-            CODE_WHITE_SQUARE               = 0x25A1,
-
-            // "REPLACEMENT CHARACTER"
-            // Represent out of range character code from unicode space.
-            CODE_REPLACEMENT_CHARACTER      = 0xFFFD,
-        };
-
         struct CodeRange {
             uint32_t    from;
             uint32_t    to;
@@ -352,26 +292,6 @@ namespace TrivialOpenGL {
                 list_first      = 0;
                 list_range      = 0;
                 list_base       = 0; 
-            }
-        };
-
-        struct GlyphData {
-            uint16_t    width; // in pixels
-            GLuint      tex_obj;
-
-            double      x1;
-            double      y1;
-            double      x2;
-            double      y2;
-
-            GlyphData() {
-                width       = 0;
-                tex_obj     = 0;
-                
-                x1          = 0;
-                y1          = 0;
-                x2          = 0;
-                y2          = 0;
             }
         };
 
@@ -500,13 +420,10 @@ namespace TrivialOpenGL {
             std::string m_err_msg;
         };
 
-        TOGL_NO_COPY(Font);
-
         void Initialize() {
             m_device_context_handle = NULL;
 
             m_data = {};
-            m_is_loaded = false;
         }
 
         void GenerateFontTextures(uint16_t width, uint16_t height) {
@@ -589,8 +506,6 @@ namespace TrivialOpenGL {
                         pos.x += size.width;
                     }
                 }
-  
-                m_is_loaded = true;
 
                 glMatrixMode(GL_PROJECTION);
                 glPopMatrix();
@@ -632,11 +547,212 @@ namespace TrivialOpenGL {
 
         void AddErrMsg(const std::string& err_msg) {
             if (!m_err_msg.empty()) m_err_msg += "\n";
-            m_err_msg += "Font Error: ";
+            m_err_msg += "FontGenerator Error: ";
             m_err_msg += err_msg;
         }
 
         void MergErrMsg(const std::string& err_msg) {
+            if (!m_err_msg.empty()) m_err_msg += "\n";
+            m_err_msg += err_msg;
+        }
+
+        static uint32_t PointsToPixels(uint32_t points) {
+            return points * 4 / 3;
+        }
+
+        static uint32_t ToPixels(uint32_t size, FontSizeUnit size_unit) {
+            switch (size_unit) {
+            case FONT_SIZE_UNIT_PIXELS: return size;
+            case FONT_SIZE_UNIT_POINTS: return PointsToPixels(size);
+            }
+            return 0;
+        }
+
+        static DWORD SolveCreateFontCharSet(FontCharSet char_set) {
+            switch (char_set) {
+            case FONT_CHAR_SET_ENGLISH:            return ANSI_CHARSET;
+            case FONT_CHAR_SET_RANGE_0000_FFFF:    return ANSI_CHARSET;
+            }
+            return 0;
+        }
+
+        template <typename Type>
+        void Load(Type& function, const std::string& function_name) {
+            function = (Type)wglGetProcAddress(function_name.c_str());
+            if (!function) {
+                AddErrMsg(std::string() + "Can not load function: \"" + function_name + "\".");
+            }
+        }
+
+        FontData                m_data;
+        std::string             m_err_msg;
+
+        HDC                     m_device_context_handle;
+        std::vector<CodeRange>  m_code_ranges;
+    };
+
+    class Font {
+    public:
+        Font() {
+            Initialize();
+        }
+        virtual ~Font() {
+            Unload();
+        }
+
+        void Load(const std::string& name, uint32_t size, FontSizeUnit size_unit, FontStyle style, FontCharSet char_set) {
+            Unload();
+
+            FontDataGenerator font_data_generator;
+            m_data = font_data_generator.Generate({name, size, size_unit, style, char_set});
+
+            if (font_data_generator.IsOk()) {
+                m_is_loaded = true;
+            } else {
+                m_data = {};
+                MergeErrMsg(font_data_generator.GetErrMsg());
+            }
+        } 
+
+        void Unload() {
+            for (auto& tex_obj : m_data.tex_objs) {
+                glDeleteTextures(1, &tex_obj);
+            }
+            Initialize();
+        }
+        bool IsLoaded() const {
+            return m_is_loaded;
+        }
+
+        void RenderBegin() {
+            glPushAttrib(GL_TEXTURE_BIT);
+            glPushAttrib(GL_ENABLE_BIT);
+            glPushAttrib(GL_COLOR_BUFFER_BIT);
+            glPushAttrib(GL_LIST_BIT);
+
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  
+        }
+
+        void RenderEnd() {
+            glPopAttrib();
+            glPopAttrib();
+            glPopAttrib();
+            glPopAttrib();
+        }
+
+        void RenderGlyph(uint32_t code) {
+            if (m_is_loaded) {
+                const GlyphData& glyph_data = FindOrAddGlyphData(code);
+
+                if (glyph_data.tex_obj != 0) {
+                    glBindTexture(GL_TEXTURE_2D, glyph_data.tex_obj);
+                    glEnable(GL_TEXTURE_2D);
+
+                    glBegin(GL_TRIANGLE_FAN);
+                    glTexCoord2d(glyph_data.x1, glyph_data.y1);
+                    glVertex2i(0, 0);
+
+                    glTexCoord2d(glyph_data.x2, glyph_data.y1);
+                    glVertex2i(glyph_data.width, 0);
+
+                    glTexCoord2d(glyph_data.x2, glyph_data.y2);
+                    glVertex2i(glyph_data.width, m_data.glyph_height);
+                
+                    glTexCoord2d(glyph_data.x1, glyph_data.y2);
+                    glVertex2i(0, m_data.glyph_height);
+                    glEnd();
+                } else {
+                    // Renders replacement for missing glyph.
+                    glDisable(GL_TEXTURE_2D);
+
+                    glBegin(GL_TRIANGLE_FAN);
+                    glVertex2i(0, 0);
+                    glVertex2i(glyph_data.width, 0);
+                    glVertex2i(glyph_data.width, m_data.glyph_height);
+                    glVertex2i(0, m_data.glyph_height);
+                    glEnd();
+                }
+            }
+        } 
+
+        // Renders array of glyphs. 
+        // Special characters (like '\n', '\t', ... and so on) are interpreted as "unknown characters".
+        // text         - Encoding format: UTF8.
+        void RenderGlyphs(const std::string& text) {
+            if (m_is_loaded) {
+                const std::wstring text_utf16 = ToUTF16(text);
+
+                RenderBegin();
+                int x = 0;
+                for (const uint32_t& code : text_utf16) {
+                    glPushMatrix();
+                    glTranslatef(float(x), 0, 0);
+                    RenderGlyph(code);
+                    x += GetGlyphSize(code).width;
+                    glPopMatrix();
+                }
+                RenderEnd();
+            }
+        }
+
+        SizeU GetGlyphSize(uint32_t code) {
+            if (m_is_loaded) {
+                const GlyphData& glyph_data = FindOrAddGlyphData(code);
+                return {glyph_data.width, m_data.glyph_height};
+            }
+            return {0, 0};
+        }
+
+        bool IsOk() const {
+            return m_err_msg.empty();
+        }
+
+        std::string GetErrMsg() const {
+            return m_err_msg;
+        }
+
+        bool SaveAsBMP(const std::string& path) const {
+            bool is_success = false;
+
+            if (m_is_loaded) {
+                std::string file_name_prefix = path;
+
+                if (file_name_prefix.length() > 0 && file_name_prefix[file_name_prefix.length() - 1] != '/' && file_name_prefix[file_name_prefix.length() - 1] != '\\') {
+                    file_name_prefix += "/";
+                }
+
+                file_name_prefix += m_data.info.name;
+
+                for (size_t ix = 0; ix < m_data.tex_objs.size(); ++ix) {
+                    std::string file_name = file_name_prefix;
+                    if (ix > 0) file_name += " (" + std::to_string(ix + 1) + ")";
+                    file_name += ".bmp";
+
+                    is_success = SaveTextureAsBMP(file_name, m_data.tex_objs[ix]);
+                    if (!is_success) break;
+                }
+            }
+
+            return is_success;
+        }
+
+    private:
+        TOGL_NO_COPY(Font);
+
+        void Initialize() {
+            m_data          = {};
+            m_is_loaded     = false;
+            m_err_msg       = "";
+        }
+
+        void AddErrMsg(const std::string& err_msg) {
+            if (!m_err_msg.empty()) m_err_msg += "\n";
+            m_err_msg += "Font Error: ";
+            m_err_msg += err_msg;
+        }
+
+        void MergeErrMsg(const std::string& err_msg) {
             if (!m_err_msg.empty()) m_err_msg += "\n";
             m_err_msg += err_msg;
         }
@@ -664,53 +780,9 @@ namespace TrivialOpenGL {
             }
         }
 
-        static uint32_t PointsToPixels(uint32_t points) {
-            return points * 4 / 3;
-        }
-
-        static uint32_t ToPixels(uint32_t size, FontSizeUnit size_unit) {
-            switch (size_unit) {
-            case FONT_SIZE_UNIT_PIXELS: return size;
-            case FONT_SIZE_UNIT_POINTS: return PointsToPixels(size);
-            }
-            return 0;
-        }
-
-        static DWORD SolveCreateFontCharSet(FontCharSet char_set) {
-            switch (char_set) {
-            case FONT_CHAR_SET_ENGLISH:            return ANSI_CHARSET;
-            case FONT_CHAR_SET_RANGE_0000_FFFF:    return ANSI_CHARSET;
-            }
-            return 0;
-        }
-
-
-        template <typename Type>
-        void Load(Type& function, const std::string& function_name) {
-            function = (Type)wglGetProcAddress(function_name.c_str());
-            if (!function) {
-                AddErrMsg(std::string() + "Can not load function: \"" + function_name + "\".");
-            }
-        }
-
-        struct FontData {
-            FontInfo info;
-
-            uint32_t glyph_height;               // in pixels
-            uint32_t glyph_ascent;               // in pixels
-            uint32_t glyph_descent;              // in pixels
-            uint32_t glyph_internal_leading;     // in pixels
-
-            std::map<uint32_t, GlyphData>   glyphs;
-            std::vector<GLuint>             tex_objs;
-        };
-
         FontData                m_data;
         bool                    m_is_loaded;
         std::string             m_err_msg;
-
-        HDC                     m_device_context_handle;
-        std::vector<CodeRange>  m_code_ranges;
     };
 
 }; // namespace TrivialOpenGL
