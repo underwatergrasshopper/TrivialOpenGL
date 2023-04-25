@@ -28,11 +28,27 @@ namespace TrivialOpenGL {
     //};
 
     struct FontInfo {
-        std::string        name;
+        std::string     name;
         uint32_t        size;
         FontSizeUnit    size_unit;
-        FontStyle        style;
-        FontCharSet        char_set;
+        FontStyle       style;
+        FontCharSet     char_set;
+
+        FontInfo() {
+            name        = "";
+            size        = 0;
+            size_unit   = FONT_SIZE_UNIT_PIXELS;
+            style       = FONT_STYLE_NORMAL;
+            char_set    = FONT_CHAR_SET_ENGLISH;
+        }
+        
+        FontInfo(const std::string& name, uint32_t size, FontSizeUnit size_unit, FontStyle style, FontCharSet char_set) {
+            this->name        = name;
+            this->size        = size;    
+            this->size_unit   = size_unit;
+            this->style       = style;    
+            this->char_set    = char_set;
+        }
     };
 
     class Font {
@@ -47,17 +63,17 @@ namespace TrivialOpenGL {
         void Load(const std::string& name, uint32_t size, FontSizeUnit size_unit, FontStyle style, FontCharSet char_set) {
             Unload();
 
-            m_info = {name, size, size_unit, style, char_set};
+            m_data.info = {name, size, size_unit, style, char_set};
 
             WindowInnerAccessor& window_inner_accessor = ToWindow();
             HWND window_handle = window_inner_accessor.ToHWND();
 
             m_device_context_handle = GetDC(window_handle);
 
-            m_glyph_height = ToPixels(size, size_unit);
+            m_data.glyph_height = ToPixels(size, size_unit);
 
             HFONT font_handle = CreateFontW(
-                    m_glyph_height,                    
+                    m_data.glyph_height,                    
                     0, 0, 0,                            
                     (style == FONT_STYLE_BOLD) ? FW_BOLD : FW_NORMAL,
                     FALSE, FALSE, FALSE,
@@ -76,95 +92,98 @@ namespace TrivialOpenGL {
                 // --- Gets Font Metrics --- //
                 TEXTMETRICW metric;
                 GetTextMetricsW(m_device_context_handle, &metric);
-                m_height            = metric.tmHeight;
-                m_ascent            = metric.tmAscent;
-                m_descent           = metric.tmDescent;
-                m_internal_leading  = metric.tmInternalLeading;
+                const uint32_t glyph_height    = metric.tmHeight;
+                m_data.glyph_ascent            = metric.tmAscent;
+                m_data.glyph_descent           = metric.tmDescent;
+                m_data.glyph_internal_leading  = metric.tmInternalLeading;
 
-                // --- Gets Code Ranges --- //
+                if (glyph_height != m_data.glyph_height) {
+                    AddErrMsg("Mismatch between font height requested and created.");
+                } else {
+                    // --- Gets Code Ranges --- //
 
-                DWORD buffer_size = GetFontUnicodeRanges(m_device_context_handle, NULL);
-                BYTE* buffer = new BYTE[buffer_size];
+                    DWORD buffer_size = GetFontUnicodeRanges(m_device_context_handle, NULL);
+                    BYTE* buffer = new BYTE[buffer_size];
 
-                GLYPHSET* glyphset = (GLYPHSET*)buffer;
-                GetFontUnicodeRanges(m_device_context_handle, glyphset);
-                // debug
-                //togl_print_i32(glyphset->cbThis);
-                //togl_print_i32(glyphset->flAccel);
-                //togl_print_i32(glyphset->cGlyphsSupported);
-                //togl_print_i32(glyphset->cRanges);
+                    GLYPHSET* glyphset = (GLYPHSET*)buffer;
+                    GetFontUnicodeRanges(m_device_context_handle, glyphset);
+                    // debug
+                    //togl_print_i32(glyphset->cbThis);
+                    //togl_print_i32(glyphset->flAccel);
+                    //togl_print_i32(glyphset->cGlyphsSupported);
+                    //togl_print_i32(glyphset->cRanges);
 
-                // --- Solves Code Ranges --- //
-                switch (char_set) {
-                case FONT_CHAR_SET_ENGLISH:
-                    m_code_ranges.push_back({0x0020, 0x007E});  
-                    m_code_ranges.push_back({CODE_WHITE_SQUARE}); 
-                    m_code_ranges.push_back({CODE_REPLACEMENT_CHARACTER}); 
-                    break;
-                case FONT_CHAR_SET_RANGE_0000_FFFF:
-                    m_code_ranges.push_back({0x0000, 0xFFFF});
-                    break;
-                default:
-                    for (uint32_t ix = 0; ix < glyphset->cRanges; ++ix) {
-                        const uint32_t from = glyphset->ranges[ix].wcLow;
-                        const uint32_t to   = from + glyphset->ranges[ix].cGlyphs - 1;
+                    // --- Solves Code Ranges --- //
+                    switch (char_set) {
+                    case FONT_CHAR_SET_ENGLISH:
+                        m_code_ranges.push_back({0x0020, 0x007E});  
+                        m_code_ranges.push_back({CODE_WHITE_SQUARE}); 
+                        m_code_ranges.push_back({CODE_REPLACEMENT_CHARACTER}); 
+                        break;
+                    case FONT_CHAR_SET_RANGE_0000_FFFF:
+                        m_code_ranges.push_back({0x0000, 0xFFFF});
+                        break;
+                    default:
+                        for (uint32_t ix = 0; ix < glyphset->cRanges; ++ix) {
+                            const uint32_t from = glyphset->ranges[ix].wcLow;
+                            const uint32_t to   = from + glyphset->ranges[ix].cGlyphs - 1;
 
-                        m_code_ranges.push_back({from, to});
-                    }
-                    break;
-                }
-
-                delete[] buffer;
-
-                //for (const auto& code_range : m_code_ranges) printf("[%04X..%04X]\n", code_range.from, code_range.to); // debug
-
-                // --- Generates Display Lists and Intermediary Font Bitmaps --- //
-                auto HexToStr = [](uint16_t value) -> std::string {
-                    std::stringstream stream;
-                    stream << std::hex << std::setfill('0') << std::setw(4) << std::right << value;
-                    return stream.str();
-                };
-
-                for (auto& code_range : m_code_ranges) {
-                    code_range.list_first = code_range.from;
-                    code_range.list_range = code_range.to - code_range.from + 1;
-                    code_range.list_base = glGenLists(code_range.list_range);
-
-                    if (code_range.list_base == 0) {
-                        AddErrMsg(std::string() + "Error: Can not generate display list for unicode range [" + HexToStr(code_range.from) + ".." + HexToStr(code_range.to) + "].");
+                            m_code_ranges.push_back({from, to});
+                        }
                         break;
                     }
 
-                    bool is_success = wglUseFontBitmapsW(m_device_context_handle, code_range.list_first, code_range.list_range, code_range.list_base);
+                    delete[] buffer;
 
-                    // Workaround for strange behavior. For POPUP window first call of wglUseFontBitmapsA fail with GetError() = 0.
-                    // Second call, right after first, seams to succeed.
-                    if (!is_success) is_success = wglUseFontBitmapsW(m_device_context_handle, code_range.list_first, code_range.list_range, code_range.list_base);
+                    //for (const auto& code_range : m_code_ranges) printf("[%04X..%04X]\n", code_range.from, code_range.to); // debug
 
-                    if (!is_success) {
-                        AddErrMsg("Error: Can not create intermediary font bitmap for unicode range [" + HexToStr(code_range.from) + ".." + HexToStr(code_range.to) + "].");
-                        break;
+                    // --- Generates Display Lists and Intermediary Font Bitmaps --- //
+                    auto HexToStr = [](uint16_t value) -> std::string {
+                        std::stringstream stream;
+                        stream << std::hex << std::setfill('0') << std::setw(4) << std::right << value;
+                        return stream.str();
+                    };
+
+                    for (auto& code_range : m_code_ranges) {
+                        code_range.list_first = code_range.from;
+                        code_range.list_range = code_range.to - code_range.from + 1;
+                        code_range.list_base = glGenLists(code_range.list_range);
+
+                        if (code_range.list_base == 0) {
+                            AddErrMsg(std::string() + "Error: Can not generate display list for unicode range [" + HexToStr(code_range.from) + ".." + HexToStr(code_range.to) + "].");
+                            break;
+                        }
+
+                        bool is_success = wglUseFontBitmapsW(m_device_context_handle, code_range.list_first, code_range.list_range, code_range.list_base);
+
+                        // Workaround for strange behavior. For POPUP window first call of wglUseFontBitmapsA fail with GetError() = 0.
+                        // Second call, right after first, seams to succeed.
+                        if (!is_success) is_success = wglUseFontBitmapsW(m_device_context_handle, code_range.list_first, code_range.list_range, code_range.list_base);
+
+                        if (!is_success) {
+                            AddErrMsg("Error: Can not create intermediary font bitmap for unicode range [" + HexToStr(code_range.from) + ".." + HexToStr(code_range.to) + "].");
+                            break;
+                        }
+
+                        togl_print_i32(code_range.list_first);
+                        togl_print_i32(code_range.list_range);
+                        togl_print_i32(code_range.list_base);
                     }
 
-                    togl_print_i32(code_range.list_first);
-                    togl_print_i32(code_range.list_range);
-                    togl_print_i32(code_range.list_base);
+                    // --- Generate Font Textures --- //
+
+                    if (IsOk()) {
+                        GenerateFontTextures(1024, 1024);
+                    }
+
+                    // --- Destroys Display Lists and Clears Ranges --- //
+
+                    for (auto& code_range : m_code_ranges) {
+                        glDeleteLists(code_range.list_base, code_range.list_range);
+                    }
+                    m_code_ranges.clear();
+
                 }
-
-                // --- Generate Font Textures --- //
-
-                if (IsOk()) {
-                    GenerateFontTextures(1024, 1024);
-                }
-
-                // --- Destroys Display Lists and Clears Ranges --- //
-
-                for (auto& code_range : m_code_ranges) {
-                    glDeleteLists(code_range.list_base, code_range.list_range);
-                }
-                m_code_ranges.clear();
-
-                // ---
 
                 SelectObject(m_device_context_handle, old_font_handle);
                 DeleteObject(font_handle);
@@ -176,12 +195,12 @@ namespace TrivialOpenGL {
 
         void Unload() {
             m_code_ranges.clear();
-            m_font_data.clear();
+            m_data.glyphs.clear();
 
-            for (auto& tex_obj : m_tex_objs) {
+            for (auto& tex_obj : m_data.tex_objs) {
                 glDeleteTextures(1, &tex_obj);
             }
-            m_tex_objs.clear();
+            m_data.tex_objs.clear();
 
             m_err_msg    = "";
 
@@ -223,10 +242,10 @@ namespace TrivialOpenGL {
                 glVertex2i(glyph_data.width, 0);
 
                 glTexCoord2d(glyph_data.x2, glyph_data.y2);
-                glVertex2i(glyph_data.width, m_glyph_height);
+                glVertex2i(glyph_data.width, m_data.glyph_height);
                 
                 glTexCoord2d(glyph_data.x1, glyph_data.y2);
-                glVertex2i(0, m_glyph_height);
+                glVertex2i(0, m_data.glyph_height);
                 glEnd();
             } else {
                 // Renders replacement for missing glyph.
@@ -235,8 +254,8 @@ namespace TrivialOpenGL {
                 glBegin(GL_TRIANGLE_FAN);
                 glVertex2i(0, 0);
                 glVertex2i(glyph_data.width, 0);
-                glVertex2i(glyph_data.width, m_glyph_height);
-                glVertex2i(0, m_glyph_height);
+                glVertex2i(glyph_data.width, m_data.glyph_height);
+                glVertex2i(0, m_data.glyph_height);
                 glEnd();
             }
         } 
@@ -261,7 +280,7 @@ namespace TrivialOpenGL {
 
         SizeU GetGlyphSize(uint32_t code) {
             const GlyphData& glyph_data = FindOrAddGlyphData(code);
-            return {glyph_data.width, m_glyph_height};
+            return {glyph_data.width, m_data.glyph_height};
         }
 
         bool IsOk() const {
@@ -279,13 +298,13 @@ namespace TrivialOpenGL {
                 file_name_prefix += "/";
             }
 
-            file_name_prefix += m_info.name;
+            file_name_prefix += m_data.info.name;
 
-            for (size_t ix = 0; ix < m_tex_objs.size(); ++ix) {
+            for (size_t ix = 0; ix < m_data.tex_objs.size(); ++ix) {
                 std::string file_name = file_name_prefix;
                 if (ix > 0) file_name += " (" + std::to_string(ix + 1) + ")";
                 file_name += ".bmp";
-                SaveTextureAsBMP(file_name, m_tex_objs[ix]);
+                SaveTextureAsBMP(file_name, m_data.tex_objs[ix]);
             }
         }
 
@@ -485,15 +504,8 @@ namespace TrivialOpenGL {
 
         void Initialize() {
             m_device_context_handle = NULL;
-            m_info        = {};
 
-            m_glyph_height = 0;
-
-            m_height        = 0;
-            m_ascent        = 0;
-            m_descent        = 0;
-            m_internal_leading = 0;
-
+            m_data = {};
             m_is_loaded = false;
         }
 
@@ -502,7 +514,7 @@ namespace TrivialOpenGL {
             GLuint tex_obj = frame_buffer.GenAndBindTex();
 
             if (frame_buffer.IsOk()) {
-                m_tex_objs.push_back(tex_obj);
+                m_data.tex_objs.push_back(tex_obj);
 
                 glPushAttrib(GL_VIEWPORT_BIT);
                 glViewport(0, 0, width, height);
@@ -521,7 +533,7 @@ namespace TrivialOpenGL {
 
                 glClear(GL_COLOR_BUFFER_BIT);
 
-                int y = int(height) - int(m_glyph_height);
+                int y = int(height) - int(m_data.glyph_height);
                 PointI pos = {0, y};
  
                 for (const CodeRange& code_range : m_code_ranges) {
@@ -532,7 +544,7 @@ namespace TrivialOpenGL {
                         if ((pos.x + size.width) >= width) {
                             pos.x = 0;
 
-                            if ((pos.y - m_glyph_height) <= 0) {
+                            if ((pos.y - m_data.glyph_height) <= 0) {
                                 // run out of space, generate next texture
                                 tex_obj = frame_buffer.GenAndBindTex();
 
@@ -542,13 +554,13 @@ namespace TrivialOpenGL {
                                 }
                                 glClear(GL_COLOR_BUFFER_BIT);
 
-                                m_tex_objs.push_back(tex_obj);
+                                m_data.tex_objs.push_back(tex_obj);
 
-                                //printf("T%d [%04X]\n", (int)m_tex_objs.size() - 1, code); // debug
+                                //printf("T%d [%04X]\n", (int)m_data.tex_objs.size() - 1, code); // debug
 
                                 pos = {0, y};
                             } else {
-                                pos.y -= m_glyph_height;
+                                pos.y -= m_data.glyph_height;
                             }
                         }
 
@@ -562,11 +574,11 @@ namespace TrivialOpenGL {
                         glyph_data.tex_obj = tex_obj;
 
                         glyph_data.x1 = ToTexSpace(pos.x, width);
-                        glyph_data.y1 = ToTexSpace(pos.y - m_descent, height);
+                        glyph_data.y1 = ToTexSpace(pos.y - m_data.glyph_descent, height);
                         glyph_data.x2 = ToTexSpace(pos.x + size.width, width);
-                        glyph_data.y2 = ToTexSpace(pos.y - m_descent + m_glyph_height, height);
+                        glyph_data.y2 = ToTexSpace(pos.y - m_data.glyph_descent + m_data.glyph_height, height);
 
-                        m_font_data[code] = glyph_data;
+                        m_data.glyphs[code] = glyph_data;
               
                         RenderGlyphToTexture(
                             code_range.list_base, 
@@ -630,12 +642,12 @@ namespace TrivialOpenGL {
         }
 
         GlyphData* FindGlyphData(uint32_t code) {
-            auto it = m_font_data.find(code);
+            auto it = m_data.glyphs.find(code);
 
-            if (it == m_font_data.end()) it = m_font_data.find(CODE_WHITE_SQUARE);
-            if (it == m_font_data.end()) it = m_font_data.find(CODE_REPLACEMENT_CHARACTER);
+            if (it == m_data.glyphs.end()) it = m_data.glyphs.find(CODE_WHITE_SQUARE);
+            if (it == m_data.glyphs.end()) it = m_data.glyphs.find(CODE_REPLACEMENT_CHARACTER);
 
-            if (it != m_font_data.end()) {
+            if (it != m_data.glyphs.end()) {
                 return &(it->second);
             } 
             return nullptr;
@@ -646,8 +658,8 @@ namespace TrivialOpenGL {
             if (glyph_data) {
                 return *glyph_data;
             } else {
-                GlyphData& new_glyph_data = m_font_data[code];
-                new_glyph_data.width = m_glyph_height;
+                GlyphData& new_glyph_data = m_data.glyphs[code];
+                new_glyph_data.width = m_data.glyph_height;
                 return new_glyph_data;
             }
         }
@@ -681,22 +693,24 @@ namespace TrivialOpenGL {
             }
         }
 
-        HDC                     m_device_context_handle;
-        FontInfo                m_info;
-        uint32_t                m_glyph_height;         // in pixels
+        struct FontData {
+            FontInfo info;
 
-        uint32_t                m_height;               // in pixels
-        uint32_t                m_ascent;               // in pixels
-        uint32_t                m_descent;              // in pixels
-        uint32_t                m_internal_leading;     // in pixels
+            uint32_t glyph_height;               // in pixels
+            uint32_t glyph_ascent;               // in pixels
+            uint32_t glyph_descent;              // in pixels
+            uint32_t glyph_internal_leading;     // in pixels
 
-        std::vector<CodeRange>    m_code_ranges;
+            std::map<uint32_t, GlyphData>   glyphs;
+            std::vector<GLuint>             tex_objs;
+        };
 
-        std::map<uint32_t, GlyphData>  m_font_data;
-        std::vector<GLuint>     m_tex_objs;
-
+        FontData                m_data;
         bool                    m_is_loaded;
-        std::string                m_err_msg;
+        std::string             m_err_msg;
+
+        HDC                     m_device_context_handle;
+        std::vector<CodeRange>  m_code_ranges;
     };
 
 }; // namespace TrivialOpenGL
