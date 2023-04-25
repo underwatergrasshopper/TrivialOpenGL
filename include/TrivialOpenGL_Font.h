@@ -9,6 +9,11 @@
 #include "TrivialOpenGL_Window.h"
 
 namespace TrivialOpenGL {
+
+    //==========================================================================
+    // Declarations
+    //==========================================================================
+
     enum FontSizeUnit {
         FONT_SIZE_UNIT_PIXELS,
         FONT_SIZE_UNIT_POINTS,
@@ -784,6 +789,10 @@ namespace TrivialOpenGL {
         bool                    m_is_loaded;
         std::string             m_err_msg;
     };
+
+    //==========================================================================
+    // Definitions
+    //==========================================================================
 
 }; // namespace TrivialOpenGL
 
