@@ -9,10 +9,10 @@
 #include "TrivialOpenGL_Window.h"
 
 namespace TrivialOpenGL {
-	enum FontSizeUnit {
-		FONT_SIZE_UNIT_PIXELS,
-		FONT_SIZE_UNIT_POINTS,
-	};
+    enum FontSizeUnit {
+        FONT_SIZE_UNIT_PIXELS,
+        FONT_SIZE_UNIT_POINTS,
+    };
 
     //enum FontStyle {
     //    FONT_STYLE_NORMAL,
@@ -27,36 +27,36 @@ namespace TrivialOpenGL {
     //    FONT_CHAR_SET_RANGE_0000_FFFF,
     //};
 
-	struct FontInfo {
-		std::string		name;
-		uint32_t		size;
-		FontSizeUnit	size_unit;
-		FontStyle		style;
-		FontCharSet		char_set;
-	};
+    struct FontInfo {
+        std::string        name;
+        uint32_t        size;
+        FontSizeUnit    size_unit;
+        FontStyle        style;
+        FontCharSet        char_set;
+    };
 
-	class Font {
-	public:
-		Font() {
-			Initialize();
-		}
-		virtual ~Font() {
+    class Font {
+    public:
+        Font() {
+            Initialize();
+        }
+        virtual ~Font() {
             Unload();
-		}
+        }
 
-		void Load(const std::string& name, uint32_t size, FontSizeUnit size_unit, FontStyle style, FontCharSet char_set) {
-			Unload();
+        void Load(const std::string& name, uint32_t size, FontSizeUnit size_unit, FontStyle style, FontCharSet char_set) {
+            Unload();
 
-			m_info = {name, size, size_unit, style, char_set};
+            m_info = {name, size, size_unit, style, char_set};
 
-			WindowInnerAccessor& window_inner_accessor = ToWindow();
-			HWND window_handle = window_inner_accessor.ToHWND();
+            WindowInnerAccessor& window_inner_accessor = ToWindow();
+            HWND window_handle = window_inner_accessor.ToHWND();
 
-			m_device_context_handle = GetDC(window_handle);
+            m_device_context_handle = GetDC(window_handle);
 
-			m_glyph_height = ToPixels(size, size_unit);
+            m_glyph_height = ToPixels(size, size_unit);
 
-			HFONT font_handle = CreateFontW(
+            HFONT font_handle = CreateFontW(
                     m_glyph_height,                    
                     0, 0, 0,                            
                     (style == FONT_STYLE_BOLD) ? FW_BOLD : FW_NORMAL,
@@ -68,9 +68,9 @@ namespace TrivialOpenGL {
                     FF_DONTCARE | DEFAULT_PITCH,
                     ToUTF16(name).c_str());  
 
-			if (font_handle == NULL) {
-				AddErrMsg("Can not create font source.");
-			} else {
+            if (font_handle == NULL) {
+                AddErrMsg("Can not create font source.");
+            } else {
                 HFONT old_font_handle = (HFONT)SelectObject(m_device_context_handle, font_handle); 
 
                 // --- Gets Font Metrics --- //
@@ -118,8 +118,8 @@ namespace TrivialOpenGL {
 
                 // --- Generates Inner Font Bitmap  --- //
 
-                GLsizei list_range	= GetListRange(char_set);
-                GLint	list_base	= glGenLists(list_range);
+                GLsizei list_range    = GetListRange(char_set);
+                GLuint  list_base    = glGenLists(list_range);
                 if (list_base == 0) {
                     AddErrMsg("Error: Can not generate display list.");
                 } else {
@@ -133,26 +133,26 @@ namespace TrivialOpenGL {
                         AddErrMsg("Error: Can not font bitmap.");
                     }
 
-					if (IsOk()) {
-						GenerateFontTextures(list_base, list_range, 1024, 1024);
-					}
+                    if (IsOk()) {
+                        GenerateFontTextures(list_base, list_range, 1024, 1024);
+                    }
 
-					glDeleteLists(list_base, list_range);
+                    glDeleteLists(list_base, list_range);
                 }
 
                 // ---
 
                 SelectObject(m_device_context_handle, old_font_handle);
 
-				DeleteObject(font_handle);
-			}
+                DeleteObject(font_handle);
+            }
 
-			ReleaseDC(window_handle, m_device_context_handle);
+            ReleaseDC(window_handle, m_device_context_handle);
             m_device_context_handle = NULL;
-		} 
+        } 
 
-		void Unload() {
-			m_code_ranges.clear();
+        void Unload() {
+            m_code_ranges.clear();
             m_font_data.clear();
 
             for (auto& tex_obj : m_tex_objs) {
@@ -160,13 +160,13 @@ namespace TrivialOpenGL {
             }
             m_tex_objs.clear();
 
-            m_err_msg	= "";
+            m_err_msg    = "";
 
-			Initialize();
-		}
-		bool IsLoaded() const {
-			return m_is_loaded;
-		}
+            Initialize();
+        }
+        bool IsLoaded() const {
+            return m_is_loaded;
+        }
 
         void RenderBegin() {
             glPushAttrib(GL_TEXTURE_BIT);
@@ -186,54 +186,35 @@ namespace TrivialOpenGL {
         }
 
         void RenderGlyph(uint32_t code) {
-            auto RenderRectangle = [](int width, int height) {
+            const GlyphData& glyph_data = FindOrAddGlyphData(code);
+
+            if (glyph_data.tex_obj != 0) {
+                glBindTexture(GL_TEXTURE_2D, glyph_data.tex_obj);
+                glEnable(GL_TEXTURE_2D);
+
+                glBegin(GL_TRIANGLE_FAN);
+                glTexCoord2d(glyph_data.x1, glyph_data.y1);
+                glVertex2i(0, 0);
+
+                glTexCoord2d(glyph_data.x2, glyph_data.y1);
+                glVertex2i(glyph_data.width, 0);
+
+                glTexCoord2d(glyph_data.x2, glyph_data.y2);
+                glVertex2i(glyph_data.width, m_glyph_height);
+                
+                glTexCoord2d(glyph_data.x1, glyph_data.y2);
+                glVertex2i(0, m_glyph_height);
+                glEnd();
+            } else {
+                // Renders replacement for missing glyph.
                 glDisable(GL_TEXTURE_2D);
 
                 glBegin(GL_TRIANGLE_FAN);
                 glVertex2i(0, 0);
-                glVertex2i(width, 0);
-                glVertex2i(width, height);
-                glVertex2i(0, height);
+                glVertex2i(glyph_data.width, 0);
+                glVertex2i(glyph_data.width, m_glyph_height);
+                glVertex2i(0, m_glyph_height);
                 glEnd();
-            };
-
-            auto it = m_font_data.find(code);
-
-            if (it == m_font_data.end()) it = m_font_data.find(L'\u25A1'); // unknown character = WHITE SQUARE
-            if (it == m_font_data.end()) it = m_font_data.find(L'\uFFFD'); // unknown character = REPLACEMENT CHARACTER
-
-            if (it != m_font_data.end()) {
-                const GlyphData& glyph_data = it->second;
-
-                if (glyph_data.tex_obj != 0) {
-                    glBindTexture(GL_TEXTURE_2D, glyph_data.tex_obj);
-                    glEnable(GL_TEXTURE_2D);
-
-                    glBegin(GL_TRIANGLE_FAN);
-                    glTexCoord2d(glyph_data.x1, glyph_data.y1);
-                    glVertex2i(0, 0);
-
-                    glTexCoord2d(glyph_data.x2, glyph_data.y1);
-                    glVertex2i(glyph_data.width, 0);
-
-                    glTexCoord2d(glyph_data.x2, glyph_data.y2);
-                    glVertex2i(glyph_data.width, m_glyph_height);
-                
-                    glTexCoord2d(glyph_data.x1, glyph_data.y2);
-                    glVertex2i(0, m_glyph_height);
-                    glEnd();
-                } else {
-                    // Replacement for Unknown Character 
-                    RenderRectangle(glyph_data.width, m_glyph_height);
-                }
-            } else {
-                // Replacement for Unknown Character 
-                // Unknown character needs to have width for other characters to be properly spaced when drawn.
-                GlyphData& glyph_data = m_font_data[code];
-                glyph_data.tex_obj = 0;
-                glyph_data.width = m_glyph_height;
-
-                RenderRectangle(glyph_data.width, m_glyph_height);
             }
         } 
 
@@ -255,25 +236,18 @@ namespace TrivialOpenGL {
             RenderEnd();
         }
 
-        SizeU GetGlyphSize(uint32_t code) const {
-            auto it = m_font_data.find(code);
-
-            if (it == m_font_data.end()) it = m_font_data.find(L'\u25A1'); // unknown character = WHITE SQUARE
-            if (it == m_font_data.end()) it = m_font_data.find(L'\uFFFD'); // unknown character = REPLACEMENT CHARACTER
-
-            if (it != m_font_data.end()) {
-                return {it->second.width, m_glyph_height};
-            }
-            return {};
+        SizeU GetGlyphSize(uint32_t code) {
+            const GlyphData& glyph_data = FindOrAddGlyphData(code);
+            return {glyph_data.width, m_glyph_height};
         }
 
-		bool IsOk() const {
-			return m_err_msg.empty();
-		}
+        bool IsOk() const {
+            return m_err_msg.empty();
+        }
 
-		std::string GetErrMsg() const {
-			return m_err_msg;
-		}
+        std::string GetErrMsg() const {
+            return m_err_msg;
+        }
 
         void SaveAsBMP(const std::string& path) {
             std::string file_name_prefix = path;
@@ -292,12 +266,43 @@ namespace TrivialOpenGL {
             }
         }
 
-	private:
-		TOGL_NO_COPY(Font);
+    private:
+        TOGL_NO_COPY(Font);
 
-		struct CodeRange {
+        struct CodeRange {
             uint32_t from;
             uint32_t to;
+
+            GLuint  list_base; 
+            GLuint  list_first;
+            GLsizei list_range;
+
+            CodeRange() {
+                from            = 0;
+                to              = 0;
+
+                list_base       = 0; 
+                list_first      = 0;
+                list_range      = 0;
+            }
+
+            CodeRange(uint32_t code) {
+                from            = code;
+                to              = code;
+
+                list_base       = 0; 
+                list_first      = 0;
+                list_range      = 0;
+            }
+
+            CodeRange(uint32_t from, uint32_t to) {
+                this->from      = from;
+                this->to        = to;
+
+                list_base       = 0; 
+                list_first      = 0;
+                list_range      = 0;
+            }
         };
 
         struct GlyphData {
@@ -310,22 +315,34 @@ namespace TrivialOpenGL {
             double      y1;
             double      x2;
             double      y2;
+
+            GlyphData() {
+                x           = 0;
+                y           = 0;
+                width       = 0;
+                tex_obj     = 0;
+                
+                x1          = 0;
+                y1          = 0;
+                x2          = 0;
+                y2          = 0;
+            }
         };
 
         class FrameBuffer {
         public:
             FrameBuffer(uint16_t width, uint16_t height) {
                 Load(m_glGenFramebuffersEXT, "glGenFramebuffersEXT");
-			    Load(m_glDeleteFramebuffersEXT, "glDeleteFramebuffersEXT");
-			    Load(m_glBindFramebufferEXT, "glBindFramebufferEXT");
-			    Load(m_glFramebufferTexture2DEXT, "glFramebufferTexture2DEXT");
-			    Load(m_glCheckFramebufferStatusEXT, "glCheckFramebufferStatusEXT");
+                Load(m_glDeleteFramebuffersEXT, "glDeleteFramebuffersEXT");
+                Load(m_glBindFramebufferEXT, "glBindFramebufferEXT");
+                Load(m_glFramebufferTexture2DEXT, "glFramebufferTexture2DEXT");
+                Load(m_glCheckFramebufferStatusEXT, "glCheckFramebufferStatusEXT");
                     
                 m_width     = width;
                 m_height    = height;
 
-			    if (IsOk()) {
-				    GLint max_viewport_size[2] = {};
+                if (IsOk()) {
+                    GLint max_viewport_size[2] = {};
                     glGetIntegerv(GL_MAX_VIEWPORT_DIMS, max_viewport_size);
                     GLint max_texture_size = 0;
                     glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
@@ -339,12 +356,12 @@ namespace TrivialOpenGL {
                             ")"
                         );
                     }
-			    }
+                }
 
                 m_fbo       = 0;
                 m_prev_fbo  = 0;
 
-			    if (IsOk()) {
+                if (IsOk()) {
                     m_glGenFramebuffersEXT(1, &m_fbo);
 
                     glGetIntegerv(TOGL_GL_FRAMEBUFFER_BINDING, (GLint*)&m_prev_fbo);
@@ -370,7 +387,7 @@ namespace TrivialOpenGL {
             GLuint GenAndBindTex() {
                 GLuint tex_obj = 0;
 
-			    if (IsOk()) {
+                if (IsOk()) {
                     glGenTextures(1, &tex_obj);
                     glBindTexture(GL_TEXTURE_2D, tex_obj);
                     glDisable(GL_TEXTURE_2D);
@@ -409,12 +426,12 @@ namespace TrivialOpenGL {
             };
 
             void AddErrMsg(const std::string& err_msg) {
-			    if (!m_err_msg.empty()) m_err_msg += "\n";
-			    m_err_msg += "Font FrameBuffer Error: ";
-			    m_err_msg += err_msg;
-		    }
+                if (!m_err_msg.empty()) m_err_msg += "\n";
+                m_err_msg += "Font FrameBuffer Error: ";
+                m_err_msg += err_msg;
+            }
 
-	        template <typename Type>
+            template <typename Type>
             void Load(Type& function, const std::string& function_name) {
                 function = (Type)wglGetProcAddress(function_name.c_str());
                 if (!function) {
@@ -422,7 +439,7 @@ namespace TrivialOpenGL {
                 }
             }
 
-			void (APIENTRY *m_glGenFramebuffersEXT)(GLsizei n, GLuint *framebuffers);
+            void (APIENTRY *m_glGenFramebuffersEXT)(GLsizei n, GLuint *framebuffers);
             void (APIENTRY *m_glDeleteFramebuffersEXT)(GLsizei n, const GLuint *framebuffers);
             void (APIENTRY *m_glBindFramebufferEXT)(GLenum target, GLuint framebuffer);
             void (APIENTRY *m_glFramebufferTexture2DEXT)(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
@@ -437,21 +454,21 @@ namespace TrivialOpenGL {
             std::string m_err_msg;
         };
 
-		void Initialize() {
+        void Initialize() {
             m_device_context_handle = NULL;
-			m_info		= {};
+            m_info        = {};
 
-			m_glyph_height = 0;
+            m_glyph_height = 0;
 
-			m_height		= 0;
-			m_ascent		= 0;
-			m_descent		= 0;
-			m_internal_leading = 0;
+            m_height        = 0;
+            m_ascent        = 0;
+            m_descent        = 0;
+            m_internal_leading = 0;
 
-			m_is_loaded = false;
-		}
+            m_is_loaded = false;
+        }
 
-		void GenerateFontTextures(GLint list_base, GLsizei list_range, uint16_t width, uint16_t height) {
+        void GenerateFontTextures(GLint list_base, GLsizei list_range, uint16_t width, uint16_t height) {
             FrameBuffer frame_buffer(width, height);
             GLuint tex_obj = frame_buffer.GenAndBindTex();
 
@@ -541,7 +558,7 @@ namespace TrivialOpenGL {
                 glPopAttrib();
                 glPopAttrib();
             }
-		}
+        }
 
         void RenderGlyphToTexture(GLint list_base, int x, int y, wchar_t c) {
             glPushAttrib(GL_ENABLE_BIT);
@@ -570,38 +587,61 @@ namespace TrivialOpenGL {
             return {};
         }
 
-		void AddErrMsg(const std::string& err_msg) {
-			if (!m_err_msg.empty()) m_err_msg += "\n";
-			m_err_msg += "Font Error: ";
-			m_err_msg += err_msg;
-		}
+        void AddErrMsg(const std::string& err_msg) {
+            if (!m_err_msg.empty()) m_err_msg += "\n";
+            m_err_msg += "Font Error: ";
+            m_err_msg += err_msg;
+        }
 
-		void MergErrMsg(const std::string& err_msg) {
-			if (!m_err_msg.empty()) m_err_msg += "\n";
-			m_err_msg += err_msg;
-		}
+        void MergErrMsg(const std::string& err_msg) {
+            if (!m_err_msg.empty()) m_err_msg += "\n";
+            m_err_msg += err_msg;
+        }
 
-		static uint32_t PointsToPixels(uint32_t points) {
-			return points * 4 / 3;
-		}
+        GlyphData* FindGlyphData(uint32_t code) {
+            auto it = m_font_data.find(code);
 
-		static uint32_t ToPixels(uint32_t size, FontSizeUnit size_unit) {
-			switch (size_unit) {
-			case FONT_SIZE_UNIT_PIXELS: return size;
-			case FONT_SIZE_UNIT_POINTS: return PointsToPixels(size);
-			}
+            if (it == m_font_data.end()) it = m_font_data.find(L'\u25A1'); // "WHITE SQUARE", represents missing glyph from unicode range
+            if (it == m_font_data.end()) it = m_font_data.find(L'\uFFFD'); // "REPLACEMENT CHARACTER", represents character code which not exist in unicode range
+
+            if (it != m_font_data.end()) {
+                return &(it->second);
+            } 
+            return nullptr;
+        }
+
+        GlyphData& FindOrAddGlyphData(uint32_t code) {
+            GlyphData* glyph_data = FindGlyphData(code);
+            if (glyph_data) {
+                return *glyph_data;
+            } else {
+                GlyphData& new_glyph_data = m_font_data[code];
+                new_glyph_data.width = m_glyph_height;
+                return new_glyph_data;
+            }
+        }
+
+        static uint32_t PointsToPixels(uint32_t points) {
+            return points * 4 / 3;
+        }
+
+        static uint32_t ToPixels(uint32_t size, FontSizeUnit size_unit) {
+            switch (size_unit) {
+            case FONT_SIZE_UNIT_PIXELS: return size;
+            case FONT_SIZE_UNIT_POINTS: return PointsToPixels(size);
+            }
             return 0;
-		}
+        }
 
-		static DWORD SolveCreateFontCharSet(FontCharSet char_set) {
-			switch (char_set) {
-			case FONT_CHAR_SET_ENGLISH:				return ANSI_CHARSET;
-			case FONT_CHAR_SET_RANGE_0000_FFFF:	return ANSI_CHARSET;
-			}
+        static DWORD SolveCreateFontCharSet(FontCharSet char_set) {
+            switch (char_set) {
+            case FONT_CHAR_SET_ENGLISH:                return ANSI_CHARSET;
+            case FONT_CHAR_SET_RANGE_0000_FFFF:    return ANSI_CHARSET;
+            }
             return 0;
-		}
+        }
 
-		static GLsizei GetListRange(FontCharSet char_set) {
+        static GLsizei GetListRange(FontCharSet char_set) {
             switch (char_set) {
             case FONT_CHAR_SET_ENGLISH:             return 128;     // 0x80
             case FONT_CHAR_SET_RANGE_0000_FFFF:   return 65535;   // 0xFFFF
@@ -609,7 +649,7 @@ namespace TrivialOpenGL {
             return 0;
         }
 
-		template <typename Type>
+        template <typename Type>
         void Load(Type& function, const std::string& function_name) {
             function = (Type)wglGetProcAddress(function_name.c_str());
             if (!function) {
@@ -618,22 +658,22 @@ namespace TrivialOpenGL {
         }
 
         HDC                     m_device_context_handle;
-		FontInfo				m_info;
-		uint32_t				m_glyph_height;         // in pixels
+        FontInfo                m_info;
+        uint32_t                m_glyph_height;         // in pixels
 
-        uint32_t				m_height;               // in pixels
-        uint32_t				m_ascent;               // in pixels
-        uint32_t				m_descent;              // in pixels
-        uint32_t				m_internal_leading;     // in pixels
+        uint32_t                m_height;               // in pixels
+        uint32_t                m_ascent;               // in pixels
+        uint32_t                m_descent;              // in pixels
+        uint32_t                m_internal_leading;     // in pixels
 
-        std::vector<CodeRange>	m_code_ranges;
+        std::vector<CodeRange>    m_code_ranges;
 
         std::map<uint32_t, GlyphData>  m_font_data;
         std::vector<GLuint>     m_tex_objs;
 
-		bool			        m_is_loaded;
-		std::string		        m_err_msg;
-	};
+        bool                    m_is_loaded;
+        std::string                m_err_msg;
+    };
 
 }; // namespace TrivialOpenGL
 
