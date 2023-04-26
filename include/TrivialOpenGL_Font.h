@@ -51,7 +51,7 @@ namespace TrivialOpenGL {
         UnicodeRange(uint32_t from, uint32_t to) : from(from), to(to) {}
     };
 
-    std::vector<UnicodeRange> GetUnicodeRanges(FontCharSet char_set) {
+    inline std::vector<UnicodeRange> GetUnicodeRanges(FontCharSet char_set) {
         switch (char_set) {
         case FONT_CHAR_SET_CUSTOM:
             return {};
