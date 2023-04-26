@@ -42,27 +42,88 @@ namespace TrivialOpenGL {
         CODE_REPLACEMENT_CHARACTER      = 0xFFFD,
     };
 
+    struct UnicodeRange {
+        uint32_t from;
+        uint32_t to;
+        
+        UnicodeRange() : from(0), to(0) {}
+        UnicodeRange(uint32_t code) : from(code), to(code) {}
+        UnicodeRange(uint32_t from, uint32_t to) : from(from), to(to) {}
+    };
+
+    std::vector<UnicodeRange> GetUnicodeRanges(FontCharSet char_set) {
+        switch (char_set) {
+        case FONT_CHAR_SET_CUSTOM:
+            return {};
+
+        case FONT_CHAR_SET_RANGE_0000_FFFF:
+            return {
+                {0x0000, 0xFFFF}
+            };
+
+        case FONT_CHAR_SET_ENGLISH:
+            return {
+                {0x0020, 0x007E},
+                {CODE_WHITE_SQUARE},
+                {CODE_REPLACEMENT_CHARACTER}
+            };
+
+        } // switch
+
+        return {};
+    }
+
+
+    class UnicodeRangeGroup {
+    public:
+        UnicodeRangeGroup() : m_char_set(FONT_CHAR_SET_CUSTOM) {}
+
+        UnicodeRangeGroup(FontCharSet char_set) : m_char_set(char_set),  m_ranges(GetUnicodeRanges(char_set)) {}
+
+        template <uint32_t NUMBER>
+        explicit UnicodeRangeGroup(const UnicodeRange (&ranges)[NUMBER]) : m_char_set(FONT_CHAR_SET_CUSTOM), m_ranges(ranges, ranges + NUMBER) {}
+
+        virtual ~UnicodeRangeGroup() {}
+
+        FontCharSet GetCharSet() const {
+            return m_char_set;
+        }
+
+        std::vector<UnicodeRange> GetRanges() const {
+            return m_ranges;
+        }
+
+        const std::vector<UnicodeRange>& ToRanges() const {
+            return m_ranges;
+        }
+
+    private:
+        FontCharSet                 m_char_set;
+        std::vector<UnicodeRange>   m_ranges;
+
+    };
+
     struct FontInfo {
-        std::string     name;       // encoding format: UTF8
-        uint32_t        size;
-        FontSizeUnit    size_unit;
-        FontStyle       style;
-        FontCharSet     char_set;
+        std::string             name;                   // encoding format: UTF8
+        uint32_t                size;
+        FontSizeUnit            size_unit;
+        FontStyle               style;
+        UnicodeRangeGroup       unicode_range_group;
 
         FontInfo() {
-            name        = "";
-            size        = 0;
-            size_unit   = FONT_SIZE_UNIT_PIXELS;
-            style       = FONT_STYLE_NORMAL;
-            char_set    = FONT_CHAR_SET_ENGLISH;
+            name                = "";
+            size                = 0;
+            size_unit           = FONT_SIZE_UNIT_PIXELS;
+            style               = FONT_STYLE_NORMAL;
+            unicode_range_group = FONT_CHAR_SET_ENGLISH;
         }
         
-        FontInfo(const std::string& name, uint32_t size, FontSizeUnit size_unit, FontStyle style, FontCharSet char_set) {
-            this->name        = name;
-            this->size        = size;    
-            this->size_unit   = size_unit;
-            this->style       = style;    
-            this->char_set    = char_set;
+        FontInfo(const std::string& name, uint32_t size, FontSizeUnit size_unit, FontStyle style, const UnicodeRangeGroup& unicode_range_group) {
+            this->name                  = name;
+            this->size                  = size;    
+            this->size_unit             = size_unit;
+            this->style                 = style;    
+            this->unicode_range_group   = unicode_range_group;
         }
     };
 
@@ -133,7 +194,7 @@ namespace TrivialOpenGL {
                     0, 0, 0,                            
                     (font_info.style == FONT_STYLE_BOLD) ? FW_BOLD : FW_NORMAL,
                     FALSE, FALSE, FALSE,
-                    SolveCreateFontCharSet(font_info.char_set),
+                    ANSI_CHARSET, // For W version of this function, should create a font bitmap with all having glyphs for unicode range from 0000 to FFFF.
                     OUT_TT_PRECIS,
                     CLIP_DEFAULT_PRECIS,
                     ANTIALIASED_QUALITY,
@@ -153,73 +214,73 @@ namespace TrivialOpenGL {
                 m_data.glyph_descent           = metric.tmDescent;
                 m_data.glyph_internal_leading  = metric.tmInternalLeading;
 
-                if (glyph_height != m_data.glyph_height) {
-                    AddErrMsg("Mismatch between font height requested and created.");
+                if (false && glyph_height != m_data.glyph_height) {
+                    AddErrMsg(std::string() + "Mismatch between font height requested (" + std::to_string(glyph_height) + "px) and created (" + std::to_string(glyph_height) + "px).");
                 } else {
-                    // --- Gets Code Ranges --- //
+                    auto GetUnicodeRangesOfCurrentWinFont = [](HDC device_context_handle) {
+                        std::vector<UnicodeRange> unicode_ranges;
 
-                    DWORD buffer_size = GetFontUnicodeRanges(m_device_context_handle, NULL);
-                    BYTE* buffer = new BYTE[buffer_size];
+                        DWORD buffer_size = GetFontUnicodeRanges(device_context_handle, NULL);
+                        BYTE* buffer = new BYTE[buffer_size];
 
-                    GLYPHSET* glyphset = (GLYPHSET*)buffer;
-                    GetFontUnicodeRanges(m_device_context_handle, glyphset);
-                    // debug
-                    //togl_print_i32(glyphset->cbThis);
-                    //togl_print_i32(glyphset->flAccel);
-                    //togl_print_i32(glyphset->cGlyphsSupported);
-                    //togl_print_i32(glyphset->cRanges);
+                        GLYPHSET* glyphset = (GLYPHSET*)buffer;
+                        GetFontUnicodeRanges(device_context_handle, glyphset);
+                        // debug
+                        //togl_print_i32(glyphset->cbThis);
+                        //togl_print_i32(glyphset->flAccel);
+                        //togl_print_i32(glyphset->cGlyphsSupported);
+                        //togl_print_i32(glyphset->cRanges);
 
-                    // --- Solves Code Ranges --- //
-                    switch (font_info.char_set) {
-                    case FONT_CHAR_SET_ENGLISH:
-                        m_code_ranges.push_back({0x0020, 0x007E});  
-                        m_code_ranges.push_back({CODE_WHITE_SQUARE}); 
-                        m_code_ranges.push_back({CODE_REPLACEMENT_CHARACTER}); 
-                        break;
-                    case FONT_CHAR_SET_RANGE_0000_FFFF:
-                        m_code_ranges.push_back({0x0000, 0xFFFF});
-                        break;
-                    default:
                         for (uint32_t ix = 0; ix < glyphset->cRanges; ++ix) {
                             const uint32_t from = glyphset->ranges[ix].wcLow;
                             const uint32_t to   = from + glyphset->ranges[ix].cGlyphs - 1;
 
-                            m_code_ranges.push_back({from, to});
+                            unicode_ranges.push_back({from, to});
                         }
-                        break;
-                    }
 
-                    delete[] buffer;
+                        delete[] buffer;
 
-                    //for (const auto& code_range : m_code_ranges) printf("[%04X..%04X]\n", code_range.from, code_range.to); // debug
-
-                    // --- Generates Display Lists and Intermediary Font Bitmaps --- //
-                    auto HexToStr = [](uint16_t value) -> std::string {
-                        std::stringstream stream;
-                        stream << std::hex << std::setfill('0') << std::setw(4) << std::right << std::uppercase << value;
-                        return stream.str();
+                        return unicode_ranges;
                     };
 
-                    for (auto& code_range : m_code_ranges) {
-                        code_range.list_first = code_range.from;
-                        code_range.list_range = code_range.to - code_range.from + 1;
-                        code_range.list_base = glGenLists(code_range.list_range);
+                    // --- Generates Display Lists and Intermediary Font Bitmaps --- //
 
-                        if (code_range.list_base == 0) {
-                            AddErrMsg(std::string() + "Error: Can not generate display list for unicode range [" + HexToStr(code_range.from) + ".." + HexToStr(code_range.to) + "].");
+                    std::vector<UnicodeRange> ranges;
+                    for (const auto& range : m_data.info.unicode_range_group.ToRanges()) {
+                        if (range.from == 0x0000 && range.to == 0xFFFF) {
+                            // Function glGenLists have problem with generating set of lists for ranges bigger than FFFF. 
+                            // Workaround: split range in two.
+                            ranges.push_back({0x0000, 0x7FFF});
+                            ranges.push_back({0x8000, 0xFFFD});
+                        } else {
+                            ranges.push_back(range);
+                        }
+                    }
+
+                    for (const auto& range : ranges) {
+                        DisplayListSet display_list_set(range.from, range.to);
+
+                        display_list_set.first  = display_list_set.unicode_range.from;
+                        display_list_set.range  = display_list_set.unicode_range.to - display_list_set.unicode_range.from + 1;
+                        display_list_set.base   = glGenLists(display_list_set.range);
+
+                        if (display_list_set.base == 0) {
+                            AddErrMsg(std::string() + "Error: Can not generate display list for unicode range [" + HexToStr(display_list_set.unicode_range.from) + ".." + HexToStr(display_list_set.unicode_range.to) + "].");
                             break;
                         }
 
-                        bool is_success = wglUseFontBitmapsW(m_device_context_handle, code_range.list_first, code_range.list_range, code_range.list_base);
+                        bool is_success = wglUseFontBitmapsW(m_device_context_handle, display_list_set.first, display_list_set.range, display_list_set.base);
 
                         // Workaround for strange behavior. For POPUP window first call of wglUseFontBitmapsA fail with GetError() = 0.
                         // Second call, right after first, seams to succeed.
-                        if (!is_success) is_success = wglUseFontBitmapsW(m_device_context_handle, code_range.list_first, code_range.list_range, code_range.list_base);
+                        if (!is_success) is_success = wglUseFontBitmapsW(m_device_context_handle, display_list_set.first, display_list_set.range, display_list_set.base);
 
                         if (!is_success) {
-                            AddErrMsg("Error: Can not create intermediary font bitmap for unicode range [" + HexToStr(code_range.from) + ".." + HexToStr(code_range.to) + "].");
+                            AddErrMsg("Error: Can not create intermediary font bitmap for unicode range [" + HexToStr(display_list_set.unicode_range.from) + ".." + HexToStr(display_list_set.unicode_range.to) + "].");
                             break;
                         }
+
+                        m_display_list_sets.push_back(display_list_set);
                     }
 
                     // --- Generate Font Textures --- //
@@ -230,11 +291,10 @@ namespace TrivialOpenGL {
 
                     // --- Destroys Display Lists and Clears Ranges --- //
 
-                    for (auto& code_range : m_code_ranges) {
-                        glDeleteLists(code_range.list_base, code_range.list_range);
+                    for (auto& display_list_set : m_display_list_sets) {
+                        glDeleteLists(display_list_set.base, display_list_set.range);
                     }
-                    m_code_ranges.clear();
-
+                    m_display_list_sets.clear();
                 }
 
                 SelectObject(m_device_context_handle, old_font_handle);
@@ -260,39 +320,33 @@ namespace TrivialOpenGL {
         }
 
     private:
-        struct CodeRange {
-            uint32_t    from;
-            uint32_t    to;
+        struct DisplayListSet {
+            UnicodeRange    unicode_range;
 
-            GLuint      list_first;
-            GLsizei     list_range;
-            GLuint      list_base;
+            GLuint          first;
+            GLsizei         range;
+            GLuint          base;
 
-            CodeRange() {
-                from            = 0;
-                to              = 0;
-
-                list_first      = 0;
-                list_range      = 0;
-                list_base       = 0; 
+            DisplayListSet() {
+                first      = 0;
+                range      = 0;
+                base       = 0; 
             }
 
-            CodeRange(uint32_t code) {
-                from            = code;
-                to              = code;
+            DisplayListSet(uint32_t code) {
+                unicode_range = UnicodeRange(code);
 
-                list_first      = 0;
-                list_range      = 0;
-                list_base       = 0; 
+                first      = 0;
+                range      = 0;
+                base       = 0; 
             }
 
-            CodeRange(uint32_t from, uint32_t to) {
-                this->from      = from;
-                this->to        = to;
+            DisplayListSet(uint32_t from, uint32_t to) {
+                unicode_range = UnicodeRange(from, to);
 
-                list_first      = 0;
-                list_range      = 0;
-                list_base       = 0; 
+                first      = 0;
+                range      = 0;
+                base       = 0; 
             }
         };
 
@@ -454,8 +508,8 @@ namespace TrivialOpenGL {
                 int y = int(height) - int(m_data.glyph_height);
                 PointI pos = {0, y};
  
-                for (const CodeRange& code_range : m_code_ranges) {
-                    for (uint32_t code = code_range.from; code <= code_range.to; ++code) {
+                for (const DisplayListSet& display_list_set : m_display_list_sets) {
+                    for (uint32_t code = display_list_set.unicode_range.from; code <= display_list_set.unicode_range.to; ++code) {
 
                         const SizeU16 size = GetCharSize((wchar_t)code);
 
@@ -499,9 +553,9 @@ namespace TrivialOpenGL {
                         m_data.glyphs[code] = glyph_data;
               
                         RenderGlyphToTexture(
-                            code_range.list_base, 
+                            display_list_set.base, 
                             pos.x, pos.y, 
-                            (wchar_t)(code - code_range.list_first) // corrects character code to match glyph index in display list
+                            (wchar_t)(code - display_list_set.first) // corrects character code to match glyph index in display list
                         );
                     
                         pos.x += size.width;
@@ -569,14 +623,6 @@ namespace TrivialOpenGL {
             return 0;
         }
 
-        static DWORD SolveCreateFontCharSet(FontCharSet char_set) {
-            switch (char_set) {
-            case FONT_CHAR_SET_ENGLISH:            return ANSI_CHARSET;
-            case FONT_CHAR_SET_RANGE_0000_FFFF:    return ANSI_CHARSET;
-            }
-            return 0;
-        }
-
         template <typename Type>
         void Load(Type& function, const std::string& function_name) {
             function = (Type)wglGetProcAddress(function_name.c_str());
@@ -585,11 +631,11 @@ namespace TrivialOpenGL {
             }
         }
 
-        FontData                m_data;
-        std::string             m_err_msg;
+        FontData                    m_data;
+        std::string                 m_err_msg;
 
-        HDC                     m_device_context_handle;
-        std::vector<CodeRange>  m_code_ranges;
+        HDC                         m_device_context_handle;
+        std::vector<DisplayListSet> m_display_list_sets;
     };
 
     class Font {
@@ -601,13 +647,29 @@ namespace TrivialOpenGL {
             Unload();
         }
 
-        void Load(const std::string& name, uint32_t size, FontSizeUnit size_unit, FontStyle style, FontCharSet char_set) {
+        void Load(const std::string& name, uint32_t size, FontSizeUnit size_unit, FontStyle style, const UnicodeRangeGroup& unicode_range_group) {
             Unload();
 
-            FontDataGenerator font_data_generator;
-            m_data = font_data_generator.Generate({name, size, size_unit, style, char_set});
+            if (ToWindow().GetLogLevel() >= LOG_LEVEL_DEBUG) {
+                LogDebug("Font Unicode Ranges:");
+                for (const auto& range : unicode_range_group.ToRanges()) {
+                    LogDebug(std::string() + "[" + HexToStr(range.from) + ".." + HexToStr(range.to) + "]");
+                }
+            }
 
+            FontDataGenerator font_data_generator;
+
+            if (ToWindow().GetLogLevel() >= LOG_LEVEL_DEBUG) {
+                LogDebug("Generating font textures...");
+            }
+
+            m_data = font_data_generator.Generate(FontInfo(name, size, size_unit, style, unicode_range_group));
             if (font_data_generator.IsOk()) {
+
+                if (ToWindow().GetLogLevel() >= LOG_LEVEL_DEBUG) {
+                    LogDebug("Font textures has been generated.");
+                }
+
                 m_is_loaded = true;
             } else {
                 m_data = {};

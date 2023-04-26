@@ -30,11 +30,12 @@ namespace TrivialOpenGL {
     };
     
     // Ranges are from unicode space.
+    // Font might not have all glyphs from this ranges.
     enum FontCharSet {
-        FONT_CHAR_SET_ENGLISH,
-    
-        // Note: Font might not have all glyphs from this range.
+        FONT_CHAR_SET_CUSTOM,
         FONT_CHAR_SET_RANGE_0000_FFFF,
+
+        FONT_CHAR_SET_ENGLISH,
     };
     
     //--------------------------------------------------------------------------
@@ -446,6 +447,7 @@ namespace TrivialOpenGL {
 
     //--------------------------------------------------------------------------
 
+    std::string HexToStr(uint16_t value);
     std::vector<std::string> Split(const std::string& text, char c);
 
     //--------------------------------------------------------------------------
@@ -1232,6 +1234,12 @@ namespace TrivialOpenGL {
         }
         return list;
     }
+
+    inline std::string HexToStr(uint16_t value) {
+        std::stringstream stream;
+        stream << std::hex << std::setfill('0') << std::setw(4) << std::right << std::uppercase << value;
+        return stream.str();
+    };
 
     //--------------------------------------------------------------------------
     // BMP

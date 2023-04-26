@@ -1217,7 +1217,7 @@ int main(int argc, char *argv[]) {
             }
             //TOGL::ToWindow().SaveFont("courier_new.bmp", 1024, 1024);
 
-            s_font.Load("Courier New", FONT_SIZE, TOGL::FONT_SIZE_UNIT_PIXELS, TOGL::FONT_STYLE_NORMAL, TOGL::FONT_CHAR_SET_ENGLISH);
+            s_font.Load("Courier New", FONT_SIZE, TOGL::FONT_SIZE_UNIT_PIXELS, TOGL::FONT_STYLE_NORMAL, TOGL::FONT_CHAR_SET_RANGE_0000_FFFF);
 
             if (!s_font.IsOk()) {
                 puts(s_font.GetErrMsg().c_str());
@@ -1250,7 +1250,7 @@ int main(int argc, char *argv[]) {
             glPushMatrix();
             glTranslatef(50, 100, 0);
             glScaled(3, 3, 1);
-            s_font.RenderGlyphs(u8"Some text. Xj\u3400\u5016\u9D9B\u0001");
+            s_font.RenderGlyphs(u8"Somme text. Xj\u3400\u5016\u9D9B\u0001");
             glPopMatrix();
         };
 
