@@ -1217,7 +1217,7 @@ int main(int argc, char *argv[]) {
             }
             //TOGL::ToWindow().SaveFont("courier_new.bmp", 1024, 1024);
 
-            s_font.Load("Courier New", FONT_SIZE, TOGL::FONT_SIZE_UNIT_PIXELS, TOGL::FONT_STYLE_NORMAL, TOGL::FONT_CHAR_SET_RANGE_0000_FFFF);
+            s_font.Load("Courier New", FONT_SIZE, TOGL::FONT_SIZE_UNIT_PIXELS, s_font_style, s_font_char_set);
 
             if (!s_font.IsOk()) {
                 puts(s_font.GetErrMsg().c_str());
