@@ -15,41 +15,26 @@ namespace TrivialOpenGL {
         TEXT_DRAWER_ORIENTATION_LEFT_TOP,
     };
 
-    template <typename Type>
-    struct Color4 {
-        Type r;
-        Type g;
-        Type b;
-        Type a;
-
-        Color4() : r(0), g(0), b(0), a(0) {}
-
-        template <typename TypeRGBA>
-        Color4(const TypeRGBA& r, const TypeRGBA& g, const TypeRGBA& b, const TypeRGBA& a) : r(r), g(g), b(b), a(a) {}
-
-        Type* ToData() {
-            return (Type*)this;
-        }
-
-        const Type* ToData() const {
-            return (const Type*)this;
-        }
-    };
-
-    using Color4U8 = Color4<uint8_t>;
-
     class TextDrawer {
     public:
         TextDrawer() {
-            SetOrientation(TEXT_DRAWER_ORIENTATION_LEFT_BOTTOM);
-            SetPos(0, 0);
-
-            m_color = {255, 255, 255, 255};
+            Reset();
         }
 
         virtual ~TextDrawer() {}
 
         // ---
+
+        void Reset() {
+            SetOrientation(TEXT_DRAWER_ORIENTATION_LEFT_BOTTOM);
+            SetPos(0, 0);
+
+            m_color = {255, 255, 255, 255};
+
+            m_text = L"";
+
+            SetNumberOfSpacesInTab(4);
+        }
 
         void SetPos(int x, int y) {
             SetPos({x, y});
@@ -68,46 +53,34 @@ namespace TrivialOpenGL {
             m_color = color;
         }
 
-        // text             - Encoding format: UTF8.
-        void RenderText(Font& font, const std::string& text) {
-            glPushAttrib(GL_CURRENT_BIT);
-
-            glColor4ubv(m_color.ToData());
-
-            const std::wstring text_utf16 = ToUTF16(text);
-
-            for (const wchar_t c : text_utf16) {
-                // TODO: for char len = 2?
-                if (c == L'\t') {
-                    InnerRenderText(font, L"    ", 4);
-                } else {
-                    InnerRenderText(font, &c, 1);
-                }
-            }
-
-            glPopAttrib();
+        void SetNumberOfSpacesInTab(uint32_t number) {
+            m_tab_as_spaces = std::string(number, ' ');
         }
 
-        void InnerRenderText(Font& font, const wchar_t* text_utf16, size_t length) {
-            font.RenderBegin();
+        void SetText(const std::string& text) {
+            m_text = SolveText(text);
+        }
 
-            for (size_t index = 0; index < length; ++index) {
-                const uint32_t code = text_utf16[index];
+        // ---
+        
+        // text             - Encoding format: UTF8.
+        void RenderText(Font& font, const std::string& text) {
+            RenderSolvedText(font, SolveText(text));
+        }
 
-                if (code == '\n') {
-                    m_pos.x = m_base.x;
-                    m_pos.y += font.GetFontHeight() * m_orientation_factor_y;
-                } else {
-                    glPushMatrix();
-                    glTranslatef(float(m_pos.x), 0, 0);
+        // text             - Encoding format: UTF8.
+        SizeU GetTextSize(Font& font, const std::string& text) const {
+            return GetSolvedTextSize(font, SolveText(text));
+        }
 
-                    font.RenderGlyph(code);
-                    m_pos.x += font.GetGlyphSize(code).width;
-                    glPopMatrix();
-                }
-            }
+        // text             - Encoding format: UTF8.
+        void RenderText(Font& font) {
+            RenderSolvedText(font, m_text);
+        }
 
-            font.RenderEnd();
+        // text             - Encoding format: UTF8.
+        SizeU GetTextSize(Font& font) const {
+            return GetSolvedTextSize(font, m_text);
         }
 
         // ---
@@ -130,12 +103,79 @@ namespace TrivialOpenGL {
         }
 
     private:
+        static void ReplaceAll(std::string& text, const std::string& from, const std::string& to) {
+            if (!from.empty()) {
+                size_t pos = 0;
+                while((pos = text.find(from, pos)) != std::string::npos) {
+                    text.replace(pos, from.length(), to);
+                    pos += to.length();
+                }
+            }
+        }
+
+        std::wstring SolveText(const std::string& text) const {
+            std::string text_utf8 = text;
+
+            ReplaceAll(text_utf8, "\t", m_tab_as_spaces);
+
+            return ToUTF16(text_utf8);
+        }
+
+        void RenderSolvedText(Font& font, const std::wstring& text_utf16) {
+            glPushAttrib(GL_CURRENT_BIT);
+            glColor4ubv(m_color.ToData());
+
+            font.RenderBegin();
+            for (const uint32_t code : text_utf16) {
+                if (code == '\n') {
+                    m_pos.x = m_base.x;
+                    m_pos.y += font.GetGlyphHeight() * m_orientation_factor_y;
+                } else {
+                    glPushMatrix();
+                    glTranslatef(float(m_pos.x), float(m_pos.y), 0);
+
+                    font.RenderGlyph(code);
+                    m_pos.x += font.GetGlyphSize(code).width;
+
+                    glPopMatrix();
+                }
+            }
+            font.RenderEnd();
+
+            glPopAttrib();
+        }
+
+        // text             - Encoding format: UTF8.
+        SizeU GetSolvedTextSize(Font& font, const std::wstring& text_utf16) const {
+            SizeU size = {0, font.GetGlyphHeight()};
+
+            uint32_t width = 0;
+            for (const uint32_t code : text_utf16) {
+                if (code == '\n') {
+                    size.height += font.GetGlyphHeight();
+
+                    if (size.width < width) size.width = width;
+                    width = 0;
+                } else {
+                    width += font.GetGlyphSize(code).width;
+                }
+            }
+            
+            if (size.width < width) size.width = width;
+
+            return size;
+        }
+
         TextDrawerOrientation   m_orientation;
         uint32_t                m_orientation_factor_y;
 
         PointI                  m_pos;
         PointI                  m_base;
+
         Color4U8                m_color;
+        std::wstring            m_text;
+
+        std::string             m_tab_as_spaces;
     };
 
 

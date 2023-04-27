@@ -11,5 +11,6 @@
 #include "TrivialOpenGL_Utility.h"
 #include "TrivialOpenGL_Window.h"
 #include "TrivialOpenGL_Font.h"
+#include "TrivialOpenGL_TextDrawer.h"
 
 #endif // TRIVIALOPENGL_H_

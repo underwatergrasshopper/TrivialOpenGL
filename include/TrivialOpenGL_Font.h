@@ -809,8 +809,8 @@ namespace TrivialOpenGL {
             return size;
         }
 
-        // Returns font height in pixels.
-        uint32_t GetFontHeight() const {
+        // Returns glyph height in pixels.
+        uint32_t GetGlyphHeight() const {
             return m_data.glyph_height;
         }
 
@@ -822,7 +822,7 @@ namespace TrivialOpenGL {
             return m_err_msg;
         }
 
-        bool SaveAsBMP(const std::string& path) const {
+        bool SaveAsBMP(const std::string& path = "") const {
             bool is_success = false;
 
             if (m_is_loaded) {

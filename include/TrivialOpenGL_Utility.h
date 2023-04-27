@@ -173,7 +173,7 @@ namespace TrivialOpenGL {
         Size(const WidthType& width, const HeightType& height) : width(Type(width)), height(Type(height)) {}
 
         template <typename SizeType>
-        explicit Size(const Size<SizeType>& s) : width(s.width), height(s.height) {}
+        explicit Size(const Size<SizeType>& s) : width(Type(s.width)), height(Type(s.height)) {}
 
         virtual ~Size() {}
     };
@@ -361,6 +361,33 @@ namespace TrivialOpenGL {
             uint16_t(r.bottom - r.top)
         );
     }
+
+    //--------------------------------------------------------------------------
+    // Color
+    //--------------------------------------------------------------------------
+
+    template <typename Type>
+    struct Color4 {
+        Type r;
+        Type g;
+        Type b;
+        Type a;
+
+        Color4() : r(0), g(0), b(0), a(0) {}
+
+        template <typename TypeR, typename TypeG, typename TypeB, typename TypeA>
+        Color4(const TypeR& r, const TypeG& g, const TypeB& b, const TypeA& a) : r(Type(r)), g(Type(g)), b(Type(b)), a(Type(a)) {}
+
+        Type* ToData() {
+            return (Type*)this;
+        }
+
+        const Type* ToData() const {
+            return (const Type*)this;
+        }
+    };
+
+    using Color4U8 = Color4<uint8_t>;
 
     //--------------------------------------------------------------------------
     // Global

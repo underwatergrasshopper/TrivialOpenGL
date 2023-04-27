@@ -599,6 +599,24 @@ void TestTOGL_Split() {
     }
 }
 
+void TestTOGL_Color() {
+    {
+        TOGL::Color4U8 color;
+        TTK_ASSERT(color.r == 0);
+        TTK_ASSERT(color.g == 0);
+        TTK_ASSERT(color.b == 0);
+        TTK_ASSERT(color.a == 0);
+    }
+
+    {
+        TOGL::Color4U8 color(1, 2, 3, 4);
+        TTK_ASSERT(color.r == 1);
+        TTK_ASSERT(color.g == 2);
+        TTK_ASSERT(color.b == 3);
+        TTK_ASSERT(color.a == 4);
+    }
+}
+
 int main(int argc, char *argv[]) {
     std::set<std::string> flags;
 
@@ -656,6 +674,7 @@ int main(int argc, char *argv[]) {
         TTK_ADD_TEST(TestTOGL_ToUTF8, 0);
         TTK_ADD_TEST(TestTOGL_Log, 0);
         TTK_ADD_TEST(TestTOGL_Split, 0);
+        TTK_ADD_TEST(TestTOGL_Color, 0);
         
         return !TTK_Run();
     }

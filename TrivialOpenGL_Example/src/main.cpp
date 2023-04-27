@@ -21,7 +21,7 @@ void DrawRectangle(int x, int y, int width, int height) {
     glVertex2i(x,           y);
     glVertex2i(x + width,   y);
     glVertex2i(x + width,   y + height);
-    glVertex2i(y,           y + height);
+    glVertex2i(x,           y + height);
 
     glEnd();
 };
@@ -48,16 +48,6 @@ void DrawTriangle(float x, float y, float scale, float angle) {
 
     glPopMatrix();
 };
-
-void DrawInfoText(const std::string& text) {
-    const auto list = TOGL::Split(text, '\n');
-
-    int y = TOGL::ToWindow().GetDrawAreaSize().height;
-    for (const auto& line : list) {
-        y -= TOGL::ToWindow().GetTextSize(line).height;
-        TOGL::ToWindow().RenderText(10, y, 255, 255, 255, 255, line);
-    }
-}
 
 class TestImage {
 public:
@@ -292,10 +282,44 @@ TOGL::FontStyle         s_font_style    = TOGL::FONT_STYLE_NORMAL;
 TOGL::FontCharSet       s_font_char_set = TOGL::FONT_CHAR_SET_ENGLISH;
 
 TOGL::Font              s_font;
+TOGL::TextDrawer        s_text_drawer;
 
 //------------------------------------------------------------------------------
 
+void LoadFont(const std::string& text = "") {
+    //if (!TOGL::ToWindow().LoadFont("Courier New", FONT_SIZE, s_font_style, s_font_char_set)) {
+    //    puts("Error: Can not load font.");
+    //    puts(TOGL::ToWindow().GetLoadFontErrMsg().c_str());
+    //} else {
+    //    puts("Font loaded.");
+    //}
 
+    s_font.Load("Courier New", FONT_SIZE, TOGL::FONT_SIZE_UNIT_PIXELS, s_font_style, s_font_char_set);
+
+    if (!text.empty()) {
+        s_text_drawer.SetText(text);
+    }
+    s_text_drawer.SetColor(255, 255, 255, 255);
+}
+
+void DrawInfoText(const std::string& text = "") {
+    //const auto list = TOGL::Split(text, '\n');
+    //
+    //int y = TOGL::ToWindow().GetDrawAreaSize().height;
+    //for (const auto& line : list) {
+    //    y -= TOGL::ToWindow().GetTextSize(line).height;
+    //    TOGL::ToWindow().RenderText(10, y, 255, 255, 255, 255, line);
+    //}
+
+    s_text_drawer.SetPos(10, TOGL::ToWindow().GetDrawAreaSize().height - s_font.GetGlyphHeight());
+    if (text.empty()) {
+        s_text_drawer.RenderText(s_font);
+    } else { 
+        s_text_drawer.RenderText(s_font, text);
+    }
+}
+
+//------------------------------------------------------------------------------
 
 class ExampleManager {
 public:
@@ -796,6 +820,10 @@ public:
         return m_fps;
     }
 
+    uint32_t Get() const {
+        return m_fps;
+    }
+
 private:
     uint32_t        m_frame_count;
     uint32_t        m_fps;
@@ -1076,12 +1104,7 @@ int main(int argc, char *argv[]) {
         data.do_on_create = []() {
             s_test_image.Initialize(TOGL::ToWindow().GetDrawAreaSize());
 
-            if (!TOGL::ToWindow().LoadFont("Courier New", FONT_SIZE)) {
-                puts("Error: Can not load font.");
-                puts(TOGL::ToWindow().GetLoadFontErrMsg().c_str());
-            } else {
-                puts("Font loaded.");
-            }
+            LoadFont();
         };
 
         data.draw = []() {
@@ -1209,22 +1232,9 @@ int main(int argc, char *argv[]) {
         data.do_on_create = []() {
             s_test_image.Initialize(TOGL::ToWindow().GetDrawAreaSize());
 
-            if (!TOGL::ToWindow().LoadFont("Courier New", FONT_SIZE, s_font_style, s_font_char_set)) {
-                puts("Error: Can not load font.");
-                puts(TOGL::ToWindow().GetLoadFontErrMsg().c_str());
-            } else {
-                puts("Font loaded.");
-            }
+            LoadFont();
 
-            //TOGL::ToWindow().SaveFont("courier_new.bmp", 1024, 1024);
-
-            s_font.Load("Courier New", FONT_SIZE, TOGL::FONT_SIZE_UNIT_PIXELS, s_font_style, s_font_char_set);
-            
-            if (!s_font.IsOk()) {
-                puts(s_font.GetErrMsg().c_str());
-            }
-            
-            s_font.SaveAsBMP("");
+            s_font.SaveAsBMP();
         };
 
         data.draw = []() {
@@ -1253,6 +1263,29 @@ int main(int argc, char *argv[]) {
             glScaled(3, 3, 1);
             s_font.RenderGlyphs(u8"Somme text. Xj\u3400\u5016\u9D9B\u0001\U00024B62");
             glPopMatrix();
+
+            TOGL::TextDrawer text_drawer;
+            
+            //text_drawer.SetOrientation(TOGL::TEXT_DRAWER_ORIENTATION_LEFT_TOP);
+
+            text_drawer.SetPos(50, 100);
+            text_drawer.SetColor(255, 0, 0, 255);
+            text_drawer.RenderText(s_font, u8"Some text. Xj\u3400\u5016\u9D9B\u0001\U00024B62\nNew Line.");
+            text_drawer.RenderText(s_font, u8"\nAnd another line.");
+            text_drawer.RenderText(s_font, u8"\n\tTab.\b");
+
+
+            const std::string text = u8"Some text. Xj\u3400\u5016\u9D9B\u0001\U00024B62\nNew Line.\nAnd another line.\n\n\tTab.";
+            const TOGL::SizeU text_size = text_drawer.GetTextSize(s_font, text);
+
+            glColor3f(1, 1, 1);
+            DrawRectangle(250, 100 - text_size.height + s_font.GetGlyphHeight(), text_size.width, text_size.height);
+
+            text_drawer.SetPos(250, 100);
+            text_drawer.SetColor(255, 0, 0, 255);
+            text_drawer.RenderText(s_font, text);
+
+
         };
 
         data.do_on_resize = [](uint16_t width, uint16_t height) {
@@ -1282,10 +1315,10 @@ int main(int argc, char *argv[]) {
 
         TOGL::Data data = {};
 
-        data.window_name        = "TrivialOpenGL_Example ";
-        data.window_name        += name;
-        data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
-        data.icon_resource_id   = ICON_ID;
+        data.window_name            = "TrivialOpenGL_Example ";
+        data.window_name            += name;
+        data.area                   = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
+        data.icon_resource_id       = ICON_ID;
 
         if (!IsOption("no_debug"))                      data.log_level = TOGL::LOG_LEVEL_DEBUG;
 
@@ -1307,23 +1340,13 @@ int main(int argc, char *argv[]) {
 
                 TOGL::ToWindow().GoWindowedFullScreen();
 
-                if (!TOGL::ToWindow().LoadFont("Courier New", FONT_SIZE)) {
-                    puts("Error: Can not load font.");
-                    puts(TOGL::ToWindow().GetLoadFontErrMsg().c_str());
-                } else {
-                    puts("Font loaded.");
-                }
+                LoadFont();
             };
         } else {
             data.do_on_create = []() {
                 s_test_image.Initialize(TOGL::ToWindow().GetDrawAreaSize());
 
-                if (!TOGL::ToWindow().LoadFont("Courier New", FONT_SIZE)) {
-                    puts("Error: Can not load font.");
-                    puts(TOGL::ToWindow().GetLoadFontErrMsg().c_str());
-                } else {
-                    puts("Font loaded.");
-                }
+                LoadFont();
             };
         }
 
@@ -1780,13 +1803,7 @@ int main(int argc, char *argv[]) {
         data.do_on_create = []() {
             s_test_image.Initialize(TOGL::ToWindow().GetDrawAreaSize());
 
-
-            if (!TOGL::ToWindow().LoadFont("Courier New", FONT_SIZE)) {
-                puts("Error: Can not load font.");
-                puts(TOGL::ToWindow().GetLoadFontErrMsg().c_str());
-            } else {
-                puts("Font loaded.");
-            }
+            LoadFont();
         };
 
         data.draw = []() {
