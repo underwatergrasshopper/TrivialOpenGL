@@ -22,23 +22,6 @@
 
 namespace TrivialOpenGL {
     //--------------------------------------------------------------------------
-    // Font
-    //--------------------------------------------------------------------------
-    enum FontStyle {
-        FONT_STYLE_NORMAL,
-        FONT_STYLE_BOLD,
-    };
-    
-    // Ranges are from unicode space.
-    // Font might not have all glyphs from this ranges.
-    enum FontCharSet {
-        FONT_CHAR_SET_CUSTOM,
-        FONT_CHAR_SET_RANGE_0000_FFFF,
-
-        FONT_CHAR_SET_ENGLISH,
-    };
-    
-    //--------------------------------------------------------------------------
     // Version
     //--------------------------------------------------------------------------
 
@@ -487,7 +470,6 @@ namespace TrivialOpenGL {
     class InnerUtility {
     public:
         friend class Window;
-        friend class Font;
 
     private:
         //--------------------------------------------------------------------------

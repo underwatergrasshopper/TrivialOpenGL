@@ -19,18 +19,19 @@ namespace TrivialOpenGL {
         FONT_SIZE_UNIT_POINTS,
     };
 
-    //enum FontStyle {
-    //    FONT_STYLE_NORMAL,
-    //    FONT_STYLE_BOLD,
-    //};
-    // 
-    //// Ranges are from unicode space.
-    //enum FontCharSet {
-    //    FONT_CHAR_SET_ENGLISH,
-    //
-    //    // Note: Font might not have all glyphs from this range.
-    //    FONT_CHAR_SET_RANGE_0000_FFFF,
-    //};
+    enum FontStyle {
+        FONT_STYLE_NORMAL,
+        FONT_STYLE_BOLD,
+    };
+    
+    // Ranges are from unicode space.
+    // Font might not have all glyphs from this ranges.
+    enum FontCharSet {
+        FONT_CHAR_SET_CUSTOM,
+        FONT_CHAR_SET_RANGE_0000_FFFF,
+
+        FONT_CHAR_SET_ENGLISH,
+    };
 
     enum {
         // "WHITE SQUARE" 
