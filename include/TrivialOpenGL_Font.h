@@ -157,7 +157,11 @@ namespace TrivialOpenGL {
         uint32_t glyph_internal_leading;     // in pixels
 
         std::map<uint32_t, GlyphData>   glyphs;     // indexed by character code from unicode space
-        std::vector<GLuint>             tex_objs;   // opengl texture objects (names)
+
+        // Array of OpenGL Texture Object Identifiers (Texture Names).
+        // Pixel Format: RGBA (8 bits per channel).
+        // Orientation: First pixel refers to left-bottom corner of image.
+        std::vector<GLuint>             tex_objs;
 
         FontData() {
             info                    = {};
