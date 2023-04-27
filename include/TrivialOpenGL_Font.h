@@ -243,60 +243,85 @@ namespace TrivialOpenGL {
                         return unicode_ranges;
                     };
 
+                    // debug
+                    //for (const auto& range : GetUnicodeRangesOfCurrentWinFont(m_device_context_handle)) {
+                    //    LogDebug(std::string() + "[" + HexToStr(range.from) + ".." + HexToStr(range.to) + "]");
+                    //}
+
                     // --- Generates Display Lists and Intermediary Font Bitmaps --- //
 
                     std::vector<UnicodeRange> ranges;
-                    for (const auto& range : m_data.info.unicode_range_group.ToRanges()) {
-                        if (range.from == 0x0000 && range.to == 0xFFFF) {
-                            // Function glGenLists have problem with generating set of lists for ranges bigger than FFFF. 
-                            // Workaround: split range in two.
-                            ranges.push_back({0x0000, 0x7FFF});
-                            ranges.push_back({0x8000, 0xFFFD});
-                        } else {
-                            ranges.push_back(range);
+                    for (UnicodeRange range : m_data.info.unicode_range_group.ToRanges()) {
+                        if (range.from > 0xFFFF || range.to > 0xFFFF) {
+                             AddErrMsg("Unicode code point is out of supported range. Supported unicode code point range is from 0000 to (including) FFFF. ");
+                             break;
                         }
+
+                        auto PushRangeWithoutCodePoint = [](uint32_t code_point, const UnicodeRange& range, std::vector<UnicodeRange>& ranges) {
+                            auto IsIn = [](uint32_t code, const UnicodeRange& range) -> bool {
+                                return range.from <= code && code <= range.to;
+                            };
+
+                            if (IsIn(code_point, range)) {
+                                if (range.from != code_point) {
+                                    ranges.push_back({range.from, code_point - 1});
+                                }
+                                if (range.to != code_point) {
+                                    ranges.push_back({code_point + 1, range.to});
+                                }
+                            } else {
+                                ranges.push_back(range);
+                            }
+                        };
+
+                        // Function wglUseFontBitmapsW have problem with generating font bitmap when FFFF code point is present in range.
+                        // Workaround: Remove this code point from range, since it's a non-character code point. 
+                        PushRangeWithoutCodePoint(0xFFFF, range, ranges);
                     }
-
-                    for (const auto& range : ranges) {
-                        DisplayListSet display_list_set(range.from, range.to);
-
-                        display_list_set.first  = display_list_set.unicode_range.from;
-                        display_list_set.range  = display_list_set.unicode_range.to - display_list_set.unicode_range.from + 1;
-                        display_list_set.base   = glGenLists(display_list_set.range);
-
-                        if (display_list_set.base == 0) {
-                            AddErrMsg(std::string() + "Error: Can not generate display list for unicode range [" + HexToStr(display_list_set.unicode_range.from) + ".." + HexToStr(display_list_set.unicode_range.to) + "].");
-                            break;
-                        }
-
-                        bool is_success = wglUseFontBitmapsW(m_device_context_handle, display_list_set.first, display_list_set.range, display_list_set.base);
-
-                        // Workaround for strange behavior. For POPUP window first call of wglUseFontBitmapsA fail with GetError() = 0.
-                        // Second call, right after first, seams to succeed.
-                        if (!is_success) is_success = wglUseFontBitmapsW(m_device_context_handle, display_list_set.first, display_list_set.range, display_list_set.base);
-
-                        if (!is_success) {
-                            AddErrMsg("Error: Can not create intermediary font bitmap for unicode range [" + HexToStr(display_list_set.unicode_range.from) + ".." + HexToStr(display_list_set.unicode_range.to) + "].");
-                            break;
-                        }
-
-                        m_display_list_sets.push_back(display_list_set);
-                    }
-
-                    // --- Generate Font Textures --- //
 
                     if (IsOk()) {
-                        GenerateFontTextures(1024, 1024);
-                    }
+                        for (const auto& range : ranges) {
+                            //LogDebug(std::string() + "[" + HexToStr(range.from) + ".." + HexToStr(range.to) + "]"); // debug
 
-                    // --- Destroys Display Lists and Clears Ranges --- //
+                            DisplayListSet display_list_set(range.from, range.to);
 
-                    for (auto& display_list_set : m_display_list_sets) {
-                        glDeleteLists(display_list_set.base, display_list_set.range);
+                            display_list_set.first  = display_list_set.unicode_range.from;
+                            display_list_set.range  = GLsizei(display_list_set.unicode_range.to - display_list_set.unicode_range.from + 1);
+                            display_list_set.base   = glGenLists(display_list_set.range);
+
+                            if (display_list_set.base == 0) {
+                                AddErrMsg(std::string() + "Can not generate display list for unicode range [" + HexToStr(display_list_set.unicode_range.from) + ".." + HexToStr(display_list_set.unicode_range.to) + "].");
+                                break;
+                            }
+
+                            bool is_success = wglUseFontBitmapsW(m_device_context_handle, display_list_set.first, display_list_set.range, display_list_set.base);
+
+                            // Workaround for strange behavior. For POPUP window first call of wglUseFontBitmapsA fail with GetError() = 0.
+                            // Second call, right after first, seams to succeed.
+                            if (!is_success) is_success = wglUseFontBitmapsW(m_device_context_handle, display_list_set.first, display_list_set.range, display_list_set.base);
+
+                            if (!is_success) {
+                                AddErrMsg("Error: Can not create intermediary font bitmap for unicode range [" + HexToStr(display_list_set.unicode_range.from) + ".." + HexToStr(display_list_set.unicode_range.to) + "].");
+                                break;
+                            }
+
+                            m_display_list_sets.push_back(display_list_set);
+                        }
+
+                        // --- Generate Font Textures --- //
+
+                        if (IsOk()) {
+                            GenerateFontTextures(1024, 1024);
+                        }
+
+                        // --- Destroys Display Lists and Clears Ranges --- //
+
+                        for (auto& display_list_set : m_display_list_sets) {
+                            glDeleteLists(display_list_set.base, display_list_set.range);
+                        }
+                        m_display_list_sets.clear();
                     }
-                    m_display_list_sets.clear();
                 }
-
                 SelectObject(m_device_context_handle, old_font_handle);
                 DeleteObject(font_handle);
             }
@@ -573,7 +598,7 @@ namespace TrivialOpenGL {
             }
         }
 
-        void RenderGlyphToTexture(GLint list_base, int x, int y, wchar_t c) {
+        void RenderGlyphToTexture(GLuint list_base, int x, int y, wchar_t c) {
             glPushAttrib(GL_ENABLE_BIT);
             glPushAttrib(GL_COLOR_BUFFER_BIT);
             glPushAttrib(GL_LIST_BIT);
@@ -647,13 +672,17 @@ namespace TrivialOpenGL {
             Unload();
         }
 
-        void Load(const std::string& name, uint32_t size, FontSizeUnit size_unit, FontStyle style, const UnicodeRangeGroup& unicode_range_group) {
+        void Load(const FontInfo& font_info) {
             Unload();
 
             if (ToWindow().GetLogLevel() >= LOG_LEVEL_DEBUG) {
                 LogDebug("Font Unicode Ranges:");
-                for (const auto& range : unicode_range_group.ToRanges()) {
-                    LogDebug(std::string() + "[" + HexToStr(range.from) + ".." + HexToStr(range.to) + "]");
+                for (const auto& range : font_info.unicode_range_group.ToRanges()) {
+                    if (range.from == range.to) { 
+                        LogDebug(std::string() + "[" + HexToStr(range.from) + "]");
+                    } else {
+                        LogDebug(std::string() + "[" + HexToStr(range.from) + ".." + HexToStr(range.to) + "]");
+                    }
                 }
             }
 
@@ -663,7 +692,7 @@ namespace TrivialOpenGL {
                 LogDebug("Generating font textures...");
             }
 
-            m_data = font_data_generator.Generate(FontInfo(name, size, size_unit, style, unicode_range_group));
+            m_data = font_data_generator.Generate(font_info);
             if (font_data_generator.IsOk()) {
 
                 if (ToWindow().GetLogLevel() >= LOG_LEVEL_DEBUG) {
@@ -675,6 +704,10 @@ namespace TrivialOpenGL {
                 m_data = {};
                 MergeErrMsg(font_data_generator.GetErrMsg());
             }
+        } 
+
+        void Load(const std::string& name, uint32_t size, FontSizeUnit size_unit, FontStyle style, const UnicodeRangeGroup& unicode_range_group) {
+            Load(FontInfo(name, size, size_unit, style, unicode_range_group));
         } 
 
         void Unload() {

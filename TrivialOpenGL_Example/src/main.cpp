@@ -1215,14 +1215,15 @@ int main(int argc, char *argv[]) {
             } else {
                 puts("Font loaded.");
             }
+
             //TOGL::ToWindow().SaveFont("courier_new.bmp", 1024, 1024);
 
             s_font.Load("Courier New", FONT_SIZE, TOGL::FONT_SIZE_UNIT_PIXELS, s_font_style, s_font_char_set);
-
+            
             if (!s_font.IsOk()) {
                 puts(s_font.GetErrMsg().c_str());
             }
-
+            
             s_font.SaveAsBMP("");
         };
 
@@ -1262,6 +1263,7 @@ int main(int argc, char *argv[]) {
             auto& window = TOGL::ToWindow();
 
             if (!is_down && key_id == 'X') window.RequestClose();
+            if (!is_down && key_id == 'R') window.Center(500, 500);
         };
         
         return TOGL::Run(data);
