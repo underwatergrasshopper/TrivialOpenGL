@@ -1251,7 +1251,7 @@ int main(int argc, char *argv[]) {
             glPushMatrix();
             glTranslatef(50, 100, 0);
             glScaled(3, 3, 1);
-            s_font.RenderGlyphs(u8"Somme text. Xj\u3400\u5016\u9D9B\u0001");
+            s_font.RenderGlyphs(u8"Somme text. Xj\u3400\u5016\u9D9B\u0001\U00024B62");
             glPopMatrix();
         };
 

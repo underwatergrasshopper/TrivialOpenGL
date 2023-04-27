@@ -743,23 +743,23 @@ namespace TrivialOpenGL {
 
         void RenderGlyph(uint32_t code) {
             if (m_is_loaded) {
-                const GlyphData& glyph_data = FindOrAddGlyphData(code);
+                const GlyphData* glyph_data = FindGlyphData(code);
 
-                if (glyph_data.tex_obj != 0) {
-                    glBindTexture(GL_TEXTURE_2D, glyph_data.tex_obj);
+                if (glyph_data->tex_obj != 0) {
+                    glBindTexture(GL_TEXTURE_2D, glyph_data->tex_obj);
                     glEnable(GL_TEXTURE_2D);
 
                     glBegin(GL_TRIANGLE_FAN);
-                    glTexCoord2d(glyph_data.x1, glyph_data.y1);
+                    glTexCoord2d(glyph_data->x1, glyph_data->y1);
                     glVertex2i(0, 0);
 
-                    glTexCoord2d(glyph_data.x2, glyph_data.y1);
-                    glVertex2i(glyph_data.width, 0);
+                    glTexCoord2d(glyph_data->x2, glyph_data->y1);
+                    glVertex2i(glyph_data->width, 0);
 
-                    glTexCoord2d(glyph_data.x2, glyph_data.y2);
-                    glVertex2i(glyph_data.width, m_data.glyph_height);
+                    glTexCoord2d(glyph_data->x2, glyph_data->y2);
+                    glVertex2i(glyph_data->width, m_data.glyph_height);
                 
-                    glTexCoord2d(glyph_data.x1, glyph_data.y2);
+                    glTexCoord2d(glyph_data->x1, glyph_data->y2);
                     glVertex2i(0, m_data.glyph_height);
                     glEnd();
                 } else {
@@ -768,8 +768,8 @@ namespace TrivialOpenGL {
 
                     glBegin(GL_TRIANGLE_FAN);
                     glVertex2i(0, 0);
-                    glVertex2i(glyph_data.width, 0);
-                    glVertex2i(glyph_data.width, m_data.glyph_height);
+                    glVertex2i(m_data.glyph_height, 0);
+                    glVertex2i(m_data.glyph_height, m_data.glyph_height);
                     glVertex2i(0, m_data.glyph_height);
                     glEnd();
                 }
@@ -796,12 +796,22 @@ namespace TrivialOpenGL {
             }
         }
 
-        SizeU GetGlyphSize(uint32_t code) {
+        SizeU GetGlyphSize(uint32_t code) const {
+            SizeU size = {0, 0};
             if (m_is_loaded) {
-                const GlyphData& glyph_data = FindOrAddGlyphData(code);
-                return {glyph_data.width, m_data.glyph_height};
+                const GlyphData* glyph_data = FindGlyphData(code);
+                if (glyph_data) {
+                    size = {glyph_data->width, m_data.glyph_height};
+                } else {
+                    size = {m_data.glyph_height, m_data.glyph_height};
+                }
             }
-            return {0, 0};
+            return size;
+        }
+
+        // Returns font height in pixels.
+        uint32_t GetFontHeight() const {
+            return m_data.glyph_height;
         }
 
         bool IsOk() const {
@@ -857,7 +867,7 @@ namespace TrivialOpenGL {
             m_err_msg += err_msg;
         }
 
-        GlyphData* FindGlyphData(uint32_t code) {
+        const GlyphData* FindGlyphData(uint32_t code) const {
             auto it = m_data.glyphs.find(code);
 
             if (it == m_data.glyphs.end()) it = m_data.glyphs.find(CODE_WHITE_SQUARE);
@@ -867,17 +877,6 @@ namespace TrivialOpenGL {
                 return &(it->second);
             } 
             return nullptr;
-        }
-
-        GlyphData& FindOrAddGlyphData(uint32_t code) {
-            GlyphData* glyph_data = FindGlyphData(code);
-            if (glyph_data) {
-                return *glyph_data;
-            } else {
-                GlyphData& new_glyph_data = m_data.glyphs[code];
-                new_glyph_data.width = m_data.glyph_height;
-                return new_glyph_data;
-            }
         }
 
         FontData                m_data;

@@ -34,6 +34,7 @@
     <ClInclude Include="include\TrivialOpenGL_Font.h" />
     <ClInclude Include="include\TrivialOpenGL_Headers.h" />
     <ClInclude Include="include\TrivialOpenGL_Key.h" />
+    <ClInclude Include="include\TrivialOpenGL_TextDrawer.h" />
     <ClInclude Include="include\TrivialOpenGL_Utility.h" />
     <ClInclude Include="include\TrivialOpenGL_Window.h" />
   </ItemGroup>
