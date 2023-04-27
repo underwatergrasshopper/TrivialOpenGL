@@ -290,29 +290,6 @@ namespace TrivialOpenGL {
 
         // ---
 
-        // name     - Font name. Encoding Format: ASCII.
-        // size     - Height of character in pixels.
-        bool LoadFont(const std::string& name, uint16_t size, FontStyle style = FONT_STYLE_NORMAL, FontCharSet char_set = FONT_CHAR_SET_ENGLISH);
-
-        void UnloadFont();
-
-        // x, y         - Position of text.
-        // r, g, b, a   - Color of text.
-        // text         - Text to be rendered. Special characters are ignored (for example: '\n', '\t'). Encoding Format: UTF8.
-        void RenderText(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text);
-
-        // x, y         - Position of text.
-        // r, g, b, a   - Color of text.
-        // text         - Text to be rendered. Special characters are ignored (for example: '\n', '\t'). Encoding Format: ASCII.
-        void RenderTextASCII(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text);
-
-
-        void SaveFont(const std::string& file_name, uint16_t width, uint16_t height) {
-            m_text_drawer.SaveFont(file_name, width, height);
-        }
-
-        // ---
-
         std::string GetLoadFontErrMsg() const;
 
         // Special characters are ignored (for example: '\n', '\t').
@@ -414,8 +391,6 @@ namespace TrivialOpenGL {
         std::map<bool*, std::stack<bool>>   m_on_off_stack_map;
 
         wchar_t                             m_char_utf16[MAX_NUM_OF_UTF16_CODE_UNITS];
-
-        InnerUtility::TextDrawer            m_text_drawer;
     };
 
 } // namespace TrivialOpenGL
@@ -855,36 +830,6 @@ namespace TrivialOpenGL {
 
     inline Version Window::GetOpenGL_Version() const {
         return m_data.opengl_verion;
-    }
-
-    //--------------------------------------------------------------------------
-
-    bool Window::LoadFont(const std::string& name, uint16_t size, FontStyle style, FontCharSet char_set) {
-        return m_text_drawer.LoadFont(m_device_context_handle, name, size, style, char_set);
-    }
-
-    void Window::UnloadFont() {
-        m_text_drawer.UnloadFont();
-    }
-
-    void Window::RenderText(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text) {
-        m_text_drawer.RenderText(x, y, r, g, b, a, text);
-    }
-
-    void Window::RenderTextASCII(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a, const std::string& text) {
-        m_text_drawer.RenderTextASCII(x, y, r, g, b, a, text);
-    }
-
-    std::string Window::GetLoadFontErrMsg() const {
-        return m_text_drawer.GetErrMsg();
-    }
-
-    SizeU16 Window::GetTextSize(const std::string& text) const {
-        return m_text_drawer.GetTextSize(text);
-    }
-
-    uint32_t Window::GetFontDescent() const {
-        return m_text_drawer.GetFontDescent();
     }
 
     //--------------------------------------------------------------------------

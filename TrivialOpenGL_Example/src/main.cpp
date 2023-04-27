@@ -1241,21 +1241,6 @@ int main(int argc, char *argv[]) {
             s_test_image.Animate();
             
             TOGL::Window& window = TOGL::ToWindow();
-            
-            int y = window.GetDrawArea().height - FONT_SIZE;
-            window.RenderText(50, y, 255, 255, 255, 255, std::string() + "FPS: " + std::to_string(s_fps.Measure()));
-            
-            y -= FONT_SIZE;
-            window.RenderTextASCII(50, y, 255, 0, 0, 255, "Some ASCII text.");
-            
-            y -= FONT_SIZE;
-            window.RenderText(50, y, 0, 255, 0, 255, u8"Some UNICODE text \u015B \u0444 \uFEA2 \uFF86 \uAC37 \u015A \u4B14 jx");
-            
-            y -= FONT_SIZE;
-            window.RenderText(50, y, 255, 255, 255, 127, "Some transparent text.");
-            
-            window.RenderText(0, 0, 0, 255, 0, 255, u8"\u015Ajx");
-            window.RenderText(100, window.GetFontDescent(), 0, 255, 0, 255, u8"\u015Ajx"); // do not cut underline of text
 
             glColor3f(1, 0.5, 0);
             glPushMatrix();
