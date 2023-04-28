@@ -291,13 +291,6 @@ TOGL::TextDrawer        s_text_drawer;
 //------------------------------------------------------------------------------
 
 void LoadFont(const std::string& text = "") {
-    //if (!TOGL::ToWindow().LoadFont("Courier New", FONT_SIZE, s_font_style, s_font_char_set)) {
-    //    puts("Error: Can not load font.");
-    //    puts(TOGL::ToWindow().GetLoadFontErrMsg().c_str());
-    //} else {
-    //    puts("Font loaded.");
-    //}
-
     s_font.Load("Courier New", FONT_SIZE, TOGL::FONT_SIZE_UNIT_PIXELS, s_font_style, s_font_char_set);
 
     if (!text.empty()) {
@@ -307,14 +300,6 @@ void LoadFont(const std::string& text = "") {
 }
 
 void DrawInfoText(const std::string& text = "") {
-    //const auto list = TOGL::Split(text, '\n');
-    //
-    //int y = TOGL::ToWindow().GetDrawAreaSize().height;
-    //for (const auto& line : list) {
-    //    y -= TOGL::ToWindow().GetTextSize(line).height;
-    //    TOGL::ToWindow().RenderText(10, y, 255, 255, 255, 255, line);
-    //}
-
     s_text_drawer.SetPos(10, TOGL::ToWindow().GetDrawAreaSize().height - s_font.GetGlyphHeight());
     if (text.empty()) {
         s_text_drawer.RenderText(s_font);
