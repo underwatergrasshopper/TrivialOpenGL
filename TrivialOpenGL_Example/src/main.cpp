@@ -127,6 +127,10 @@ public:
         TOGL::ToWindow().RequestRedraw();
     }
 
+    TOGL::SizeU16 GetSize() const {
+        return m_size;
+    }
+
 private:
     TOGL::SizeU16   m_size;
 
@@ -1260,17 +1264,16 @@ int main(int argc, char *argv[]) {
             text_drawer.RenderText(s_font, u8"\n\tTab.\b");
 
 
-            const std::string text = u8"Some text. Xj\u3400\u5016\u9D9B\u0001\U00024B62\nNew Line.\nAnd another line.\n\n\tTab.";
+            const std::string text = u8"Some text. Xj\u3400\u5016\u9D9B\u0001\U00024B62\nNew Line.\nAnd another line.\n\n\tTab. Long                                 line.";
             const TOGL::SizeU text_size = text_drawer.GetTextSize(s_font, text);
 
             glColor3f(1, 1, 1);
-            DrawRectangle(250, 100 - text_size.height + s_font.GetGlyphHeight(), text_size.width, text_size.height);
+            DrawRectangle(0, s_test_image.GetSize().height - text_size.height, s_test_image.GetSize().width - 10, text_size.height);
 
-            text_drawer.SetPos(250, 100);
+            text_drawer.SetPos(0 , s_test_image.GetSize().height - s_font.GetGlyphHeight());
+            text_drawer.SetLineWrapWidth(s_test_image.GetSize().width);
             text_drawer.SetColor(255, 0, 0, 255);
             text_drawer.RenderText(s_font, text);
-
-
         };
 
         data.do_on_resize = [](uint16_t width, uint16_t height) {
