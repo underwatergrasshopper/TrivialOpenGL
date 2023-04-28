@@ -1264,14 +1264,23 @@ int main(int argc, char *argv[]) {
             text_drawer.RenderText(s_font, u8"\n\tTab.\b");
 
 
-            const std::string text = u8"Some text. Xj\u3400\u5016\u9D9B\u0001\U00024B62\nNew Line.\nAnd another line.\n\n\tTab. Long                                 line.";
+            const std::string text = 
+                u8"Some text. Xj\u3400\u5016\u9D9B\u0001\U00024B62 "
+                u8"Many words in line. Many words in line. Many words in line. Many words in line. Many words in line. Many words in line.\n"
+                u8"Many words in line withi\ttab.\n"
+                u8"Many words in line with\ttab.\n"
+                u8"New line. "
+                u8"\tTab.Long                                 line. "
+                u8"Very-long-text-to-split-apart. ";
+            text_drawer.SetLineWrapWidth(s_test_image.GetSize().width - 10);
+
             const TOGL::SizeU text_size = text_drawer.GetTextSize(s_font, text);
 
             glColor3f(1, 1, 1);
             DrawRectangle(0, s_test_image.GetSize().height - text_size.height, s_test_image.GetSize().width - 10, text_size.height);
 
             text_drawer.SetPos(0 , s_test_image.GetSize().height - s_font.GetGlyphHeight());
-            text_drawer.SetLineWrapWidth(s_test_image.GetSize().width);
+            
             text_drawer.SetColor(255, 0, 0, 255);
             text_drawer.RenderText(s_font, text);
         };

@@ -70,12 +70,12 @@ namespace TrivialOpenGL {
         
         // text             - Encoding format: UTF8.
         void RenderText(Font& font, const std::string& text) {
-            RenderSolvedText(font, m_text_preparer.PrepareText(font, text));
+            RenderSolvedText(font, m_text_preparer.PrepareText(*this, font, text));
         }
 
         // text             - Encoding format: UTF8.
         SizeU GetTextSize(Font& font, const std::string& text) const {
-            return GetSolvedTextSize(font, m_text_preparer.PrepareText(font, text));
+            return GetSolvedTextSize(font, m_text_preparer.PrepareText(*this, font, text));
         }
 
         // text             - Encoding format: UTF8.
@@ -128,66 +128,103 @@ namespace TrivialOpenGL {
 
             void SetNumberOfSpacesInTab(uint32_t number) {
                 m_num_of_spaces_in_tab = number;
-                m_tab_as_spaces = std::string(number, ' ');
+                m_tab_as_spaces = std::wstring(number, L' ');
             }
 
+            static SizeU GetWordSize(const Font& font, const std::wstring& word) {
+                SizeU size;
+                size.height = font.GetGlyphHeight();
+                for (const wchar_t c : word) size.width += font.GetGlyphSize(c).width;
+                return size;
+            }
 
-            std::wstring PrepareText(const Font& font, const std::string& text) const {
+            static uint32_t GetWordWidth(const Font& font, const std::wstring& word) {
+                uint32_t width = 0;
+                for (const wchar_t c : word) width += font.GetGlyphSize(c).width;
+                return width;
+            }
+
+            // width - in pixels
+            static size_t GetGlyphCountInWidth(const Font& font, const std::wstring& word, uint32_t max_width) {
+                size_t      count = 0;
+                uint32_t    width = 0;
+                for (const wchar_t c : word) {
+                    width += font.GetGlyphSize(c).width;
+                    if (max_width < width) break;
+                    count += 1;
+                }
+                return count;
+            }
+
+            std::wstring PrepareText(const TextDrawer& text_drawer, const Font& font, const std::string& text) const {
                 std::wstring prepared_text;
 
                 const std::vector<std::wstring> words = SplitToWords(ToUTF16(text));
 
-                size_t      line_length = 0;
-                uint32_t    line_width = 0; // in pixels
+                const uint32_t width_of_full_tab = GetWordWidth(font, m_tab_as_spaces); // in pixels
+
+                uint32_t line_width = 0; // in pixels
 
                 for (const auto& word : words) {
+                    const uint32_t word_width = GetWordWidth(font, word);
 
                     if (word == L"\n") {
                         prepared_text   += word;
-                        line_length     = 0;
+                        line_width      = 0;
 
                     } else if (word == L"\t") {
-                        uint32_t num_of_spaces = line_length % m_num_of_spaces_in_tab;
-                        if (num_of_spaces == 0) num_of_spaces = m_num_of_spaces_in_tab;
-
-                        if (m_wrap_line_width != 0 && (line_length + num_of_spaces) > m_wrap_line_width) {
+                        // TODO: Implement correct tabbing.
+                        //uint32_t width_of_tab = line_width % width_of_full_tab;
+                        //if (width_of_tab == 0) width_of_tab = width_of_full_tab;
+                        
+                        if (m_wrap_line_width != 0 && (line_width + + width_of_full_tab) > m_wrap_line_width) {
                             prepared_text   += L"\n";
-                            line_length     = 0;
+                            line_width      = 0;
+                        } 
 
-                            prepared_text   += std::wstring(m_num_of_spaces_in_tab, L' ');
-                            line_length     += m_num_of_spaces_in_tab;
-                        } else {
-                            prepared_text   += std::wstring(num_of_spaces, L' ');
-                            line_length     += num_of_spaces;
-                        }
+                        prepared_text   += m_tab_as_spaces;
+                        line_width      += width_of_full_tab;
                     } else {
-                        if (m_wrap_line_width != 0 && word.length() > m_wrap_line_width) {
-                            const size_t line_length_left = m_wrap_line_width - line_length;
+                        if (m_wrap_line_width != 0 && (line_width + word_width) > m_wrap_line_width) {
+                            // Word is crossing wrap line width. Needs to be moved or split.
 
-                            
-                            prepared_text   += word.substr(0, line_length_left);
-                            line_length     += line_length_left;
-
-                            prepared_text   += L"\n";
-                            line_length     = 0;
-
-                            prepared_text   += word.substr(line_length_left);
-                            line_length     += word.substr(line_length_left).length();
-
-                        } else if (m_wrap_line_width != 0 && (line_length + word.length()) > m_wrap_line_width) {
-                            puts("0");
-                            // Spaces are ignored if they are going after wrap line width.
+                            // Spaces are ignored if they are behind wrap line width.
                             if (word != L" ") {
-                                prepared_text   += L"\n";
-                                line_length     = 0;
 
-                                prepared_text   += word;
-                                line_length     += word.length();
+                                if (word_width > m_wrap_line_width) {
+                                    // Word is longer than line. Must be split between two or multiple lines.
+                                    std::wstring    long_word       = word;
+                                    size_t          long_word_width = word_width;
+
+                                    while (long_word_width > m_wrap_line_width) {
+                                        const uint32_t line_width_left = m_wrap_line_width - line_width;
+
+                                        const size_t glyph_count = GetGlyphCountInWidth(font, long_word, line_width_left);
+
+                                        prepared_text   += long_word.substr(0, glyph_count);
+                                        prepared_text   += L"\n";
+                                        line_width      = 0;
+
+                                        long_word       = long_word.substr(glyph_count);
+                                        long_word_width = GetWordWidth(font, long_word);
+                                    }
+
+                                    prepared_text   += long_word;
+                                    line_width      += long_word_width;
+
+                                } else {
+                                    // Word is shorter than line. Whole word is moved to next line
+                                    prepared_text   += L"\n";
+                                    line_width      = 0;
+
+                                    prepared_text   += word;
+                                    line_width      += word_width;
+                                }
                             }
   
                         } else {
                             prepared_text   += word;
-                            line_length     += word.length();
+                            line_width      += word_width;
                         }
 
                     }
@@ -204,7 +241,7 @@ namespace TrivialOpenGL {
             }
         private:
             uint32_t            m_num_of_spaces_in_tab;
-            std::string         m_tab_as_spaces;
+            std::wstring        m_tab_as_spaces;
 
             uint32_t            m_wrap_line_width;          // in pixels
 
