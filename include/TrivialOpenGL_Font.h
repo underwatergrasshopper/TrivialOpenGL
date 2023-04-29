@@ -588,7 +588,10 @@ namespace TrivialOpenGL {
                             (wchar_t)(code - display_list_set.first) // corrects character code to match glyph index in display list
                         );
                     
-                        pos.x += size.width;
+                        // Used as workaround for overlapping glyphs when they are drawn.
+                        enum { ADDITIONAL_SAFE_SPACE = 1 };
+
+                        pos.x += size.width + ADDITIONAL_SAFE_SPACE;
                     }
                 }
 
