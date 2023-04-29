@@ -31,10 +31,10 @@
   <ItemGroup>
     <ClInclude Include="include\TrivialOpenGL.h" />
     <ClInclude Include="include\TrivialOpenGL_Debug.h" />
+    <ClInclude Include="include\TrivialOpenGL_FineText.h" />
     <ClInclude Include="include\TrivialOpenGL_Font.h" />
     <ClInclude Include="include\TrivialOpenGL_Headers.h" />
     <ClInclude Include="include\TrivialOpenGL_Key.h" />
-    <ClInclude Include="include\TrivialOpenGL_Text.h" />
     <ClInclude Include="include\TrivialOpenGL_TextDrawer.h" />
     <ClInclude Include="include\TrivialOpenGL_Utility.h" />
     <ClInclude Include="include\TrivialOpenGL_Window.h" />

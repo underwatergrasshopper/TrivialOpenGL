@@ -1,10 +1,10 @@
 /**
-* @file TrivialOpenGL_Text.h
+* @file TrivialOpenGL_FineText.h
 * @author underwatergrasshopper
 */
 
-#ifndef TRIVIALOPENGL_TEXT_H_
-#define TRIVIALOPENGL_TEXT_H_
+#ifndef TRIVIALOPENGL_FINETEXT_H_
+#define TRIVIALOPENGL_FINETEXT_H_
 
 #include "TrivialOpenGL_Utility.h"
 
@@ -46,27 +46,27 @@ namespace TrivialOpenGL {
         TextElement(const TextHorizontalSpacer& horizontal_spacer) : text(), color(),  horizontal_spacer(horizontal_spacer),  type_id(TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER) {}
     };
 
-    class Text {
+    class FineText {
     public:
-        Text() {}
+        FineText() {}
 
         // text - Encoding format: UTF8.
-        Text(const std::string& text) {
+        FineText(const std::string& text) {
             Append(TextElement(text));
         }
 
-        Text(const std::wstring& text) {
+        FineText(const std::wstring& text) {
             Append(TextElement(text));
         }
 
         template <typename... Types>
-        explicit Text(const TextElement& element, const Types&... arguments) {
+        explicit FineText(const TextElement& element, const Types&... arguments) {
             Append(element, TextElement(arguments)...);
         }
 
-        explicit Text(const std::vector<TextElement>& elements) : m_elements(elements) {}
+        explicit FineText(const std::vector<TextElement>& elements) : m_elements(elements) {}
 
-        virtual ~Text() {}
+        virtual ~FineText() {}
 
 
         void Append(const TextElement& element) {
@@ -103,11 +103,11 @@ namespace TrivialOpenGL {
         std::vector<TextElement> m_elements;
     };
 
-    inline Text& operator+=(Text& l, const Text& r) {
+    inline FineText& operator+=(FineText& l, const FineText& r) {
         l.Append(r.ToElements());
         return l;
     }
 
 } // namespace TrivialOpenGL
 
-#endif // TRIVIALOPENGL_TEXT_H_
+#endif // TRIVIALOPENGL_FINETEXT_H_

@@ -299,7 +299,7 @@ void LoadFont() {
 void DrawInfoText(const std::string& text = "") {
     s_text_drawer.SetPos(10, TOGL::ToWindow().GetDrawAreaSize().height - s_font.GetGlyphHeight());
     
-    s_text_drawer.RenderText(s_font, TOGL::Text(text));
+    s_text_drawer.RenderText(s_font, TOGL::FineText(text));
 }
 
 //------------------------------------------------------------------------------
@@ -1244,7 +1244,7 @@ int main(int argc, char *argv[]) {
             text_drawer.RenderText(s_font, u8"\n\tTab.\b");
 
 
-            const TOGL::Text text = TOGL::Text(
+            const TOGL::FineText text = TOGL::FineText(
                 TOGL::Color4U8(0, 0, 0, 255),
                 u8"Some text. Xj\u3400\u5016\u9D9B\u0001\U00024B62 "
                 u8"Many words in line. Many words in line. Many words in line. Many words in line. Many words in line. Many words in line.\n"

@@ -7,7 +7,7 @@
 #define TRIVIALOPENGL_TEXTDRAWER_H_
 
 #include "TrivialOpenGL_Font.h"
-#include "TrivialOpenGL_Text.h"
+#include "TrivialOpenGL_FineText.h"
 
 namespace TrivialOpenGL {
 
@@ -65,18 +65,18 @@ namespace TrivialOpenGL {
         
         // text             - Encoding format: UTF8.
         void RenderText(Font& font, const std::string& text) {
-            RenderText(font, Text(text));
+            RenderText(font, FineText(text));
         }
-        void RenderText(Font& font, const Text& text) {
+        void RenderText(Font& font, const FineText& text) {
             RenderSolvedText(font, m_text_preparer.PrepareText(font, text));
         }
 
         // text             - Encoding format: UTF8.
        SizeU GetTextSize(Font& font, const std::string& text) const {
-            return GetTextSize(font, Text(text));
+            return GetTextSize(font, FineText(text));
         }
 
-        SizeU GetTextSize(Font& font, const Text& text) const {
+        SizeU GetTextSize(Font& font, const FineText& text) const {
             return GetSolvedTextSize(font, m_text_preparer.PrepareText(font, text));
         }
 
@@ -151,8 +151,8 @@ namespace TrivialOpenGL {
                 return count;
             }
 
-            Text PrepareText(const Font& font, const Text& text) const {
-                Text prepared_text;
+            FineText PrepareText(const Font& font, const FineText& text) const {
+                FineText prepared_text;
 
                 uint32_t line_width = 0; // in pixels
 
@@ -218,8 +218,8 @@ namespace TrivialOpenGL {
                 return words;
             };
 
-            Text PrepareTextElementHorizontalSpacer(const Font & font, const TextElement & element_spacer, uint32_t & line_width) const {
-                Text prepared_text;
+            FineText PrepareTextElementHorizontalSpacer(const Font & font, const TextElement & element_spacer, uint32_t & line_width) const {
+                FineText prepared_text;
 
                 const uint32_t spacer_width = element_spacer.horizontal_spacer.GetWidth();
 
@@ -233,8 +233,8 @@ namespace TrivialOpenGL {
                 return prepared_text;
             }
 
-            Text PrepareTextElementText(const Font& font, const TextElement& element_text, uint32_t& line_width) const {
-                Text prepared_text;
+            FineText PrepareTextElementText(const Font& font, const TextElement& element_text, uint32_t& line_width) const {
+                FineText prepared_text;
                 TextElement element = TextElement(L"");
 
                 const uint32_t width_of_full_tab = GetWordWidth(font, m_tab_as_spaces); // in pixels
@@ -324,18 +324,7 @@ namespace TrivialOpenGL {
             }
         }
 
-        std::wstring PrepareText(const std::string& text) const {
-            return L"";
-
-
-            //std::string text_utf8 = text;
-            //
-            //ReplaceAll(text_utf8, "\t", m_tab_as_spaces);
-            //
-            //return ToUTF16(text_utf8);
-        }
-
-        void RenderSolvedText(Font& font, const Text& text) {
+        void RenderSolvedText(Font& font, const FineText& text) {
             glPushAttrib(GL_CURRENT_BIT);
             glColor4ubv(m_color.ToData());
 
@@ -375,7 +364,7 @@ namespace TrivialOpenGL {
         }
 
         // text             - Encoding format: UTF8.
-        SizeU GetSolvedTextSize(Font& font, const Text& text) const {
+        SizeU GetSolvedTextSize(Font& font, const FineText& text) const {
             SizeU size = {0, font.GetGlyphHeight()};
             uint32_t width = 0;
 

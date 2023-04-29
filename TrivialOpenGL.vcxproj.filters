@@ -49,7 +49,7 @@
     <ClInclude Include="include\TrivialOpenGL_TextDrawer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\TrivialOpenGL_Text.h">
+    <ClInclude Include="include\TrivialOpenGL_FineText.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
