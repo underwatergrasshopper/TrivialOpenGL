@@ -1186,7 +1186,7 @@ int main(int argc, char *argv[]) {
     example_manager.AddExample("font", Combine(all_options, {"unicode", "bold"}), {}, [](const std::string& name, const std::set<std::string>& options) {
         auto IsOption = [&options](const std::string& option) { return options.find(option) != options.end(); };
 
-        s_resolution = {600, 300};
+        s_resolution = {800, 400};
 
         TOGL::Data data = {};
 

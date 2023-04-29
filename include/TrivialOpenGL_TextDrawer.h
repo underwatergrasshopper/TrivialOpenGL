@@ -156,15 +156,15 @@ namespace TrivialOpenGL {
 
                 uint32_t line_width = 0; // in pixels
 
-                for (const TextElement& element : text.ToElements()) {
-                    switch (element.type_id) {
-                    case TEXT_ELEMENT_TYPE_ID_TEXT:
-                        prepared_text += PrepareTextElementText(font, element, line_width);
+                for (const FineTextElement& element : text.ToElements()) {
+                    switch (element.GetTypeId()) {
+                    case FINE_TEXT_ELEMENT_TYPE_ID_TEXT:
+                        prepared_text += PrepareTextElementText(font, element.GetText(), line_width);
                         break;
-                    case TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
-                        prepared_text += PrepareTextElementHorizontalSpacer(font, element, line_width);
+                    case FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
+                        prepared_text += PrepareTextElementHorizontalSpacer(font, element.GetTextHorizontalSpacer(), line_width);
                         break;
-                    case TEXT_ELEMENT_TYPE_ID_COLOR:
+                    case FINE_TEXT_ELEMENT_TYPE_ID_COLOR:
                         prepared_text.Append(element);
                         break;
 
@@ -218,34 +218,34 @@ namespace TrivialOpenGL {
                 return words;
             };
 
-            FineText PrepareTextElementHorizontalSpacer(const Font & font, const TextElement & element_spacer, uint32_t & line_width) const {
-                FineText prepared_text;
+            FineText PrepareTextElementHorizontalSpacer(const Font & font, const TextHorizontalSpacer& text_horizontal_spacer, uint32_t & line_width) const {
+                FineText prepared_fine_text;
 
-                const uint32_t spacer_width = element_spacer.horizontal_spacer.GetWidth();
+                const uint32_t spacer_width = text_horizontal_spacer.GetWidth();
 
                 if (spacer_width + line_width > m_wrap_line_width) {
-                    prepared_text.Append(TextElement(L"\n"));
+                    prepared_fine_text.Append(FineTextElement(L"\n"));
                     line_width = 0;
                 }
-                prepared_text.Append(element_spacer);
+                prepared_fine_text.Append(text_horizontal_spacer);
                 line_width += spacer_width;
 
-                return prepared_text;
+                return prepared_fine_text;
             }
 
-            FineText PrepareTextElementText(const Font& font, const TextElement& element_text, uint32_t& line_width) const {
-                FineText prepared_text;
-                TextElement element = TextElement(L"");
+            FineText PrepareTextElementText(const Font& font, const std::wstring& text, uint32_t& line_width) const {
+                FineText prepared_fine_text;
+                std::wstring prepared_text;
 
                 const uint32_t width_of_full_tab = GetWordWidth(font, m_tab_as_spaces); // in pixels
 
-                const std::vector<std::wstring> words = SplitToWords(element_text.text);
+                const std::vector<std::wstring> words = SplitToWords(text);
 
                 for (const auto& word : words) {
                     const uint32_t word_width = GetWordWidth(font, word);
 
                     if (word == L"\n") {
-                        element.text    += word;
+                        prepared_text   += word;
                         line_width      = 0;
 
                     } else if (word == L"\t") {
@@ -253,14 +253,14 @@ namespace TrivialOpenGL {
                         if (width_of_tab == 0) width_of_tab = width_of_full_tab;
                         
                         if (m_wrap_line_width != 0 && (line_width + width_of_full_tab) > m_wrap_line_width) {
-                            element.text    += L"\n";
+                            prepared_text   += L"\n";
                             line_width      = 0;
 
                             width_of_tab = width_of_full_tab;
                         } 
 
-                        prepared_text.Append(element, TextHorizontalSpacer(width_of_tab));
-                        element = TextElement(L"");
+                        prepared_fine_text.Append(prepared_text, TextHorizontalSpacer(width_of_tab));
+                        prepared_text = L"";
 
                         line_width += width_of_tab;
                     } else {
@@ -280,36 +280,36 @@ namespace TrivialOpenGL {
 
                                         const size_t glyph_count = GetGlyphCountInWidth(font, long_word, line_width_left);
 
-                                        element.text    += long_word.substr(0, glyph_count);
-                                        element.text    += L"\n";
+                                        prepared_text   += long_word.substr(0, glyph_count);
+                                        prepared_text   += L"\n";
                                         line_width      = 0;
 
                                         long_word       = long_word.substr(glyph_count);
                                         long_word_width = GetWordWidth(font, long_word);
                                     }
 
-                                    element.text    += long_word;
+                                    prepared_text   += long_word;
                                     line_width      += long_word_width;
 
                                 } else {
                                     // Word is shorter than line. Whole word is moved to next line
-                                    element.text    += L"\n";
+                                    prepared_text   += L"\n";
                                     line_width      = 0;
 
-                                    element.text    += word;
+                                    prepared_text   += word;
                                     line_width      += word_width;
                                 }
                             }
   
                         } else {
-                            element.text    += word;
+                            prepared_text   += word;
                             line_width      += word_width;
                         }
 
                     }
                 }
-                prepared_text.Append(element);
-                return prepared_text;
+                prepared_fine_text.Append(prepared_text);
+                return prepared_fine_text;
             }
 
         };
@@ -328,12 +328,12 @@ namespace TrivialOpenGL {
             glPushAttrib(GL_CURRENT_BIT);
             glColor4ubv(m_color.ToData());
 
-            for (const TextElement& element : text.ToElements()) {
-                switch (element.type_id) {
+            for (const FineTextElement& element : text.ToElements()) {
+                switch (element.GetTypeId()) {
 
-                case TEXT_ELEMENT_TYPE_ID_TEXT:
+                case FINE_TEXT_ELEMENT_TYPE_ID_TEXT:
                     font.RenderBegin();
-                    for (const uint32_t code : element.text) {
+                    for (const uint32_t code : element.GetText()) {
                         if (code == '\n') {
                             m_pos.x = m_base.x;
                             m_pos.y += font.GetGlyphHeight() * m_orientation_factor_y;
@@ -350,12 +350,12 @@ namespace TrivialOpenGL {
                     font.RenderEnd();
                     break;
 
-                case TEXT_ELEMENT_TYPE_ID_COLOR:
-                    glColor4ubv(element.color.ToData());
+                case FINE_TEXT_ELEMENT_TYPE_ID_COLOR:
+                    glColor4ubv(element.GetColor().ToData());
                     break;
 
-                case TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
-                    m_pos.x += element.horizontal_spacer.GetWidth();
+                case FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
+                    m_pos.x += element.GetTextHorizontalSpacer().GetWidth();
                     break;
                 } // switch
             }
@@ -369,11 +369,11 @@ namespace TrivialOpenGL {
             uint32_t width = 0;
 
 
-            for (const TextElement& element : text.ToElements()) {
-                switch (element.type_id) {
+            for (const FineTextElement& element : text.ToElements()) {
+                switch (element.GetTypeId()) {
 
-                case TEXT_ELEMENT_TYPE_ID_TEXT:
-                    for (const uint32_t code : element.text) {
+                case FINE_TEXT_ELEMENT_TYPE_ID_TEXT:
+                    for (const uint32_t code : element.GetText()) {
                         if (code == '\n') {
                             size.height += font.GetGlyphHeight();
 
@@ -384,17 +384,16 @@ namespace TrivialOpenGL {
                         }
                     }
                     break;
-                case TEXT_ELEMENT_TYPE_ID_COLOR:
+                case FINE_TEXT_ELEMENT_TYPE_ID_COLOR:
                     break;
 
-                case TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
-                    width += element.horizontal_spacer.GetWidth();
+                case FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
+                    width += element.GetTextHorizontalSpacer().GetWidth();
                     break;
                 }
             }
 
             if (size.width < width) size.width = width;
-
 
             return size;
         }
