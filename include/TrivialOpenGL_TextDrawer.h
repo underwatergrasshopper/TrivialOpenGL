@@ -7,6 +7,7 @@
 #define TRIVIALOPENGL_TEXTDRAWER_H_
 
 #include "TrivialOpenGL_Font.h"
+#include "TrivialOpenGL_Text.h"
 
 namespace TrivialOpenGL {
 
@@ -30,8 +31,6 @@ namespace TrivialOpenGL {
             SetPos(0, 0);
 
             m_color = {255, 255, 255, 255};
-
-            m_text = L"";
 
             m_text_preparer.Reset();
         }
@@ -57,10 +56,6 @@ namespace TrivialOpenGL {
             m_text_preparer.SetNumberOfSpacesInTab(number);
         }
 
-        void SetText(const std::string& text) {
-            m_text = PrepareText(text);
-        }
-
         // width        - in pixels
         void SetLineWrapWidth(uint32_t width) {
             m_text_preparer.SetLineWrapWidth(width);
@@ -70,22 +65,19 @@ namespace TrivialOpenGL {
         
         // text             - Encoding format: UTF8.
         void RenderText(Font& font, const std::string& text) {
-            RenderSolvedText(font, m_text_preparer.PrepareText(*this, font, text));
+            RenderText(font, Text(text));
+        }
+        void RenderText(Font& font, const Text& text) {
+            RenderSolvedText(font, m_text_preparer.PrepareText(font, text));
         }
 
         // text             - Encoding format: UTF8.
-        SizeU GetTextSize(Font& font, const std::string& text) const {
-            return GetSolvedTextSize(font, m_text_preparer.PrepareText(*this, font, text));
+       SizeU GetTextSize(Font& font, const std::string& text) const {
+            return GetTextSize(font, Text(text));
         }
 
-        // text             - Encoding format: UTF8.
-        void RenderText(Font& font) {
-            RenderSolvedText(font, m_text);
-        }
-
-        // text             - Encoding format: UTF8.
-        SizeU GetTextSize(Font& font) const {
-            return GetSolvedTextSize(font, m_text);
+        SizeU GetTextSize(Font& font, const Text& text) const {
+            return GetSolvedTextSize(font, m_text_preparer.PrepareText(font, text));
         }
 
         // ---
@@ -111,8 +103,11 @@ namespace TrivialOpenGL {
 
         class TextPreparer {
         public:
-            TextPreparer() {
+            TextPreparer() {            
                 Reset();
+
+                m_width_of_full_tab = 0;        
+                m_line_width        = 0;   
             }
             virtual ~TextPreparer() {}
 
@@ -156,94 +151,37 @@ namespace TrivialOpenGL {
                 return count;
             }
 
-            std::wstring PrepareText(const TextDrawer& text_drawer, const Font& font, const std::string& text) const {
-                std::wstring prepared_text;
-
-                const std::vector<std::wstring> words = SplitToWords(ToUTF16(text));
-
-                const uint32_t width_of_full_tab = GetWordWidth(font, m_tab_as_spaces); // in pixels
+            Text PrepareText(const Font& font, const Text& text) const {
+                Text prepared_text;
 
                 uint32_t line_width = 0; // in pixels
 
-                for (const auto& word : words) {
-                    const uint32_t word_width = GetWordWidth(font, word);
+                for (const TextElement& element : text.ToElements()) {
+                    switch (element.type_id) {
+                    case TEXT_ELEMENT_TYPE_ID_TEXT:
+                        prepared_text += PrepareTextElementText(font, element, line_width);
+                        break;
+                    case TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
+                        prepared_text += PrepareTextElementHorizontalSpacer(font, element, line_width);
+                        break;
+                    case TEXT_ELEMENT_TYPE_ID_COLOR:
+                        prepared_text.Append(element);
+                        break;
 
-                    if (word == L"\n") {
-                        prepared_text   += word;
-                        line_width      = 0;
-
-                    } else if (word == L"\t") {
-                        // TODO: Implement correct tabbing.
-                        //uint32_t width_of_tab = line_width % width_of_full_tab;
-                        //if (width_of_tab == 0) width_of_tab = width_of_full_tab;
-                        
-                        if (m_wrap_line_width != 0 && (line_width + + width_of_full_tab) > m_wrap_line_width) {
-                            prepared_text   += L"\n";
-                            line_width      = 0;
-                        } 
-
-                        prepared_text   += m_tab_as_spaces;
-                        line_width      += width_of_full_tab;
-                    } else {
-                        if (m_wrap_line_width != 0 && (line_width + word_width) > m_wrap_line_width) {
-                            // Word is crossing wrap line width. Needs to be moved or split.
-
-                            // Spaces are ignored if they are behind wrap line width.
-                            if (word != L" ") {
-
-                                if (word_width > m_wrap_line_width) {
-                                    // Word is longer than line. Must be split between two or multiple lines.
-                                    std::wstring    long_word       = word;
-                                    size_t          long_word_width = word_width;
-
-                                    while (long_word_width > m_wrap_line_width) {
-                                        const uint32_t line_width_left = m_wrap_line_width - line_width;
-
-                                        const size_t glyph_count = GetGlyphCountInWidth(font, long_word, line_width_left);
-
-                                        prepared_text   += long_word.substr(0, glyph_count);
-                                        prepared_text   += L"\n";
-                                        line_width      = 0;
-
-                                        long_word       = long_word.substr(glyph_count);
-                                        long_word_width = GetWordWidth(font, long_word);
-                                    }
-
-                                    prepared_text   += long_word;
-                                    line_width      += long_word_width;
-
-                                } else {
-                                    // Word is shorter than line. Whole word is moved to next line
-                                    prepared_text   += L"\n";
-                                    line_width      = 0;
-
-                                    prepared_text   += word;
-                                    line_width      += word_width;
-                                }
-                            }
-  
-                        } else {
-                            prepared_text   += word;
-                            line_width      += word_width;
-                        }
-
-                    }
-
-                    // debug
-                    //if (word == L"\n") {
-                    //    wprintf(L"><\n");
-                    //} else {
-                    //    wprintf(L">%ls<\n", word.c_str());
-                    //}
-                    
+                    } // switch
                 }
+ 
                 return prepared_text;
             }
+
         private:
             uint32_t            m_num_of_spaces_in_tab;
             std::wstring        m_tab_as_spaces;
 
             uint32_t            m_wrap_line_width;          // in pixels
+
+            uint32_t            m_width_of_full_tab;        // in pixels
+            uint32_t            m_line_width;               // in pixels
 
             // <word>
             //     '\t'         # tab
@@ -279,6 +217,101 @@ namespace TrivialOpenGL {
 
                 return words;
             };
+
+            Text PrepareTextElementHorizontalSpacer(const Font & font, const TextElement & element_spacer, uint32_t & line_width) const {
+                Text prepared_text;
+
+                const uint32_t spacer_width = element_spacer.horizontal_spacer.GetWidth();
+
+                if (spacer_width + line_width > m_wrap_line_width) {
+                    prepared_text.Append(TextElement(L"\n"));
+                    line_width = 0;
+                }
+                prepared_text.Append(element_spacer);
+                line_width += spacer_width;
+
+                return prepared_text;
+            }
+
+            Text PrepareTextElementText(const Font& font, const TextElement& element_text, uint32_t& line_width) const {
+                Text prepared_text;
+                TextElement element = TextElement(L"");
+
+                const uint32_t width_of_full_tab = GetWordWidth(font, m_tab_as_spaces); // in pixels
+
+                const std::vector<std::wstring> words = SplitToWords(element_text.text);
+
+                for (const auto& word : words) {
+                    const uint32_t word_width = GetWordWidth(font, word);
+
+                    if (word == L"\n") {
+                        element.text    += word;
+                        line_width      = 0;
+
+                    } else if (word == L"\t") {
+                        uint32_t width_of_tab = width_of_full_tab - (line_width % width_of_full_tab);
+                        if (width_of_tab == 0) width_of_tab = width_of_full_tab;
+                        
+                        if (m_wrap_line_width != 0 && (line_width + width_of_full_tab) > m_wrap_line_width) {
+                            element.text    += L"\n";
+                            line_width      = 0;
+
+                            width_of_tab = width_of_full_tab;
+                        } 
+
+                        prepared_text.Append(element, TextHorizontalSpacer(width_of_tab));
+                        element = TextElement(L"");
+
+                        line_width += width_of_tab;
+                    } else {
+                        if (m_wrap_line_width != 0 && (line_width + word_width) > m_wrap_line_width) {
+                            // Word is crossing wrap line width. Needs to be moved or split.
+
+                            // Spaces are ignored if they are behind wrap line width.
+                            if (word != L" ") {
+
+                                if (word_width > m_wrap_line_width) {
+                                    // Word is longer than line. Must be split between two or multiple lines.
+                                    std::wstring    long_word       = word;
+                                    uint32_t        long_word_width = word_width;
+
+                                    while (long_word_width > m_wrap_line_width) {
+                                        const uint32_t line_width_left = m_wrap_line_width - line_width;
+
+                                        const size_t glyph_count = GetGlyphCountInWidth(font, long_word, line_width_left);
+
+                                        element.text    += long_word.substr(0, glyph_count);
+                                        element.text    += L"\n";
+                                        line_width      = 0;
+
+                                        long_word       = long_word.substr(glyph_count);
+                                        long_word_width = GetWordWidth(font, long_word);
+                                    }
+
+                                    element.text    += long_word;
+                                    line_width      += long_word_width;
+
+                                } else {
+                                    // Word is shorter than line. Whole word is moved to next line
+                                    element.text    += L"\n";
+                                    line_width      = 0;
+
+                                    element.text    += word;
+                                    line_width      += word_width;
+                                }
+                            }
+  
+                        } else {
+                            element.text    += word;
+                            line_width      += word_width;
+                        }
+
+                    }
+                }
+                prepared_text.Append(element);
+                return prepared_text;
+            }
+
         };
 
         static void ReplaceAll(std::string& text, const std::string& from, const std::string& to) {
@@ -302,47 +335,77 @@ namespace TrivialOpenGL {
             //return ToUTF16(text_utf8);
         }
 
-        void RenderSolvedText(Font& font, const std::wstring& text_utf16) {
+        void RenderSolvedText(Font& font, const Text& text) {
             glPushAttrib(GL_CURRENT_BIT);
             glColor4ubv(m_color.ToData());
 
-            font.RenderBegin();
-            for (const uint32_t code : text_utf16) {
-                if (code == '\n') {
-                    m_pos.x = m_base.x;
-                    m_pos.y += font.GetGlyphHeight() * m_orientation_factor_y;
-                } else {
-                    glPushMatrix();
-                    glTranslatef(float(m_pos.x), float(m_pos.y), 0);
+            for (const TextElement& element : text.ToElements()) {
+                switch (element.type_id) {
 
-                    font.RenderGlyph(code);
-                    m_pos.x += font.GetGlyphSize(code).width;
+                case TEXT_ELEMENT_TYPE_ID_TEXT:
+                    font.RenderBegin();
+                    for (const uint32_t code : element.text) {
+                        if (code == '\n') {
+                            m_pos.x = m_base.x;
+                            m_pos.y += font.GetGlyphHeight() * m_orientation_factor_y;
+                        } else {
+                            glPushMatrix();
+                            glTranslatef(float(m_pos.x), float(m_pos.y), 0);
 
-                    glPopMatrix();
-                }
+                            font.RenderGlyph(code);
+                            m_pos.x += font.GetGlyphSize(code).width;
+
+                            glPopMatrix();
+                        }
+                    }
+                    font.RenderEnd();
+                    break;
+
+                case TEXT_ELEMENT_TYPE_ID_COLOR:
+                    glColor4ubv(element.color.ToData());
+                    break;
+
+                case TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
+                    m_pos.x += element.horizontal_spacer.GetWidth();
+                    break;
+                } // switch
             }
-            font.RenderEnd();
 
             glPopAttrib();
         }
 
         // text             - Encoding format: UTF8.
-        SizeU GetSolvedTextSize(Font& font, const std::wstring& text_utf16) const {
+        SizeU GetSolvedTextSize(Font& font, const Text& text) const {
             SizeU size = {0, font.GetGlyphHeight()};
-
             uint32_t width = 0;
-            for (const uint32_t code : text_utf16) {
-                if (code == '\n') {
-                    size.height += font.GetGlyphHeight();
 
-                    if (size.width < width) size.width = width;
-                    width = 0;
-                } else {
-                    width += font.GetGlyphSize(code).width;
+
+            for (const TextElement& element : text.ToElements()) {
+                switch (element.type_id) {
+
+                case TEXT_ELEMENT_TYPE_ID_TEXT:
+                    for (const uint32_t code : element.text) {
+                        if (code == '\n') {
+                            size.height += font.GetGlyphHeight();
+
+                            if (size.width < width) size.width = width;
+                            width = 0;
+                        } else {
+                            width += font.GetGlyphSize(code).width;
+                        }
+                    }
+                    break;
+                case TEXT_ELEMENT_TYPE_ID_COLOR:
+                    break;
+
+                case TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
+                    width += element.horizontal_spacer.GetWidth();
+                    break;
                 }
             }
-            
+
             if (size.width < width) size.width = width;
+
 
             return size;
         }
@@ -354,7 +417,6 @@ namespace TrivialOpenGL {
         PointI                  m_base;
 
         Color4U8                m_color;
-        std::wstring            m_text;
         
         TextPreparer            m_text_preparer;
     };

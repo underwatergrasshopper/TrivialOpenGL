@@ -49,5 +49,8 @@
     <ClInclude Include="include\TrivialOpenGL_TextDrawer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\TrivialOpenGL_Text.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

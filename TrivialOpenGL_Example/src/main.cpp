@@ -290,22 +290,16 @@ TOGL::TextDrawer        s_text_drawer;
 
 //------------------------------------------------------------------------------
 
-void LoadFont(const std::string& text = "") {
+void LoadFont() {
     s_font.Load("Courier New", FONT_SIZE, TOGL::FONT_SIZE_UNIT_PIXELS, s_font_style, s_font_char_set);
 
-    if (!text.empty()) {
-        s_text_drawer.SetText(text);
-    }
     s_text_drawer.SetColor(255, 255, 255, 255);
 }
 
 void DrawInfoText(const std::string& text = "") {
     s_text_drawer.SetPos(10, TOGL::ToWindow().GetDrawAreaSize().height - s_font.GetGlyphHeight());
-    if (text.empty()) {
-        s_text_drawer.RenderText(s_font);
-    } else { 
-        s_text_drawer.RenderText(s_font, text);
-    }
+    
+    s_text_drawer.RenderText(s_font, TOGL::Text(text));
 }
 
 //------------------------------------------------------------------------------
@@ -1227,6 +1221,7 @@ int main(int argc, char *argv[]) {
         };
 
         data.draw = []() {
+            
             s_test_image.Animate();
             
             TOGL::Window& window = TOGL::ToWindow();
@@ -1249,14 +1244,18 @@ int main(int argc, char *argv[]) {
             text_drawer.RenderText(s_font, u8"\n\tTab.\b");
 
 
-            const std::string text = 
+            const TOGL::Text text = TOGL::Text(
+                TOGL::Color4U8(0, 0, 0, 255),
                 u8"Some text. Xj\u3400\u5016\u9D9B\u0001\U00024B62 "
                 u8"Many words in line. Many words in line. Many words in line. Many words in line. Many words in line. Many words in line.\n"
-                u8"Many words in line withi\ttab.\n"
-                u8"Many words in line with\ttab.\n"
+                u8"Many words in line with \ttab.\n"
+                u8"Many words in line with i\ttab.\n"
+                u8"Many words in line with ii\ttab.\n"
+                u8"Many words in line with iii\ttab.\n"
+                u8"Many words in line with iiii\ttab.\n"
                 u8"New line. "
                 u8"\tTab.Long                                 line. "
-                u8"Very-long-text-to-split-apart. ";
+                u8"Very-long-text-to-split-apart. ");
             text_drawer.SetLineWrapWidth(s_test_image.GetSize().width - 10);
 
             const TOGL::SizeU text_size = text_drawer.GetTextSize(s_font, text);
@@ -1268,6 +1267,7 @@ int main(int argc, char *argv[]) {
             
             text_drawer.SetColor(255, 0, 0, 255);
             text_drawer.RenderText(s_font, text);
+            
         };
 
         data.do_on_resize = [](uint16_t width, uint16_t height) {
