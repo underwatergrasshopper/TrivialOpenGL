@@ -282,15 +282,6 @@ namespace TrivialOpenGL {
 
         // ---
 
-        std::string GetLoadFontErrMsg() const;
-
-        // Special characters are ignored (for example: '\n', '\t').
-        SizeU16 GetTextSize(const std::string& text) const;
-
-        uint32_t GetFontDescent() const;
-
-        // ---
-
         // Get access to singleton instance.
         static Window& To();
 
