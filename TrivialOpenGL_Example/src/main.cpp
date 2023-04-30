@@ -866,7 +866,8 @@ int main(int argc, char *argv[]) {
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
-        data.area               = {TOGL::DEF, TOGL::DEF, 400, 800};
+        data.area               = {0, 0, 400, 800};
+        data.style              = TOGL::StyleBit::CENTERED;
 
         return TOGL::Run(data);
     });
@@ -965,8 +966,10 @@ int main(int argc, char *argv[]) {
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
-        data.area               = {TOGL::DEF, TOGL::DEF, 400, 200};
-        data.style              = TOGL::StyleBit::DRAW_AREA_SIZE;
+        data.area               = {0, 0, 400, 200};
+        data.style              = 0;
+        data.style              |= TOGL::StyleBit::CENTERED;
+        data.style              |= TOGL::StyleBit::DRAW_AREA_SIZE;
 
         return TOGL::Run(data);
 
@@ -981,8 +984,10 @@ int main(int argc, char *argv[]) {
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
-        data.area               = {TOGL::DEF, TOGL::DEF, 400, 200};
-        data.style              = TOGL::StyleBit::DRAW_AREA_ONLY;
+        data.area               = {0, 0, 400, 200};
+        data.style              = 0;
+        data.style              |= TOGL::StyleBit::CENTERED;
+        data.style              |= TOGL::StyleBit::DRAW_AREA_ONLY;
 
         return TOGL::Run(data);
     });
@@ -1067,7 +1072,9 @@ int main(int argc, char *argv[]) {
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
-        data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
+        data.area               = {0, 0, s_resolution.width, s_resolution.height};
+        data.style              = 0;
+        data.style              |= TOGL::StyleBit::CENTERED;
         data.icon_resource_id   = ICON_ID;
 
         if (!IsOption("no_debug"))                      data.log_level = TOGL::LOG_LEVEL_DEBUG;
@@ -1192,7 +1199,9 @@ int main(int argc, char *argv[]) {
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
-        data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
+        data.area               = {0, 0, s_resolution.width, s_resolution.height};
+        data.style              = 0;
+        data.style              |= TOGL::StyleBit::CENTERED;
         data.icon_resource_id   = ICON_ID;
 
         if (!IsOption("no_debug"))                      data.log_level = TOGL::LOG_LEVEL_DEBUG;
@@ -1299,7 +1308,9 @@ int main(int argc, char *argv[]) {
 
         data.window_name            = "TrivialOpenGL_Example ";
         data.window_name            += name;
-        data.area                   = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
+        data.area                   = {0, 0, s_resolution.width, s_resolution.height};
+        data.style                  = 0;
+        data.style                  |= TOGL::StyleBit::CENTERED;
         data.icon_resource_id       = ICON_ID;
 
         if (!IsOption("no_debug"))                      data.log_level = TOGL::LOG_LEVEL_DEBUG;
@@ -1765,7 +1776,9 @@ int main(int argc, char *argv[]) {
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
-        data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
+        data.area               = {0, 0, s_resolution.width, s_resolution.height};
+        data.style              = 0;
+        data.style              |= TOGL::StyleBit::CENTERED;
         data.icon_resource_id   = ICON_ID;
 
         if (!IsOption("no_debug"))                      data.log_level = TOGL::LOG_LEVEL_DEBUG;
@@ -1911,7 +1924,9 @@ int main(int argc, char *argv[]) {
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
-        data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
+        data.area               = {0, 0, s_resolution.width, s_resolution.height};
+        data.style              = 0;
+        data.style              |= TOGL::StyleBit::CENTERED;
         data.icon_resource_id   = ICON_ID;
         data.log_level          = TOGL::LOG_LEVEL_DEBUG;
 
@@ -1956,7 +1971,9 @@ int main(int argc, char *argv[]) {
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
-        data.area               = {TOGL::DEF, TOGL::DEF, s_resolution.width, s_resolution.height};
+        data.area               = {0, 0, s_resolution.width, s_resolution.height};
+        data.style              = 0;
+        data.style              |= TOGL::StyleBit::CENTERED;
         data.icon_resource_id   = ICON_ID;
         data.log_level          = TOGL::LOG_LEVEL_DEBUG;
         

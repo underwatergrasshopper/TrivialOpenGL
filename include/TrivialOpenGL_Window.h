@@ -16,10 +16,6 @@
 
 namespace TrivialOpenGL {
 
-    enum {
-        DEF = -1,
-    };
-
     struct StyleBit {
         using Field = uint32_t;
         enum {
@@ -62,14 +58,10 @@ namespace TrivialOpenGL {
         std::string     window_name         = "Window";
 
         // Window area.
-        // If x is DEF then created window will be centered on X axis.
-        // If y is DEF then created window will be centered on Y axis.
-        // If width is DEF then created window will have with equal to half width of working area (desktop area excluding task bar area).
-        // If with is not DEF end less than 0 then it's considered as 0.
-        // If height is DEF then created window will have with equal to half height of working area (desktop area excluding task bar area).
-        // If height is not DEF end less than 1 then it's considered as 1. 
+        // If area is equal to {0, 0, 0, 0} then created window will be centered in screen working area (desktop area excluding task bar) 
+        // with width equal to half of screen working area width and height equal to half of screen working area height. 
         // Actual window width or height might be higher, depends on operating system minimal window size.
-        AreaI           area                = {DEF, DEF, DEF, DEF};
+        AreaIU16        area                = {0, 0, 0, 0};
 
         // NO_RESIZE                      - Window wont have resize frame.
         // NO_MAXIMIZE                    - Window wont have maximize button.
@@ -81,7 +73,7 @@ namespace TrivialOpenGL {
 
         // Tries create OpenGL Rendering Context which support to at least this version, with compatibility to all previous versions.
         // If opengl_version.major and opengl_version.minor is DEF then creates for any available OpenGL version. Can be checked by GetOpenGL_Version().
-        Version         opengl_verion       = {DEF, DEF};
+        Version         opengl_verion       = {0, 0};
 
         // File name of icon image file (.ico). 
         // Loaded icon will be presented on window title bar and on task bar.
@@ -327,7 +319,7 @@ namespace TrivialOpenGL {
         void Pop(bool& value);
 
         // Changes area by applying style from data parameter which was provided to Run function.
-        void ChangeArea(const AreaI& area);
+        void ChangeArea(const AreaIU16& area);
 
         void SingletonCheck();
         HICON TryLoadIcon();
@@ -335,7 +327,7 @@ namespace TrivialOpenGL {
 
         void Draw();
 
-        AreaIU16 GenerateWindowArea(const AreaI& area);
+        AreaIU16 GenerateWindowArea(const AreaIU16& area);
         void Restore();
         void SetArea(const AreaIU16& area, AreaPartId area_part_id, bool is_client_area);
 
@@ -618,7 +610,7 @@ namespace TrivialOpenGL {
     }
 
 
-    inline void Window::ChangeArea(const AreaI& area) {
+    inline void Window::ChangeArea(const AreaIU16& area) {
         SetArea(GenerateWindowArea(area), AreaPartId::ALL, m_data.style & StyleBit::DRAW_AREA_ONLY);
     }
 
@@ -931,15 +923,17 @@ namespace TrivialOpenGL {
         SwapBuffers(m_device_context_handle);
     }
 
-    inline AreaIU16 Window::GenerateWindowArea(const AreaI& area) {
+    inline AreaIU16 Window::GenerateWindowArea(const AreaIU16& area) {
         AreaIU16 window_area;
+
+        const bool is_default = (area == AreaIU16(0, 0, 0, 0));
 
         // --- Size --- //
 
         const AreaIU16 desktop_area = GetDesktopAreaNoTaskBar();
 
-        window_area.width   = (area.width != DEF)   ? area.width    : (desktop_area.width / 2);
-        window_area.height  = (area.height != DEF)  ? area.height   : (desktop_area.height / 2);
+        window_area.width   = is_default ? (desktop_area.width / 2)     : area.width;
+        window_area.height  = is_default ? (desktop_area.height / 2)    : area.height;
 
         // In a case of unreasonable values.
         if (window_area.width < 0)    window_area.width = 0;
@@ -957,8 +951,8 @@ namespace TrivialOpenGL {
             window_area.x = (desktop_area.width - window_area.width) / 2;
             window_area.y = (desktop_area.height - window_area.height) / 2;
         } else {
-            window_area.x = (area.x != DEF) ? area.x : ((desktop_area.width - window_area.width) / 2);
-            window_area.y = (area.y != DEF) ? area.y : ((desktop_area.height - window_area.height) / 2);
+            window_area.x = is_default ? ((desktop_area.width - window_area.width) / 2)     : area.x;
+            window_area.y = is_default ? ((desktop_area.height - window_area.height) / 2)   : area.y;
         }
 
         // No need for additional adjustment for invisible window frame. 
@@ -1135,13 +1129,9 @@ namespace TrivialOpenGL {
             LogFatalError("Window::Create: Can not set created OpenGl Rendering Context to be current.");
         }
 
-        if ((m_data.opengl_verion.major == DEF || m_data.opengl_verion.minor == DEF) && m_data.opengl_verion.major != m_data.opengl_verion.minor) {
-            LogFatalError("Window::Create: Incorrect OpenGL version is provided.");
-        }
-
         // --- Creates OpenGL Rendering Context with required minimum version --- //
 
-        if (m_data.opengl_verion.major != DEF && m_data.opengl_verion.minor != DEF) {
+        if (m_data.opengl_verion.major != 0 && m_data.opengl_verion.minor != 0) {
             HGLRC (WINAPI *togl_wglCreateContextAttribsARB)(HDC hDC, HGLRC hShareContext, const int* attribList) = (decltype(togl_wglCreateContextAttribsARB)) wglGetProcAddress("wglCreateContextAttribsARB");
             if (togl_wglCreateContextAttribsARB) {
                 enum {
