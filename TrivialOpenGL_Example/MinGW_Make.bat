@@ -128,7 +128,7 @@ goto :EOF
 :BUILD
     if not exist !BUILD_PATH! md !BUILD_PATH!
     set BUILD_PATH=!BUILD_PATH:\\=/!
-    cmake --fresh -G "MinGW Makefiles" -D CMAKE_BUILD_TYPE=!BUILD_TYPE! -D  ARCHITECTURE=!ARCHITECTURE! -S . -B !BUILD_PATH! && cmake --build !BUILD_PATH!
+    cmake --fresh -G "MinGW Makefiles" -D CMAKE_BUILD_TYPE=!BUILD_TYPE! -S . -B !BUILD_PATH! && cmake --build !BUILD_PATH!
     if !ERRORLEVEL! neq 0 exit /B !ERRORLEVEL!
     exit /B
 
