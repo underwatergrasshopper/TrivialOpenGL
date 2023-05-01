@@ -20,7 +20,7 @@ setlocal EnableDelayedExpansion
 ::------------------------------------------------------------------------------
 :: User Section
 
-set TEST_PROJECT_NAME=
+set EXAMPLE_PROJECT_NAME=
 
 ::------------------------------------------------------------------------------
 
@@ -39,9 +39,9 @@ if "%ARCHITECTURE%" equ "" set ARCHITECTURE=64
 ::------------------------------------------------------------------------------
 
 :: project name is a folder name by default
-if "!TEST_PROJECT_NAME!" equ "" (
+if "!EXAMPLE_PROJECT_NAME!" equ "" (
     for %%D in (.) do (
-        set TEST_PROJECT_NAME=%%~nxD
+        set EXAMPLE_PROJECT_NAME=%%~nxD
     )
 )
 
@@ -80,8 +80,8 @@ if "!ARCHITECTURE!" equ "64" set ARCH_PRE=x64
 if "!ARCHITECTURE!" equ "32" set ARCH_PRE=Win32
 
 set BUILD_SUB_DIR=..\\build\\mingw_llvm
-set BUILD_PATH=!BUILD_SUB_DIR!\\!ARCH_PRE!\\!BUILD_TYPE!
-set RETURN_PATH=..\\..\\..\\..\\!TEST_PROJECT_NAME!
+set BUILD_PATH=!BUILD_SUB_DIR!\\!ARCH_PRE!\\!BUILD_TYPE!\\!EXAMPLE_PROJECT_NAME!
+set RETURN_PATH=..\\..\\..\\..\\..\\!TEST_PROJECT_NAME!
 
 set ERR_PASS=0
 

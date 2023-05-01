@@ -58,5 +58,5 @@ jobs:
         run: |
           $env:Path = "C:\${{ matrix.mingw_folder }}\bin;" + $env:Path 
           cd build\mingw_llvm\${{ matrix.platform_folder }}\${{ matrix.build_mode }}
-          ./TrivialOpenGL_Test.exe ${{ matrix.test_flag }}
+          ./TrivialOpenGL_Test/TrivialOpenGL_Test.exe ${{ matrix.test_flag }}
       
