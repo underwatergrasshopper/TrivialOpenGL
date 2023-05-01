@@ -22,6 +22,7 @@
     <None Include=".github\workflows\build_and_test.yml" />
     <None Include=".github\workflows\build_and_test_mingw.yml" />
     <None Include="CHANGELOG.md" />
+    <None Include="MinGW_Make.bat" />
     <None Include="MinGW_Test.bat" />
     <None Include="Pack.bat" />
     <None Include="README.md" />
@@ -38,6 +39,12 @@
     <ClInclude Include="include\TrivialOpenGL_TextDrawer.h" />
     <ClInclude Include="include\TrivialOpenGL_Utility.h" />
     <ClInclude Include="include\TrivialOpenGL_Window.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\TrivialOpenGL_Window.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

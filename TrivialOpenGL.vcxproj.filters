@@ -23,6 +23,7 @@
     <None Include=".github\workflows\build_and_test.yml" />
     <None Include=".github\workflows\build_and_test_mingw.yml" />
     <None Include="VERSION" />
+    <None Include="MinGW_Make.bat" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\TrivialOpenGL.h">
@@ -52,5 +53,13 @@
     <ClInclude Include="include\TrivialOpenGL_FineText.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\TrivialOpenGL_Window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="CMakeLists.txt" />
   </ItemGroup>
 </Project>

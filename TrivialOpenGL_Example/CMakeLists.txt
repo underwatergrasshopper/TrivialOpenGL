@@ -24,15 +24,23 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
     message("FLAGS: ${CMAKE_CXX_FLAGS_RELEASE}")
 endif()
 
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
-
 file(GLOB_RECURSE SRC_FILES src/*.cpp)
 message("${SRC_FILES}")
-add_executable(${CMAKE_PROJECT_NAME} ${SRC_FILES})
-target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include)
-target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/externals/TimeLapse/include)
-target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-target_link_libraries(${CMAKE_PROJECT_NAME} OpenGL32.lib)
+add_executable(${PROJECT_NAME} ${SRC_FILES})
+
+set_target_properties(${PROJECT_NAME}
+    PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+)
+message("${CMAKE_CURRENT_BINARY_DIR}")
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/externals/TimeLapse/include)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
+
+add_subdirectory(.. TrivialOpenGL)
+add_dependencies(${PROJECT_NAME} TrivialOpenGL)
+
+target_link_libraries(${PROJECT_NAME} OpenGL32 TrivialOpenGL)
