@@ -1133,8 +1133,8 @@ int main(int argc, char *argv[]) {
                     case TOGL::KEY_ID_1:            window.MoveTo(0, 0); break;
                     case TOGL::KEY_ID_2:            window.MoveTo(10, 100); break;
 
-                    case TOGL::KEY_ID_3:            window.SetSize(400, 200); break;
-                    case TOGL::KEY_ID_4:            window.SetSize(800, 400); break;
+                    case TOGL::KEY_ID_3:            window.Resize(400, 200); break;
+                    case TOGL::KEY_ID_4:            window.Resize(800, 400); break;
 
                     case TOGL::KEY_ID_5:            window.SetArea(100, 10, 800, 400); break;
                     case TOGL::KEY_ID_6:            window.SetArea(window.GetArea()); break;
@@ -1158,8 +1158,8 @@ int main(int argc, char *argv[]) {
                     case TOGL::KEY_ID_1:            window.MoveTo(0, 0, true); break;
                     case TOGL::KEY_ID_2:            window.MoveTo(10, 100, true); break;
 
-                    case TOGL::KEY_ID_3:            window.SetSize(400, 200, true); break;
-                    case TOGL::KEY_ID_4:            window.SetSize(800, 400, true); break;
+                    case TOGL::KEY_ID_3:            window.Resize(400, 200, true); break;
+                    case TOGL::KEY_ID_4:            window.Resize(800, 400, true); break;
 
                     case TOGL::KEY_ID_5:            window.SetArea(100, 10, 800, 400, false); break;
                     case TOGL::KEY_ID_6:            window.SetArea(window.GetDrawArea(), false); break;
@@ -1506,7 +1506,7 @@ int main(int argc, char *argv[]) {
                     
                     s_actions.Add(1, [](){
                         puts("---");
-                        TOGL::ToWindow().SetSize(s_resolution, TOGL::ToWindow().GetStyle() & TOGL::StyleBit::DRAW_AREA_SIZE); 
+                        TOGL::ToWindow().Resize(s_resolution, TOGL::ToWindow().GetStyle() & TOGL::StyleBit::DRAW_AREA_SIZE); 
                         PrintWindowStates();
                     });
                     

@@ -210,8 +210,8 @@ namespace TrivialOpenGL {
         void MoveBy(const PointI& offset);
 
         // Resizes window and keeps current window position.
-        void SetSize(uint16_t width, uint16_t height, bool is_draw_area = false);
-        void SetSize(const SizeU16& size, bool is_draw_area = false);
+        void Resize(uint16_t width, uint16_t height, bool is_draw_area = false);
+        void Resize(const SizeU16& size, bool is_draw_area = false);
 
         // Moves and resizes window area.
         void SetArea(int x, int y, uint16_t width, uint16_t height, bool is_draw_area = false);
@@ -554,11 +554,11 @@ namespace TrivialOpenGL {
         MoveBy(offset.x, offset.y);
     }
 
-    inline void Window::SetSize(uint16_t width, uint16_t height, bool is_draw_area) {
+    inline void Window::Resize(uint16_t width, uint16_t height, bool is_draw_area) {
         SetArea({0, 0, width, height}, AreaPartId::SIZE, is_draw_area);
     }
-    inline void Window::SetSize(const SizeU16& size, bool is_draw_area) {
-        SetSize(size.width, size.height, is_draw_area);
+    inline void Window::Resize(const SizeU16& size, bool is_draw_area) {
+        Resize(size.width, size.height, is_draw_area);
     }
 
     inline void Window::SetArea(int x, int y, uint16_t width, uint16_t height, bool is_draw_area) {
