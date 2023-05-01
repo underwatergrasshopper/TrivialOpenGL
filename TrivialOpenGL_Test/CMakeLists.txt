@@ -10,19 +10,18 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
 message("${CMAKE_BINARY_DIR}")
 
-file(GLOB_RECURSE SRC_FILES src/*.cpp)
+file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS "src/*.cpp")
 message("${SRC_FILES}")
+add_executable("${PROJECT_NAME}" "${SRC_FILES}")
 
-add_executable(${PROJECT_NAME} ${SRC_FILES})
-
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/externals/TrivialTestKit/include)
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/externals/ToStr/include)
+target_include_directories("${PROJECT_NAME}" PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/externals/TrivialTestKit/include")
+target_include_directories("${PROJECT_NAME}" PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/externals/ToStr/include")
+target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 add_subdirectory(.. TrivialOpenGL)
-add_dependencies(${PROJECT_NAME} TrivialOpenGL)
+add_dependencies("${PROJECT_NAME}" TrivialOpenGL)
 
-target_link_libraries(${PROJECT_NAME} OpenGL32 TrivialOpenGL)
+target_link_libraries("${PROJECT_NAME}" OpenGL32 TrivialOpenGL)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message("FLAGS: ${CMAKE_CXX_FLAGS_DEBUG}")
