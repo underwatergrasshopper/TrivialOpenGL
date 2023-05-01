@@ -375,7 +375,192 @@ namespace TrivialOpenGL {
         wchar_t                             m_char_utf16[MAX_NUM_OF_UTF16_CODE_UNITS];
     };
 
+
+    // Creates and runs window.
+    inline int Run(const Data& data) {
+        return ToWindow().Run(data);
+    }
+
+    // If called from inside of do_on_{...} function, then close window after exiting from current do_on_{...} function.
+    inline void RequestClose() {
+        ToWindow().RequestClose();
+    }
+
+    // If called from inside of do_on_{...} function, then redraws window after exiting from current do_on_{...} function.
+    inline void RequestRedraw() {
+        ToWindow().RequestRedraw();
+    }
+
+    // ---
+        
+    // WINDOW_OPTION_AUTO_SLEEP_MODE     - true - if window at foreground then can automatically enter screen saver mode or any sleep mode,
+    //                                     false - if window at foreground then can not automatically enter screen saver mode or any sleep mode.
+    inline void SetOption(WindowOption window_option, bool is_enabled) {
+        ToWindow().SetOption(window_option, is_enabled);
+    }
+    inline bool IsEnabled(WindowOption window_option) {
+        ToWindow().IsEnabled(window_option);
+    }
+
+    // ---
+
+    // Moves window to position in screen coordinates.
+    inline void MoveTo(int x, int y, bool is_draw_area = false) {
+        ToWindow().MoveTo(x, y, is_draw_area);
+    }
+    inline void MoveTo(const PointI& pos, bool is_draw_area = false) {
+        ToWindow().MoveTo(pos, is_draw_area);
+    }
+
+    // Moves from current position by offset (x, y).
+    inline void MoveBy(int x, int y) {
+        ToWindow().MoveBy(x, y);
+    }
+    inline void MoveBy(const PointI& offset) {
+        ToWindow().MoveBy(offset);
+    }
+
+    // Resizes window and keeps current window position.
+    void Resize(uint16_t width, uint16_t height, bool is_draw_area = false) {
+        ToWindow().Resize(width, height, is_draw_area);
+    }
+    void Resize(const SizeU16& size, bool is_draw_area = false) {
+        ToWindow().Resize(size, is_draw_area);
+    }
+
+    // Moves and resizes window area.
+    inline void SetArea(int x, int y, uint16_t width, uint16_t height, bool is_draw_area = false) {
+        ToWindow().SetArea(x, y, width, height, is_draw_area);
+    }
+    inline void SetArea(const AreaIU16& area, bool is_draw_area = false) {
+        ToWindow().SetArea(area, is_draw_area);
+    }
+
+    // Puts window in center of desktop area excluding task bar area.
+
+    // If STYLE_BIT_DRAW_AREA_SIZE then width and height correspond to draw area.
+    inline void Center(uint16_t width, uint16_t height) {
+        ToWindow().Center(width, height);
+    }
+    inline void Center(const SizeU16& size) {
+        ToWindow().Center(size);
+    }
+
+    inline void Center(uint16_t width, uint16_t height, bool is_draw_area_size) {
+        ToWindow().Center(width, height, is_draw_area_size);
+    }
+    inline void Center(const SizeU16& size, bool is_draw_area_size) {
+        ToWindow().Center(size, is_draw_area_size);
+    }
+
+    // ---
+        
+    //// Returns window left-top corner position in screen coordinates.
+    inline PointI GetPos() {
+        return ToWindow().GetPos();
+    }
+        
+    // Returns window size.
+    inline SizeU16 GetSize() {
+        return ToWindow().GetSize();
+    }
+        
+    // Returns window area in screen coordinates.
+    inline AreaIU16 GetArea() {
+        return ToWindow().GetArea();
+    }
+        
+    // Returns draw area top-left corner position in screen coordinates.
+    inline PointI GetDrawAreaPos() {
+        return ToWindow().GetDrawAreaPos();
+    }
+        
+    // Returns draw area size.
+    inline SizeU16 GetDrawAreaSize() {
+        return ToWindow().GetDrawAreaSize();
+    }
+        
+    // Returns draw area in screen coordinates.
+    inline AreaIU16 GetDrawArea() {
+        return ToWindow().GetDrawArea();
+    }
+
+    // ---
+
+    inline void Hide() {
+        ToWindow().Hide();
+    }
+    inline void Show() {
+        ToWindow().Show();
+    }
+    inline bool IsVisible() {
+        return ToWindow().IsVisible();
+    }
+
+    // ---
+
+    inline void Minimize() {
+        ToWindow().Minimize();
+    }
+    inline void Maximize() {
+        ToWindow().Maximize();
+    }
+    inline void GoWindowedFullScreen() {
+        ToWindow().GoWindowedFullScreen();
+    }
+
+    inline WindowState GetState()  {
+        return ToWindow().GetState();
+    }
+
+    inline bool IsNormal() {
+        return ToWindow().IsNormal();
+    }
+    inline bool IsWindowMinimized() {
+        return ToWindow().IsWindowMinimized();
+    }
+    inline bool IsWindowMaximized() {
+        return ToWindow().IsWindowMaximized();
+    }
+    inline bool IsWindowedFullScreen() {
+        return ToWindow().IsWindowedFullScreen();
+    }
+
+    // Moves window to foreground.
+    inline void GoForeground() {
+        ToWindow().GoForeground();
+    }
+    inline bool IsForeground() {
+        return ToWindow().IsForeground();
+    }
+
+    // ---
+
+    inline StyleBitfield GetStyle() {
+        return ToWindow().GetStyle();
+    }
+
+    inline PointI GetCursorPosInDrawArea() {
+        return ToWindow().GetCursorPosInDrawArea();
+    }
+
+    inline void SetLogLevel(uint32_t log_level) {
+        return ToWindow().SetLogLevel(log_level);
+    }
+    inline uint32_t GetLogLevel() {
+        return ToWindow().GetLogLevel();
+    }
+
+    inline Version GetOpenGL_Version() {
+        return ToWindow().GetOpenGL_Version();
+    }
+
+
 } // namespace TrivialOpenGL
+
+
+
+
 
 //==========================================================================
 // Definitions
@@ -385,10 +570,6 @@ namespace TrivialOpenGL {
 
     inline Window& ToWindow() {
         return Window::To();
-    }
-
-    inline int Run(const Data& data) {
-        return ToWindow().Run(data);
     }
 
     //--------------------------------------------------------------------------
