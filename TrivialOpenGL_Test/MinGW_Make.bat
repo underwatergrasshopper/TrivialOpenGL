@@ -19,8 +19,7 @@ setlocal EnableDelayedExpansion
 
 ::------------------------------------------------------------------------------
 :: User Section
-
-set TEST_PROJECT_NAME=TrivialOpenGL_Test
+set TEST_PROJECT_NAME=
 
 ::------------------------------------------------------------------------------
 
@@ -39,6 +38,15 @@ if "%ARCHITECTURE%" equ "" set ARCHITECTURE=64
 :: <none>, <word>( <word>)*
 set TEST_FLAGS=
 call :FETCH_TEST_FLAGS %*
+
+::------------------------------------------------------------------------------
+
+:: project name is a folder name by default
+if "!TEST_PROJECT_NAME!" equ "" (
+    for %%D in (.) do (
+        set TEST_PROJECT_NAME=%%~nxD
+    )
+)
 
 if not exist .\\MinGW_MakeCache.bat (
     echo set MINGW32_BIN_PATH=
@@ -71,8 +79,8 @@ if "!ARCHITECTURE!" equ "64" set ARCH_PRE=x64
 if "!ARCHITECTURE!" equ "32" set ARCH_PRE=Win32
 
 set BUILD_SUB_DIR=..\\build\\mingw_llvm
-set BUILD_PATH=!BUILD_SUB_DIR!\\!ARCH_PRE!\\!BUILD_TYPE!
-set RETURN_PATH=..\\..\\..\\..\\!TEST_PROJECT_NAME!
+set BUILD_PATH=!BUILD_SUB_DIR!\\!ARCH_PRE!\\!BUILD_TYPE!\\!TEST_PROJECT_NAME!
+set RETURN_PATH=..\\..\\..\\..\\..\\!TEST_PROJECT_NAME!
 
 set ERR_PASS=0
 

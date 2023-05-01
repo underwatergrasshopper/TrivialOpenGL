@@ -17,6 +17,8 @@
 @echo off
 setlocal EnableDelayedExpansion
 
+::------------------------------------------------------------------------------
+
 :: <none>, build, rebuild, clean, run
 set ACTION=%1
 if "%ACTION%" equ "" set ACTION=run
@@ -32,6 +34,19 @@ if "%ARCHITECTURE%" equ "" set ARCHITECTURE=64
 :: <none>, <word>( <word>)*
 set TEST_FLAGS=
 call :FETCH_TEST_FLAGS %*
+
+::------------------------------------------------------------------------------
+:: User Section
+set PROJECT_NAME=
+
+::------------------------------------------------------------------------------
+
+:: project name is a folder name by default
+if "!PROJECT_NAME!" equ "" (
+    for %%D in (.) do (
+        set PROJECT_NAME=%%~nxD
+    )
+)
 
 if not exist .\\MinGW_MakeCache.bat (
     echo set MINGW32_BIN_PATH=
@@ -64,8 +79,8 @@ if "!ARCHITECTURE!" equ "64" set ARCH_PRE=x64
 if "!ARCHITECTURE!" equ "32" set ARCH_PRE=Win32
 
 set BUILD_SUB_DIR=build\\mingw_llvm
-set BUILD_PATH=!BUILD_SUB_DIR!\\!ARCH_PRE!\\!BUILD_TYPE!
-set RETURN_PATH=..\\..\\..\\..
+set BUILD_PATH=!BUILD_SUB_DIR!\\!ARCH_PRE!\\!BUILD_TYPE!\\!PROJECT_NAME!
+set RETURN_PATH=..\\..\\..\\..\\..
 
 set ERR_PASS=0
 

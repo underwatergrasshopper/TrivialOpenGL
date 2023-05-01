@@ -20,7 +20,7 @@ setlocal EnableDelayedExpansion
 ::------------------------------------------------------------------------------
 :: User Section
 
-set TEST_PROJECT_NAME=TrivialOpenGL_Example
+set TEST_PROJECT_NAME=
 
 ::------------------------------------------------------------------------------
 
@@ -35,6 +35,15 @@ if "%BUILD_TYPE%" equ "" set BUILD_TYPE=Release
 :: <none>, 32, 64
 set ARCHITECTURE=%3
 if "%ARCHITECTURE%" equ "" set ARCHITECTURE=64
+
+::------------------------------------------------------------------------------
+
+:: project name is a folder name by default
+if "!TEST_PROJECT_NAME!" equ "" (
+    for %%D in (.) do (
+        set TEST_PROJECT_NAME=%%~nxD
+    )
+)
 
 :: <none>, <word>( <word>)*
 set TEST_FLAGS=
