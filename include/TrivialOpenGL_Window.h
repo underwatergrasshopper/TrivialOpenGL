@@ -16,23 +16,22 @@
 
 namespace TrivialOpenGL {
 
-    struct StyleBit {
-        using Field = uint32_t;
-        enum {
-            NO_RESIZE                       = 0x0001,
-            NO_MAXIMIZE                     = 0x0002,
-            CENTERED                        = 0x0004,
-            DRAW_AREA_SIZE                  = 0x0008,
-            DRAW_AREA_ONLY                  = 0x0010,
-            REDRAW_ON_CHANGE_OR_REQUEST     = 0x0020,
-        };
+    using StyleBitfield = uint32_t;
+    enum {
+        STYLE_BIT_NO_RESIZE                     = 0x0001,
+        STYLE_BIT_NO_MAXIMIZE                   = 0x0002,
+        STYLE_BIT_CENTERED                      = 0x0004,
+        STYLE_BIT_DRAW_AREA_SIZE                = 0x0008,
+        STYLE_BIT_DRAW_AREA_ONLY                = 0x0010,
+        STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST   = 0x0020,
     };
+    
 
-    enum class WindowState {
-        NORMAL,
-        MAXIMIZED,
-        MINIMIZED,
-        WINDOWED_FULL_SCREENED,
+    enum WindowState {
+        WINDOW_STATE_NORMAL,
+        WINDOW_STATE_MAXIMIZED,
+        WINDOW_STATE_MINIMIZED,
+        WINDOW_STATE_WINDOWED_FULL_SCREENED,
     };
 
     enum {
@@ -69,7 +68,7 @@ namespace TrivialOpenGL {
         // DRAW_AREA_SIZE                 - Width and height from 'area' variable will set size of window draw area instead whole window area.
         // DRAW_AREA_ONLY                 - Window will contain only draw area (without borders and title bar).
         // REDRAW_ON_CHANGE_OR_REQUEST    - Window will only be redrawing on change or call of Window::RequestDraw method.
-        StyleBit::Field style               = 0;
+        StyleBitfield style               = 0;
 
         // Tries create OpenGL Rendering Context which support to at least this version, with compatibility to all previous versions.
         // If opengl_version.major and opengl_version.minor is DEF then creates for any available OpenGL version. Can be checked by GetOpenGL_Version().
@@ -219,7 +218,7 @@ namespace TrivialOpenGL {
 
         // Puts window in center of desktop area excluding task bar area.
 
-        // If StyleBit::DRAW_AREA_SIZE then width and height correspond to draw area.
+        // If STYLE_BIT_DRAW_AREA_SIZE then width and height correspond to draw area.
         void Center(uint16_t width, uint16_t height);
         void Center(const SizeU16& size);
 
@@ -271,7 +270,7 @@ namespace TrivialOpenGL {
 
         // ---
 
-        StyleBit::Field GetStyle() const;
+        StyleBitfield GetStyle() const;
 
         PointI GetCursorPosInDrawArea() const;
 
@@ -411,7 +410,7 @@ namespace TrivialOpenGL {
         m_is_visible                = false;
         m_is_frame                  = true;
 
-        m_state                     = WindowState::NORMAL;
+        m_state                     = WINDOW_STATE_NORMAL;
         m_prev_state                = m_state;
 
         m_is_win7                   = IsWindows7OrGreater() && !IsWindows8OrGreater();
@@ -460,9 +459,9 @@ namespace TrivialOpenGL {
             LogFatalError("Error TOGLW::Window::Run: Cannot create window class.");
         }
         m_window_style = WS_OVERLAPPEDWINDOW;
-        if (m_data.style & StyleBit::NO_RESIZE)     m_window_style &= ~WS_THICKFRAME;
-        if (m_data.style & StyleBit::NO_MAXIMIZE)   m_window_style &= ~WS_MAXIMIZEBOX;
-        if (m_data.style & StyleBit::DRAW_AREA_ONLY) {
+        if (m_data.style & STYLE_BIT_NO_RESIZE)     m_window_style &= ~WS_THICKFRAME;
+        if (m_data.style & STYLE_BIT_NO_MAXIMIZE)   m_window_style &= ~WS_MAXIMIZEBOX;
+        if (m_data.style & STYLE_BIT_DRAW_AREA_ONLY) {
             m_window_style          = GetWindowStyle_DrawAreaOnly();
             m_window_extended_style = GetWindowExtendedStyle_DrawAreaOnly();
         }
@@ -571,11 +570,11 @@ namespace TrivialOpenGL {
     //--------------------------------------------------------------------------
 
     inline void Window::Center(const SizeU16& size) {
-        Center(size, m_data.style & StyleBit::DRAW_AREA_SIZE);
+        Center(size, m_data.style & STYLE_BIT_DRAW_AREA_SIZE);
     }
 
     inline void Window::Center(uint16_t width, uint16_t height) {
-        Center(width, height, m_data.style & StyleBit::DRAW_AREA_SIZE);
+        Center(width, height, m_data.style & STYLE_BIT_DRAW_AREA_SIZE);
     }
 
     inline void Window::Center(const SizeU16& size, bool is_draw_area_size) {
@@ -602,7 +601,7 @@ namespace TrivialOpenGL {
 
 
     inline void Window::ChangeArea(const AreaIU16& area) {
-        SetArea(GenerateWindowArea(area), AreaPartId::ALL, m_data.style & StyleBit::DRAW_AREA_ONLY);
+        SetArea(GenerateWindowArea(area), AreaPartId::ALL, m_data.style & STYLE_BIT_DRAW_AREA_ONLY);
     }
 
     //--------------------------------------------------------------------------
@@ -616,7 +615,7 @@ namespace TrivialOpenGL {
     }
     
     inline AreaIU16 Window::GetArea() const {
-        if (m_state == WindowState::MINIMIZED) {
+        if (m_state == WINDOW_STATE_MINIMIZED) {
             return AreaIU16(0, 0, 0, 0);
         }
 
@@ -638,7 +637,7 @@ namespace TrivialOpenGL {
     
     inline AreaIU16 Window::GetDrawArea() const {
         RECT r;
-        if (m_state == WindowState::MINIMIZED) {
+        if (m_state == WINDOW_STATE_MINIMIZED) {
             return AreaIU16(0, 0, 0, 0);
         }
 
@@ -670,7 +669,7 @@ namespace TrivialOpenGL {
     }
 
     inline void Window::Minimize() {
-        if (m_state == WindowState::WINDOWED_FULL_SCREENED) {
+        if (m_state == WINDOW_STATE_WINDOWED_FULL_SCREENED) {
             Push(m_is_enable_do_on_resize, false);
             Push(m_is_enable_change_state_at_resize, false);
 
@@ -680,7 +679,7 @@ namespace TrivialOpenGL {
 
             Pop(m_is_enable_change_state_at_resize);
             Pop(m_is_enable_do_on_resize);
-        } else if (m_state == WindowState::MAXIMIZED) {
+        } else if (m_state == WINDOW_STATE_MAXIMIZED) {
             Push(m_is_enable_do_on_resize, false);
             Push(m_is_enable_change_state_at_resize, false);
 
@@ -698,7 +697,7 @@ namespace TrivialOpenGL {
             ShowWindow(m_window_handle, SW_SHOW);
         }
 
-        if (m_state == WindowState::WINDOWED_FULL_SCREENED) {
+        if (m_state == WINDOW_STATE_WINDOWED_FULL_SCREENED) {
             Push(m_is_enable_do_on_resize, false);
             Push(m_is_enable_change_state_at_resize, false);
 
@@ -707,11 +706,11 @@ namespace TrivialOpenGL {
 
             Pop(m_is_enable_change_state_at_resize);
             Pop(m_is_enable_do_on_resize);
-        } else if (m_state == WindowState::MINIMIZED) {
+        } else if (m_state == WINDOW_STATE_MINIMIZED) {
             ShowWindow(m_window_handle, SW_RESTORE);
         }
 
-        if (m_data.style & StyleBit::DRAW_AREA_ONLY) {
+        if (m_data.style & STYLE_BIT_DRAW_AREA_ONLY) {
             const SizeU16 work_area_size = GetDesktopAreaSizeNoTaskBar();
 
             Push(m_is_enable_change_state_at_resize, false);
@@ -720,7 +719,7 @@ namespace TrivialOpenGL {
 
             Pop(m_is_enable_change_state_at_resize);
 
-            SetState(WindowState::MAXIMIZED);
+            SetState(WINDOW_STATE_MAXIMIZED);
         } else {
             ShowWindow(m_window_handle, SW_MAXIMIZE);
         }
@@ -758,7 +757,7 @@ namespace TrivialOpenGL {
         m_is_apply_fake_width = false;
         Pop(m_is_enable_change_state_at_resize);
 
-        SetState(WindowState::WINDOWED_FULL_SCREENED);
+        SetState(WINDOW_STATE_WINDOWED_FULL_SCREENED);
     }
 
     inline WindowState Window::GetState() const {
@@ -766,19 +765,19 @@ namespace TrivialOpenGL {
     }
 
     inline bool Window::IsNormal() const {
-        return GetState() == WindowState::NORMAL;
+        return GetState() == WINDOW_STATE_NORMAL;
     }
 
     inline bool Window::IsWindowMinimized() const {
-        return GetState() == WindowState::MINIMIZED;
+        return GetState() == WINDOW_STATE_MINIMIZED;
     }
 
     inline bool Window::IsWindowMaximized() const {
-        return GetState() == WindowState::MAXIMIZED;
+        return GetState() == WINDOW_STATE_MAXIMIZED;
     }
 
     inline bool Window::IsWindowedFullScreen() const {
-        return GetState() == WindowState::WINDOWED_FULL_SCREENED;
+        return GetState() == WINDOW_STATE_WINDOWED_FULL_SCREENED;
     }
 
     inline void Window::GoForeground() {
@@ -791,7 +790,7 @@ namespace TrivialOpenGL {
 
     //--------------------------------------------------------------------------
 
-    inline StyleBit::Field Window::GetStyle() const {
+    inline StyleBitfield Window::GetStyle() const {
         return m_data.style;
     }
 
@@ -873,7 +872,7 @@ namespace TrivialOpenGL {
     inline int Window::ExecuteMainLoop() {
         MSG msg = {};
 
-        if (m_data.style & StyleBit::REDRAW_ON_CHANGE_OR_REQUEST) {
+        if (m_data.style & STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST) {
 
             while (GetMessageW(&msg, NULL, 0, 0)) {
                 TranslateMessage(&msg);
@@ -930,7 +929,7 @@ namespace TrivialOpenGL {
         if (window_area.width < 0)    window_area.width = 0;
         if (window_area.height < 1)   window_area.height = 1;
 
-        if ((m_data.style & StyleBit::DRAW_AREA_SIZE) && !(m_data.style & StyleBit::DRAW_AREA_ONLY)) {
+        if ((m_data.style & STYLE_BIT_DRAW_AREA_SIZE) && !(m_data.style & STYLE_BIT_DRAW_AREA_ONLY)) {
             const AreaIU16 window_area_with_invisible_frame = GetWindowAreaFromDrawArea(window_area, m_window_style);
 
             window_area = m_window_area_corrector.RemoveInvisibleFrameFrom(window_area_with_invisible_frame, m_window_handle);
@@ -938,7 +937,7 @@ namespace TrivialOpenGL {
 
         // --- Position --- //
 
-        if (m_data.style & StyleBit::CENTERED) {
+        if (m_data.style & STYLE_BIT_CENTERED) {
             window_area.x = (desktop_area.width - window_area.width) / 2;
             window_area.y = (desktop_area.height - window_area.height) / 2;
         } else {
@@ -956,7 +955,7 @@ namespace TrivialOpenGL {
 
     inline void Window::Restore() {
         if (IsMaximized(m_window_handle)) {
-            if (m_prev_state == WindowState::WINDOWED_FULL_SCREENED) {
+            if (m_prev_state == WINDOW_STATE_WINDOWED_FULL_SCREENED) {
                 Push(m_is_enable_do_on_resize, false);
                 Push(m_is_enable_change_state_at_resize, false);
 
@@ -973,7 +972,7 @@ namespace TrivialOpenGL {
             ShowWindow(m_window_handle, SW_RESTORE);
         }
       
-        if (m_state == WindowState::WINDOWED_FULL_SCREENED) {
+        if (m_state == WINDOW_STATE_WINDOWED_FULL_SCREENED) {
             Push(m_is_enable_do_on_resize, false);
             Push(m_is_enable_change_state_at_resize, false);
 
@@ -1462,13 +1461,13 @@ namespace TrivialOpenGL {
             if (m_is_enable_change_state_at_resize) {
                 switch (w_param) {
                 case SIZE_MAXIMIZED:  
-                    SetState(WindowState::MAXIMIZED);
+                    SetState(WINDOW_STATE_MAXIMIZED);
                     break;
                 case SIZE_MINIMIZED:    
-                    SetState(WindowState::MINIMIZED);
+                    SetState(WINDOW_STATE_MINIMIZED);
                     break;
                 case SIZE_RESTORED:    
-                    SetState(WindowState::NORMAL);
+                    SetState(WINDOW_STATE_NORMAL);
                     break;
                 }
             }
