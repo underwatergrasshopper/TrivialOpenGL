@@ -23,20 +23,16 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
 endif()
 
 project("TrivialOpenGL")
+                                                           
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+message("${CMAKE_BINARY_DIR}")
 
 file(GLOB_RECURSE SRC_FILES src/*.cpp)
 message("${SRC_FILES}")
 
 add_library(${PROJECT_NAME} STATIC  ${SRC_FILES})
-
-set_target_properties(${PROJECT_NAME}
-    PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-    LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-)
-message("${CMAKE_CURRENT_BINARY_DIR}")
-message("${CMAKE_BINARY_DIR}")
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
