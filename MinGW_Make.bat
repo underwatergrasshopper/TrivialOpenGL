@@ -79,8 +79,8 @@ if "!ARCHITECTURE!" equ "64" set ARCH_PRE=x64
 if "!ARCHITECTURE!" equ "32" set ARCH_PRE=Win32
 
 set BUILD_SUB_DIR=build\\mingw_llvm
-set BUILD_PATH=!BUILD_SUB_DIR!\\!ARCH_PRE!\\!BUILD_TYPE!\\!PROJECT_NAME!
-set RETURN_PATH=..\\..\\..\\..\\..
+set BUILD_PATH=!BUILD_SUB_DIR!\\!ARCH_PRE!\\!BUILD_TYPE!
+set RETURN_PATH=..\\..\\..\\..
 
 set ERR_PASS=0
 
@@ -127,7 +127,7 @@ goto :EOF
 :BUILD
     if not exist !BUILD_PATH! md !BUILD_PATH!
     set BUILD_PATH=!BUILD_PATH:\\=/!
-    cmake --fresh -G "MinGW Makefiles" -D CMAKE_BUILD_TYPE=!BUILD_TYPE! -S . -B !BUILD_PATH! && cmake --build !BUILD_PATH!
+    cmake -G "MinGW Makefiles" -D CMAKE_BUILD_TYPE=!BUILD_TYPE! -S . -B !BUILD_PATH! && cmake --build !BUILD_PATH!
     if !ERRORLEVEL! neq 0 exit /B !ERRORLEVEL!
     exit /B
 

@@ -7,8 +7,8 @@ project("TrivialOpenGL_Test")
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}")
-message("${CMAKE_BINARY_DIR}")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Test")
+
 
 file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS "src/*.cpp")
 message("${SRC_FILES}")
@@ -23,6 +23,9 @@ add_dependencies("${PROJECT_NAME}" TrivialOpenGL)
 
 target_link_libraries("${PROJECT_NAME}" OpenGL32 TrivialOpenGL)
 
+### info ###
+
+message(">>> ${PROJECT_NAME}: ${PROJECT_BINARY_DIR}")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     message("FLAGS: ${CMAKE_CXX_FLAGS_DEBUG}")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")

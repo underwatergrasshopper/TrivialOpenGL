@@ -57,6 +57,6 @@ jobs:
         working-directory: ${{env.GITHUB_WORKSPACE}}
         run: |
           $env:Path = "C:\${{ matrix.mingw_folder }}\bin;" + $env:Path 
-          cd build\mingw_llvm\${{ matrix.platform_folder }}\${{ matrix.build_mode }}\TrivialOpenGL_Test
+          cd build\mingw_llvm\${{ matrix.platform_folder }}\${{ matrix.build_mode }}\TrivialOpenGL_Test\Test
           ./TrivialOpenGL_Test.exe ${{ matrix.test_flag }}
       

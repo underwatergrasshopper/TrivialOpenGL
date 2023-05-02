@@ -21,6 +21,7 @@ setlocal EnableDelayedExpansion
 :: User Section
 
 set EXAMPLE_PROJECT_NAME=
+set BIN_SUB_FOLDER=Example
 
 ::------------------------------------------------------------------------------
 
@@ -128,16 +129,24 @@ goto :EOF
 :BUILD
     if not exist !BUILD_PATH! md !BUILD_PATH!
     set BUILD_PATH=!BUILD_PATH:\\=/!
-    cmake --fresh -G "MinGW Makefiles" -D CMAKE_BUILD_TYPE=!BUILD_TYPE! -S . -B !BUILD_PATH! && cmake --build !BUILD_PATH!
+    cmake -G "MinGW Makefiles" -D CMAKE_BUILD_TYPE=!BUILD_TYPE! -S . -B !BUILD_PATH! && cmake --build !BUILD_PATH!
     if !ERRORLEVEL! neq 0 exit /B !ERRORLEVEL!
     exit /B
 
 :RUN
+    set BIN_PATH=!BUILD_PATH!
+    set BIN_RETURN_PATH=!RETURN_PATH!
+
+    if "!BIN_SUB_FOLDER!" neq "" (
+        set BIN_PATH=!BIN_PATH!\\!BIN_SUB_FOLDER!
+        set BIN_RETURN_PATH=..\\!BIN_RETURN_PATH!
+    )
+
     if not exist !BUILD_PATH! md !BUILD_PATH!
-    cd !BUILD_PATH!
+    cd !BIN_PATH!
     !EXE_FILE_NAME! !TEST_FLAGS!
     if !ERRORLEVEL! neq 0 set ERR_PASS=!ERRORLEVEL!
-    cd !RETURN_PATH!
+    cd !BIN_RETURN_PATH!
     if !ERR_PASS! neq 0 exit /B !ERR_PASS!
 
     exit /B
