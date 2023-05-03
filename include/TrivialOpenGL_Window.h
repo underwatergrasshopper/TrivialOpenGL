@@ -34,12 +34,6 @@ namespace TrivialOpenGL {
         WINDOW_STATE_WINDOWED_FULL_SCREENED,
     };
 
-    enum {
-        LOG_LEVEL_ERROR        = 0,
-        LOG_LEVEL_INFO         = 1,
-        LOG_LEVEL_DEBUG        = 2,
-    };
-
     struct SpecialDebug {
         bool is_notify_any_message          = false;
         bool is_notify_draw_call            = false;
@@ -542,13 +536,6 @@ namespace TrivialOpenGL {
 
     inline PointI GetCursorPosInDrawArea() {
         return ToWindow().GetCursorPosInDrawArea();
-    }
-
-    inline void SetLogLevel(uint32_t log_level) {
-        return ToWindow().SetLogLevel(log_level);
-    }
-    inline uint32_t GetLogLevel() {
-        return ToWindow().GetLogLevel();
     }
 
     inline Version GetOpenGL_Version() {

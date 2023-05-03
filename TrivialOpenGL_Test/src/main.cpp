@@ -527,14 +527,18 @@ void TestTOGL_Log() {
         const std::string expectd_content = 
             "(TOGL) Debug: Some message.\n"
             "(TOGL) Info: Some message 2.\n"
+            "(TOGL) Warning: Some message 2.5.\n"
+            "(TOGL) Error: Some message 2.999.\n"
             "(TOGL) Fatal Error: Some message 3.\n";
-        TTK_ASSERT(LoadTextFromFile("log\\test\\log_dedicated.txt") == expectd_content);
+        TTK_ASSERT(LoadTextFromFile("log\\test\\log.txt") == expectd_content);
     }
     {
         system("TrivialOpenGL_Test.exe LOG_TRY_WIDE > log\\test\\log_try_wide.txt");
         const std::string expectd_content = 
             "(TOGL) Debug: Some message.\n"
             "(TOGL) Info: Some message 2.\n"
+            "(TOGL) Warning: Some message 2.5.\n"
+            "(TOGL) Error: Some message 2.999.\n"
             "(TOGL) Fatal Error: Some message 3.\n";
         TTK_ASSERT(LoadTextFromFile("log\\test\\log_try_wide.txt") == expectd_content);
     }
@@ -544,6 +548,8 @@ void TestTOGL_Log() {
         const std::string expectd_content = 
             "Custom Debug: Some message.\n"
             "Custom Info: Some message 2.\n"
+            "Custom Warning: Some message 2.5.\n"
+            "Custom Error: Some message 2.999.\n"
             "Custom Fatal Error: Some message 3.\n";
         TTK_ASSERT(LoadTextFromFile("log\\test\\log_custom.txt") == expectd_content);
     }
@@ -643,6 +649,8 @@ int main(int argc, char *argv[]) {
         printf(""); // try force narrow stream
         TOGL::LogDebug("Some message.");
         TOGL::LogInfo("Some message 2.");
+        TOGL::LogWarning("Some message 2.5.");
+        TOGL::LogError("Some message 2.999.");
         TOGL::LogFatalError("Some message 3.");
         TOGL::LogInfo("Some message 4.");
         return 0;
@@ -651,6 +659,8 @@ int main(int argc, char *argv[]) {
         wprintf(L""); // try force wide stream
         TOGL::LogDebug("Some message.");
         TOGL::LogInfo("Some message 2.");
+        TOGL::LogWarning("Some message 2.5.");
+        TOGL::LogError("Some message 2.999.");
         TOGL::LogFatalError("Some message 3.");
         TOGL::LogInfo("Some message 4.");
         return 0;
@@ -661,6 +671,10 @@ int main(int argc, char *argv[]) {
                 printf("Custom Fatal Error: %s\n", message);
             } else if (message_type == TOGL::LOG_MESSAGE_TYPE_DEBUG) {
                 printf("Custom Debug: %s\n", message);
+            } else if (message_type == TOGL::LOG_MESSAGE_TYPE_WARNING) {
+                printf("Custom Warning: %s\n", message);
+            } else if (message_type == TOGL::LOG_MESSAGE_TYPE_ERROR) {
+                printf("Custom Error: %s\n", message);
             } else {
                 printf("Custom Info: %s\n", message);
             }
@@ -669,6 +683,8 @@ int main(int argc, char *argv[]) {
 
         TOGL::LogDebug("Some message.");
         TOGL::LogInfo("Some message 2.");
+        TOGL::LogWarning("Some message 2.5.");
+        TOGL::LogError("Some message 2.999.");
         TOGL::LogFatalError("Some message 3.");
         TOGL::LogInfo("Some message 4.");
         return 0;

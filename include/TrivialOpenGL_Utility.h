@@ -408,17 +408,34 @@ namespace TrivialOpenGL {
 
     enum LogMessageType {
         LOG_MESSAGE_TYPE_FATAL_ERROR,
+        LOG_MESSAGE_TYPE_ERROR,
+        LOG_MESSAGE_TYPE_WARNING,
         LOG_MESSAGE_TYPE_INFO,
         LOG_MESSAGE_TYPE_DEBUG,
     };
-
     using CustomLogFnP_T = void (*)(LogMessageType message_type, const char* message);
+
+    enum LogLevel : uint32_t {
+        LOG_LEVEL_ERROR         = 0,    // logs: error, warning, info, debug
+        LOG_LEVEL_WARNING       = 1,    // logs: warning, info, debug
+        LOG_LEVEL_INFO          = 2,    // logs: info, debug
+        LOG_LEVEL_DEBUG         = 3,    // logs: debug
+    };                                 
+
+    // Sets current log level.
+    void SetLogLevel(LogLevel log_level);
+    LogLevel GetLogLevel();
+
+    // Returns true if log_level is less or equal to current log level.
+    bool IsInLogLevel(LogLevel log_level);
 
     // Logs message to standard output (by default) or redirect to custom function (provided by SetHandleLogFunction).
     // message      - Message in ascii encoding.
 
     void LogDebug(const std::string& message);
     void LogInfo(const std::string& message);
+    void LogWarning(const std::string& message);
+    void LogError(const std::string& message);
     void LogFatalError(const std::string& message);
 
     void SetCustomLogFunction(CustomLogFnP_T custom_log);
@@ -432,16 +449,36 @@ namespace TrivialOpenGL {
         // message      - Message in ascii encoding.
 
         void LogDebug(const std::string& message) {
-            Logger::Log(LOG_MESSAGE_TYPE_DEBUG, message);
+            if (IsInLogLevel(LOG_LEVEL_DEBUG)) Log(LOG_MESSAGE_TYPE_DEBUG, message);
         }
 
         void LogInfo(const std::string& message) {
-            Logger::Log(LOG_MESSAGE_TYPE_INFO, message);
+            if (IsInLogLevel(LOG_LEVEL_INFO)) Log(LOG_MESSAGE_TYPE_INFO, message);
+        }
+
+        void LogWarning(const std::string& message) {
+            if (IsInLogLevel(LOG_LEVEL_WARNING)) Log(LOG_MESSAGE_TYPE_WARNING, message);
+        }
+
+        void LogError(const std::string& message) {
+            Log(LOG_MESSAGE_TYPE_ERROR, message);
         }
 
         // This function exits executable with error code EXIT_FAILURE.
         void LogFatalError(const std::string& message) {
-            Logger::Log(LOG_MESSAGE_TYPE_FATAL_ERROR, message);
+            Log(LOG_MESSAGE_TYPE_FATAL_ERROR, message);
+        }
+
+        void SetLogLevel(LogLevel log_level) {
+            m_log_level = log_level;
+        }
+
+        LogLevel GetLogLevel() const {
+            return m_log_level;
+        }
+
+        bool IsInLogLevel(LogLevel log_level) {
+            return log_level <= m_log_level;
         }
 
         void SetCustomLogFunction(CustomLogFnP_T custom_log) {
@@ -450,12 +487,15 @@ namespace TrivialOpenGL {
 
     private:
         Logger() {
-            m_custom_log = nullptr;
+            m_log_level     = LOG_LEVEL_INFO;
+            m_custom_log    = nullptr;
         }
 
         static std::string GetMessagePrefix(LogMessageType log_message_type) {
             switch (log_message_type) {
             case LOG_MESSAGE_TYPE_FATAL_ERROR:  return "(TOGL) Fatal Error: ";
+            case LOG_MESSAGE_TYPE_ERROR:        return "(TOGL) Error: ";
+            case LOG_MESSAGE_TYPE_WARNING:      return "(TOGL) Warning: ";
             case LOG_MESSAGE_TYPE_INFO:         return "(TOGL) Info: ";
             case LOG_MESSAGE_TYPE_DEBUG:        return "(TOGL) Debug: ";
             }
@@ -479,8 +519,9 @@ namespace TrivialOpenGL {
             }
             fflush(stdout);
         }
-
-        CustomLogFnP_T m_custom_log;
+        
+        LogLevel        m_log_level;
+        CustomLogFnP_T  m_custom_log;
     };
 
     inline Logger& ToLogger() {
@@ -725,12 +766,32 @@ namespace TrivialOpenGL {
     // Log
     //--------------------------------------------------------------------------
 
+    inline void SetLogLevel(LogLevel log_level) {
+        ToLogger().SetLogLevel(log_level);
+    }
+
+    inline LogLevel GetLogLevel() {
+        return ToLogger().GetLogLevel();
+    }
+
+    inline bool IsInLogLevel(LogLevel log_level) {
+        return ToLogger().IsInLogLevel(log_level);
+    }
+
     inline void LogDebug(const std::string& message) {
         ToLogger().LogDebug(message);
     }
 
     inline void LogInfo(const std::string& message) {
         ToLogger().LogInfo(message);
+    }
+
+    inline void LogWarning(const std::string& message) {
+        ToLogger().LogWarning(message);
+    }
+
+    inline void LogError(const std::string& message) {
+        ToLogger().LogError(message);
     }
 
     inline void LogFatalError(const std::string& message) {
