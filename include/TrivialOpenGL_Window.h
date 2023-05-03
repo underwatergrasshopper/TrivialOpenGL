@@ -92,9 +92,10 @@ namespace TrivialOpenGL {
         bool            is_auto_sleep_blocked   = false;
 
         // LOG_LEVEL_ERROR         - error messages only
-        // LOG_LEVEL_INFO          - info and error messages
-        // LOG_LEVEL_DEBUG         - debug, info and error messages
-        uint32_t        log_level           = LOG_LEVEL_INFO;
+        // LOG_LEVEL_WARNING        - warning and error messages
+        // LOG_LEVEL_INFO          - info, warning and error messages
+        // LOG_LEVEL_DEBUG         - debug, info, warning and error messages
+        LogLevel        log_level           = LOG_LEVEL_INFO;
 
         // To enable special debugging messages.
         SpecialDebug    special_debug       = {}; // Warning!!! Can slowdown application significantly.   
@@ -267,9 +268,6 @@ namespace TrivialOpenGL {
         StyleBitfield GetStyle() const;
 
         PointI GetCursorPosInDrawArea() const;
-
-        void SetLogLevel(uint32_t log_level);
-        uint32_t GetLogLevel() const;
 
         Version GetOpenGL_Version() const;
 
@@ -614,6 +612,7 @@ namespace TrivialOpenGL {
 
     inline int Window::Run(const Data& data) {
         m_data = data;
+        SetLogLevel(m_data.log_level);
 
         m_instance_handle = GetModuleHandleW(NULL);
 
@@ -970,14 +969,6 @@ namespace TrivialOpenGL {
             return { pos.x, pos.y };
         }
         return {};
-    }
-
-    inline void Window::SetLogLevel(uint32_t log_level) {
-        m_data.log_level = log_level;
-    }
-
-    inline uint32_t Window::GetLogLevel() const { 
-        return m_data.log_level; 
     }
 
     inline Version Window::GetOpenGL_Version() const {
@@ -1347,13 +1338,13 @@ namespace TrivialOpenGL {
         glGetIntegerv(TOGL_GL_MAJOR_VERSION, &m_data.opengl_verion.major);
         glGetIntegerv(TOGL_GL_MINOR_VERSION, &m_data.opengl_verion.minor);
 
-        if (m_data.log_level >= LOG_LEVEL_INFO) LogInfo(std::string("OpenGl Version: ") + (const char*)glGetString(GL_VERSION));
+        if (IsLogLevelAtLeast(LOG_LEVEL_INFO)) LogInfo(std::string("OpenGl Version: ") + (const char*)glGetString(GL_VERSION));
 
         // ---
     }
 
     inline void Window::Destroy() {
-        if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+        if (IsLogLevelAtLeast(LOG_LEVEL_INFO)) {
             LogDebug("Window::Destroy");
         }
 
@@ -1440,7 +1431,7 @@ namespace TrivialOpenGL {
 
         switch (message) {
         case WM_CREATE: 
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (IsLogLevelAtLeast(LOG_LEVEL_INFO)) {
                 LogDebug("WM_CREATE"); 
             }
 
@@ -1448,7 +1439,7 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_DESTROY:
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (IsLogLevelAtLeast(LOG_LEVEL_INFO)) {
                 LogDebug("WM_DESTROY"); 
             }
 
@@ -1456,7 +1447,7 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_CLOSE:
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (IsLogLevelAtLeast(LOG_LEVEL_INFO)) {
                 LogDebug("WM_CLOSE"); 
             }
 
@@ -1464,7 +1455,7 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_PAINT:
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (IsLogLevelAtLeast(LOG_LEVEL_INFO)) {
                 LogDebug("WM_PAINT"); 
             }
 
@@ -1477,7 +1468,7 @@ namespace TrivialOpenGL {
         // Used for debugging.
 #if 0
         case WM_MOVING: {
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (IsInLogLevel(LOG_LEVEL_INFO)) {
                 std::string message = "WM_MOVING";
         
                 RECT* drag_rect = (RECT*)(l_param); // in screen coordinates
@@ -1498,7 +1489,7 @@ namespace TrivialOpenGL {
         // Used for debugging.
 #if 0
         case WM_WINDOWPOSCHANGING: {
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (IsInLogLevel(LOG_LEVEL_INFO)) {
                 std::string dbg_msg = "WM_WINDOWPOSCHANGING";
         
         
@@ -1518,7 +1509,7 @@ namespace TrivialOpenGL {
         // Used for debugging.
 #if 0
         case WM_GETMINMAXINFO: {
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (IsInLogLevel(LOG_LEVEL_INFO)) {
                 std::string dbg_msg = "WM_GETMINMAXINFO ";
         
                 const MINMAXINFO* info = (const MINMAXINFO*)(l_param);
@@ -1537,7 +1528,7 @@ namespace TrivialOpenGL {
 #endif
 
         case WM_ENTERSIZEMOVE: {
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (IsLogLevelAtLeast(LOG_LEVEL_INFO)) {
                 LogDebug("WM_ENTERSIZEMOVE");
             }
 
@@ -1545,7 +1536,7 @@ namespace TrivialOpenGL {
         }
 
         case WM_EXITSIZEMOVE: {
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (IsLogLevelAtLeast(LOG_LEVEL_INFO)) {
                 LogDebug("WM_EXITSIZEMOVE");
             }
 
@@ -1553,7 +1544,7 @@ namespace TrivialOpenGL {
         }
 
         case WM_SIZING: {
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (IsLogLevelAtLeast(LOG_LEVEL_INFO)) {
                 std::string dbg_msg = "WM_SIZING";
 
                 auto GetEdgeName = [](WPARAM w_param) -> std::string {
@@ -1588,7 +1579,7 @@ namespace TrivialOpenGL {
         }
 
         case WM_SIZE:
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (IsLogLevelAtLeast(LOG_LEVEL_INFO)) {
                 std::string dbg_msg = "WM_SIZE";
 
                 const uint16_t width    = LOWORD(l_param);
@@ -1645,7 +1636,7 @@ namespace TrivialOpenGL {
             return 0;
 
         case WM_SHOWWINDOW: {
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (IsLogLevelAtLeast(LOG_LEVEL_INFO)) {
                 std::string dbg_msg = "WM_SHOWWINDOW";
 
                 dbg_msg += (w_param == TRUE) ? " SHOW" : " HIDE";
@@ -1690,7 +1681,7 @@ namespace TrivialOpenGL {
             const bool is_active    = LOWORD(w_param) != WA_INACTIVE;
             const bool is_minimized = HIWORD(w_param);
 
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (IsLogLevelAtLeast(LOG_LEVEL_INFO)) {
                 std::string dbg_msg = "WM_ACTIVATE";
 
                 auto GetActivationStateName = [](int state) -> std::string {
@@ -1728,7 +1719,7 @@ namespace TrivialOpenGL {
         // Used for debugging.
 #if 0
         case WM_NCCALCSIZE: {
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (IsInLogLevel(LOG_LEVEL_INFO)) {
                 std::string dbg_msg = "WM_NCCALCSIZE";
 
                 if (w_param == TRUE) {
@@ -1787,13 +1778,13 @@ namespace TrivialOpenGL {
         // Keyboard //
         //////////////
         case WM_SETFOCUS:
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (IsLogLevelAtLeast(LOG_LEVEL_INFO)) {
                 LogDebug("WM_SETFOCUS");
             }
             return 0;
 
         case WM_KILLFOCUS:
-            if (m_data.log_level >= LOG_LEVEL_DEBUG) {
+            if (IsLogLevelAtLeast(LOG_LEVEL_INFO)) {
                 LogDebug("WM_KILLFOCUS");
             }
             return 0;

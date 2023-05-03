@@ -683,7 +683,7 @@ namespace TrivialOpenGL {
         void Load(const FontInfo& font_info) {
             Unload();
 
-            if (ToWindow().GetLogLevel() >= LOG_LEVEL_DEBUG) {
+            if (IsLogLevelAtLeast(LOG_LEVEL_DEBUG)) {
                 LogDebug("Font Unicode Ranges:");
                 for (const auto& range : font_info.unicode_range_group.ToRanges()) {
                     if (range.from == range.to) { 
@@ -696,14 +696,14 @@ namespace TrivialOpenGL {
 
             FontDataGenerator font_data_generator;
 
-            if (ToWindow().GetLogLevel() >= LOG_LEVEL_DEBUG) {
+            if (IsLogLevelAtLeast(LOG_LEVEL_DEBUG)) {
                 LogDebug("Generating font textures...");
             }
 
             m_data = font_data_generator.Generate(font_info);
             if (font_data_generator.IsOk()) {
 
-                if (ToWindow().GetLogLevel() >= LOG_LEVEL_DEBUG) {
+                if (IsLogLevelAtLeast(LOG_LEVEL_DEBUG)) {
                     LogDebug("Font textures has been generated.");
                 }
 

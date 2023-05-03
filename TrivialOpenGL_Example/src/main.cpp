@@ -1002,7 +1002,7 @@ int main(int argc, char *argv[]) {
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
         data.style              = TOGL::STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
-        data.log_level          = 3;
+        data.log_level          = TOGL::LOG_LEVEL_DEBUG;
 
         return TOGL::Run(data);
 
@@ -1018,7 +1018,7 @@ int main(int argc, char *argv[]) {
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
         data.icon_resource_id   = ICON_ID;
-        data.log_level          = 3;
+        data.log_level          = TOGL::LOG_LEVEL_DEBUG;
 
         data.do_on_create = []() {
             glClearColor(0.0f, 0.0f, 0.2f, 1.0f);

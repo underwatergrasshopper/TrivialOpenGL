@@ -376,6 +376,7 @@ namespace TrivialOpenGL {
     // Global
     //--------------------------------------------------------------------------
 
+    // Makes global object of specified type in header-only library.
     template <typename Type>
     class Global {
     public:
@@ -415,11 +416,12 @@ namespace TrivialOpenGL {
     };
     using CustomLogFnP_T = void (*)(LogMessageType message_type, const char* message);
 
-    enum LogLevel : uint32_t {
-        LOG_LEVEL_ERROR         = 0,    // logs: error, warning, info, debug
-        LOG_LEVEL_WARNING       = 1,    // logs: warning, info, debug
-        LOG_LEVEL_INFO          = 2,    // logs: info, debug
-        LOG_LEVEL_DEBUG         = 3,    // logs: debug
+    using LogLevel = uint32_t;
+    enum : LogLevel {
+        LOG_LEVEL_ERROR         = 0,    // log errors
+        LOG_LEVEL_WARNING       = 1,    // log errors, warnings
+        LOG_LEVEL_INFO          = 2,    // log errors, warnings, infos
+        LOG_LEVEL_DEBUG         = 3,    // log errors, warnings, infos, debugs
     };                                 
 
     // Sets current log level.
@@ -427,7 +429,7 @@ namespace TrivialOpenGL {
     LogLevel GetLogLevel();
 
     // Returns true if log_level is less or equal to current log level.
-    bool IsInLogLevel(LogLevel log_level);
+    bool IsLogLevelAtLeast(LogLevel log_level);
 
     // Logs message to standard output (by default) or redirect to custom function (provided by SetHandleLogFunction).
     // message      - Message in ascii encoding.
@@ -440,6 +442,7 @@ namespace TrivialOpenGL {
 
     void SetCustomLogFunction(CustomLogFnP_T custom_log);
 
+    // Singleton.
     class Logger {
     public:
         friend Global<Logger>;
@@ -449,15 +452,15 @@ namespace TrivialOpenGL {
         // message      - Message in ascii encoding.
 
         void LogDebug(const std::string& message) {
-            if (IsInLogLevel(LOG_LEVEL_DEBUG)) Log(LOG_MESSAGE_TYPE_DEBUG, message);
+            if (IsLogLevelAtLeast(LOG_LEVEL_DEBUG)) Log(LOG_MESSAGE_TYPE_DEBUG, message);
         }
 
         void LogInfo(const std::string& message) {
-            if (IsInLogLevel(LOG_LEVEL_INFO)) Log(LOG_MESSAGE_TYPE_INFO, message);
+            if (IsLogLevelAtLeast(LOG_LEVEL_INFO)) Log(LOG_MESSAGE_TYPE_INFO, message);
         }
 
         void LogWarning(const std::string& message) {
-            if (IsInLogLevel(LOG_LEVEL_WARNING)) Log(LOG_MESSAGE_TYPE_WARNING, message);
+            if (IsLogLevelAtLeast(LOG_LEVEL_WARNING)) Log(LOG_MESSAGE_TYPE_WARNING, message);
         }
 
         void LogError(const std::string& message) {
@@ -477,7 +480,7 @@ namespace TrivialOpenGL {
             return m_log_level;
         }
 
-        bool IsInLogLevel(LogLevel log_level) {
+        bool IsLogLevelAtLeast(LogLevel log_level) {
             return log_level <= m_log_level;
         }
 
@@ -774,8 +777,8 @@ namespace TrivialOpenGL {
         return ToLogger().GetLogLevel();
     }
 
-    inline bool IsInLogLevel(LogLevel log_level) {
-        return ToLogger().IsInLogLevel(log_level);
+    inline bool IsLogLevelAtLeast(LogLevel log_level) {
+        return ToLogger().IsLogLevelAtLeast(log_level);
     }
 
     inline void LogDebug(const std::string& message) {
