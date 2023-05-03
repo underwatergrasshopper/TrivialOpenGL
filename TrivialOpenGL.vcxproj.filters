@@ -55,11 +55,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\TrivialOpenGL_Window.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
     <Text Include="CMakeLists.txt" />
   </ItemGroup>
 </Project>

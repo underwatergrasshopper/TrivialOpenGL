@@ -41,9 +41,6 @@
     <ClInclude Include="include\TrivialOpenGL_Window.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\TrivialOpenGL_Window.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <Text Include="CMakeLists.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
