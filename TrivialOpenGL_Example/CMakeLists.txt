@@ -19,7 +19,7 @@ target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR
 add_subdirectory(.. TrivialOpenGL)
 add_dependencies("${PROJECT_NAME}" TrivialOpenGL)
 
-target_link_libraries("${PROJECT_NAME}" PRIVATE OpenGL32)
+target_link_libraries("${PROJECT_NAME}" PUBLIC OpenGL32)
 target_link_libraries("${PROJECT_NAME}" PUBLIC TrivialOpenGL)
 
 ### info ###

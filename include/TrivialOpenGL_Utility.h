@@ -406,26 +406,86 @@ namespace TrivialOpenGL {
     // Log
     //--------------------------------------------------------------------------
 
-    enum class LogMessageType {
-        UNKNOWN,
-        DEBUG,
-        INFO,
-        FATAL_ERROR
+    enum LogMessageType {
+        LOG_MESSAGE_TYPE_FATAL_ERROR,
+        LOG_MESSAGE_TYPE_INFO,
+        LOG_MESSAGE_TYPE_DEBUG,
     };
 
     using CustomLogFnP_T = void (*)(LogMessageType message_type, const char* message);
 
-    // Logs message to standard output (by default) redirect to custom function which was set by calling SetHandleLogFunction.
-    // message          A message in ASCII encoding.
-    void Log(LogMessageType message_type, const char* message);
+    // Logs message to standard output (by default) or redirect to custom function (provided by SetHandleLogFunction).
+    // message      - Message in ascii encoding.
 
-    // message      Message in ascii encoding.
-    void Log(LogMessageType message_type, const std::string& message);
     void LogDebug(const std::string& message);
     void LogInfo(const std::string& message);
     void LogFatalError(const std::string& message);
 
     void SetCustomLogFunction(CustomLogFnP_T custom_log);
+
+    class Logger {
+    public:
+        friend Global<Logger>;
+
+        virtual ~Logger() {}
+
+        // message      - Message in ascii encoding.
+
+        void LogDebug(const std::string& message) {
+            Logger::Log(LOG_MESSAGE_TYPE_DEBUG, message);
+        }
+
+        void LogInfo(const std::string& message) {
+            Logger::Log(LOG_MESSAGE_TYPE_INFO, message);
+        }
+
+        // This function exits executable with error code EXIT_FAILURE.
+        void LogFatalError(const std::string& message) {
+            Logger::Log(LOG_MESSAGE_TYPE_FATAL_ERROR, message);
+        }
+
+        void SetCustomLogFunction(CustomLogFnP_T custom_log) {
+            m_custom_log = custom_log;
+        }
+
+    private:
+        Logger() {
+            m_custom_log = nullptr;
+        }
+
+        static std::string GetMessagePrefix(LogMessageType log_message_type) {
+            switch (log_message_type) {
+            case LOG_MESSAGE_TYPE_FATAL_ERROR:  return "(TOGL) Fatal Error: ";
+            case LOG_MESSAGE_TYPE_INFO:         return "(TOGL) Info: ";
+            case LOG_MESSAGE_TYPE_DEBUG:        return "(TOGL) Debug: ";
+            }
+            return "";
+        }
+
+        void Log(LogMessageType message_type, const std::string& message) {
+            if (m_custom_log) {
+                m_custom_log(message_type, message.c_str());
+            } else {
+                LogTextToStdOut(GetMessagePrefix(message_type) + message);
+            }
+            if (message_type == LOG_MESSAGE_TYPE_FATAL_ERROR) exit(EXIT_FAILURE);
+        }
+
+        void LogTextToStdOut(const std::string& message) {
+            if (fwide(stdout, 0) > 0) {
+                wprintf(L"%ls\n", ASCII_ToUTF16(message).c_str());
+            } else {
+                printf("%s\n", message.c_str());
+            }
+            fflush(stdout);
+        }
+
+        CustomLogFnP_T m_custom_log;
+    };
+
+    inline Logger& ToLogger() {
+        return Global<Logger>::To();
+    }
 
     //--------------------------------------------------------------------------
     // BMP
@@ -665,46 +725,20 @@ namespace TrivialOpenGL {
     // Log
     //--------------------------------------------------------------------------
 
-    inline void Log(LogMessageType message_type, const char* message) {
-        auto& custom_log = Global<CustomLogFnP_T>::To();
-
-        if (custom_log) {
-            custom_log(message_type, message);
-        } else {
-            if (fwide(stdout, 0) > 0) {
-                wprintf(L"%ls", ASCII_ToUTF16(message).c_str());
-            } else {
-                printf("%s", message);
-            }
-            fflush(stdout);
-        }
-        if (message_type == LogMessageType::FATAL_ERROR) exit(EXIT_FAILURE);
-    }
-
-    inline void Log(LogMessageType message_type, const std::string& message) {
-        Log(message_type, message.c_str());
-    }
-
     inline void LogDebug(const std::string& message) {
-        const std::string info_message = std::string("(TOGL) Debug: ") + message + "\n";
-
-        Log(LogMessageType::DEBUG, info_message.c_str());
+        ToLogger().LogDebug(message);
     }
 
     inline void LogInfo(const std::string& message) {
-        const std::string info_message = std::string("(TOGL) Info: ") + message + "\n";
-
-        Log(LogMessageType::INFO, info_message.c_str());
+        ToLogger().LogInfo(message);
     }
 
     inline void LogFatalError(const std::string& message) {
-        const std::string fatal_error_message = std::string("(TOGL) Fatal Error: ") + message + "\n";
-
-        Log(LogMessageType::FATAL_ERROR, fatal_error_message.c_str());
+        ToLogger().LogFatalError(message);
     }
 
     inline void SetCustomLogFunction(CustomLogFnP_T custom_log) {
-        Global<CustomLogFnP_T>::To() = custom_log;
+        ToLogger().SetCustomLogFunction(custom_log);
     }
 
     //--------------------------------------------------------------------------

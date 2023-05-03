@@ -522,22 +522,33 @@ void TestTOGL_Log() {
     TTK_ASSERT(CreateDirectoryA(".\\log", 0) || GetLastError() == ERROR_ALREADY_EXISTS);
     TTK_ASSERT(CreateDirectoryA(".\\log\\test", 0) || GetLastError() == ERROR_ALREADY_EXISTS);
 
-    system("TrivialOpenGL_Test.exe LOG > log\\test\\log.txt");
-    TTK_ASSERT(LoadTextFromFile("log\\test\\log.txt") == "Some message.\nSome message 2.\n");
+    {
+        system("TrivialOpenGL_Test.exe LOG > log\\test\\log.txt");
+        const std::string expectd_content = 
+            "(TOGL) Debug: Some message.\n"
+            "(TOGL) Info: Some message 2.\n"
+            "(TOGL) Fatal Error: Some message 3.\n";
+        TTK_ASSERT(LoadTextFromFile("log\\test\\log_dedicated.txt") == expectd_content);
+    }
+    {
+        system("TrivialOpenGL_Test.exe LOG_TRY_WIDE > log\\test\\log_try_wide.txt");
+        const std::string expectd_content = 
+            "(TOGL) Debug: Some message.\n"
+            "(TOGL) Info: Some message 2.\n"
+            "(TOGL) Fatal Error: Some message 3.\n";
+        TTK_ASSERT(LoadTextFromFile("log\\test\\log_try_wide.txt") == expectd_content);
+    }
 
-    system("TrivialOpenGL_Test.exe LOG_DEDICATED > log\\test\\log_dedicated.txt");
-    const std::string expectd_content = 
-        "(TOGL) Debug: Some message.\n"
-        "(TOGL) Info: Some message 2.\n"
-        "(TOGL) Fatal Error: Some message 3.\n";
-    TTK_ASSERT(LoadTextFromFile("log\\test\\log_dedicated.txt") == expectd_content);
+    {
+        system("TrivialOpenGL_Test.exe LOG_CUSTOM > log\\test\\log_custom.txt");
+        const std::string expectd_content = 
+            "Custom Debug: Some message.\n"
+            "Custom Info: Some message 2.\n"
+            "Custom Fatal Error: Some message 3.\n";
+        TTK_ASSERT(LoadTextFromFile("log\\test\\log_custom.txt") == expectd_content);
+    }
 
 
-    system("TrivialOpenGL_Test.exe LOG_TRY_WIDE > log\\test\\log_try_wide.txt");
-    TTK_ASSERT(LoadTextFromFile("log\\test\\log_try_wide.txt") == "Some message.\nSome message 2.\n");
-
-    system("TrivialOpenGL_Test.exe LOG_CUSTOM > log\\test\\log_custom.txt");
-    TTK_ASSERT(LoadTextFromFile("log\\test\\log_custom.txt") == "Info: Some message.\nFatal Error: Some message 2.\n");
 }
 
 void TestTOGL_Split() {
@@ -630,13 +641,6 @@ int main(int argc, char *argv[]) {
 
     if (IsFlag("LOG")) {
         printf(""); // try force narrow stream
-        TOGL::Log(TOGL::LogMessageType::INFO, "Some message.\n");
-        TOGL::Log(TOGL::LogMessageType::FATAL_ERROR, "Some message 2.\n");
-        TOGL::Log(TOGL::LogMessageType::INFO, "Some message 3.\n");
-        return 0;
-
-    } else if (IsFlag("LOG_DEDICATED")) {
-        printf(""); // try force wide stream
         TOGL::LogDebug("Some message.");
         TOGL::LogInfo("Some message 2.");
         TOGL::LogFatalError("Some message 3.");
@@ -645,24 +649,28 @@ int main(int argc, char *argv[]) {
 
     } else if (IsFlag("LOG_TRY_WIDE")) {
         wprintf(L""); // try force wide stream
-        TOGL::Log(TOGL::LogMessageType::INFO, "Some message.\n");
-        TOGL::Log(TOGL::LogMessageType::FATAL_ERROR, "Some message 2.\n");
-        TOGL::Log(TOGL::LogMessageType::INFO, "Some message 3.\n");
+        TOGL::LogDebug("Some message.");
+        TOGL::LogInfo("Some message 2.");
+        TOGL::LogFatalError("Some message 3.");
+        TOGL::LogInfo("Some message 4.");
         return 0;
 
     } else if (IsFlag("LOG_CUSTOM")) {
         TOGL::SetCustomLogFunction([](TOGL::LogMessageType message_type, const char* message) {
-            if (message_type == TOGL::LogMessageType::FATAL_ERROR) {
-                printf("Fatal Error: %s\n", message);
+            if (message_type == TOGL::LOG_MESSAGE_TYPE_FATAL_ERROR) {
+                printf("Custom Fatal Error: %s\n", message);
+            } else if (message_type == TOGL::LOG_MESSAGE_TYPE_DEBUG) {
+                printf("Custom Debug: %s\n", message);
             } else {
-                printf("Info: %s\n", message);
+                printf("Custom Info: %s\n", message);
             }
             fflush(stdout);
         });
 
-        TOGL::Log(TOGL::LogMessageType::INFO, "Some message.");
-        TOGL::Log(TOGL::LogMessageType::FATAL_ERROR, "Some message 2.");
-        TOGL::Log(TOGL::LogMessageType::INFO, "Some message 3.");
+        TOGL::LogDebug("Some message.");
+        TOGL::LogInfo("Some message 2.");
+        TOGL::LogFatalError("Some message 3.");
+        TOGL::LogInfo("Some message 4.");
         return 0;
 
     } else {
