@@ -9,7 +9,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/Test")
 
-
 file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS "src/*.cpp")
 message("${SRC_FILES}")
 add_executable("${PROJECT_NAME}" "${SRC_FILES}")
@@ -21,7 +20,8 @@ target_include_directories("${PROJECT_NAME}" PRIVATE "${CMAKE_CURRENT_SOURCE_DIR
 add_subdirectory(.. TrivialOpenGL)
 add_dependencies("${PROJECT_NAME}" TrivialOpenGL)
 
-target_link_libraries("${PROJECT_NAME}" OpenGL32 TrivialOpenGL)
+target_link_libraries("${PROJECT_NAME}" PUBLIC OpenGL32)
+target_link_libraries("${PROJECT_NAME}" PUBLIC TrivialOpenGL)
 
 ### info ###
 
