@@ -626,7 +626,7 @@ inline int TOGL_Window::Run(const TOGL_Data& data) {
     wc.hIconSm          = NULL;
 
     if (!RegisterClassExW(&wc)) {
-        TOGL_LogFatalError("Error TOGLW::Window::Run: Cannot create window class.");
+        TOGL_LogFatalError("Error TOGL_Window::Run: Cannot create window class.");
     }
     m_window_style = WS_OVERLAPPEDWINDOW;
     if (m_data.style & TOGL_STYLE_BIT_NO_RESIZE)     m_window_style &= ~WS_THICKFRAME;
@@ -649,13 +649,13 @@ inline int TOGL_Window::Run(const TOGL_Data& data) {
     );
                 
     if (!m_window_handle) {
-        TOGL_LogFatalError("Error TOGLW::Window::Run: Cannot create window.");
+        TOGL_LogFatalError("Cannot create window.");
     }
 
     if (m_data.timer_time_interval > 0) {
         const UINT_PTR result = SetTimer(m_window_handle, DEFAULT_TIMER_ID, m_data.timer_time_interval, NULL);
 
-        if (!result) TOGL_LogFatalError(std::string() + "Error TOGLW::Window::Create: Can not set timer. (windows error code:" + std::to_string(GetLastError()) + ")");
+        if (!result) TOGL_LogFatalError(std::string() + "Can not set timer. (windows error code:" + std::to_string(GetLastError()) + ")");
     }
 
     ShowWindow(m_window_handle, SW_SHOW);
@@ -999,14 +999,6 @@ inline void TOGL_Window::Pop(bool& value) {
     
 //--------------------------------------------------------------------------
 
-inline void TOGL_Window::SingletonCheck() {
-    static bool is_instance_exists = false;
-    if (is_instance_exists) {
-        TOGL_LogFatalError("Window::SingletonCheck: Can't be more than one instance of Window class.");
-    }
-    is_instance_exists = true;
-}
-
 inline HICON TOGL_Window::TryLoadIcon() {
     if (!m_data.icon_file_name.empty()) {
         return (HICON)LoadImageW(
@@ -1242,19 +1234,19 @@ inline void TOGL_Window::Create(HWND window_handle) {
     pfd.iLayerType      = PFD_MAIN_PLANE;
 
     m_device_context_handle = GetDC(window_handle);
-    if (!m_device_context_handle) TOGL_LogFatalError("Window::Create: Can not get device context.");
+    if (!m_device_context_handle) TOGL_LogFatalError(" Can not get device context.");
 
     int pfi = ChoosePixelFormat(m_device_context_handle, &pfd);
-    if (!pfi) TOGL_LogFatalError(std::string() + "Window::Create: Can not choose pixel format. (windows error code:" + std::to_string(GetLastError()) + ")");
+    if (!pfi) TOGL_LogFatalError(std::string() + "Can not choose pixel format. (windows error code:" + std::to_string(GetLastError()) + ")");
 
     BOOL result = SetPixelFormat(m_device_context_handle, pfi, &pfd);
-    if (!result) TOGL_LogFatalError(std::string() + "Window::Create: Can not set pixel format. (windows error code:" + std::to_string(GetLastError()) + ")");
+    if (!result) TOGL_LogFatalError(std::string() + "Can not set pixel format. (windows error code:" + std::to_string(GetLastError()) + ")");
 
     // --- Displaying Format Info --- //
 
     memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
     int max_pfi = DescribePixelFormat(m_device_context_handle, pfi, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
-    if (!max_pfi) TOGL_LogFatalError(std::string() + "Window::Create: Can not get pixel format. (windows error code:" + std::to_string(GetLastError()) + ")");
+    if (!max_pfi) TOGL_LogFatalError(std::string() + "Can not get pixel format. (windows error code:" + std::to_string(GetLastError()) + ")");
 
     TOGL_LogInfo(std::string() + "OpenGL Pixel Format:"
         " Red:"     + std::to_string(pfd.cRedBits) + 
@@ -1267,10 +1259,10 @@ inline void TOGL_Window::Create(HWND window_handle) {
     // --- Creates OpenGL Rendering Context --- //
 
     m_rendering_context_handle = wglCreateContext(m_device_context_handle);
-    if (!m_rendering_context_handle) TOGL_LogFatalError(std::string() + "Window::Create: Can not create OpenGl Rendering Context. (windows error code:" + std::to_string(GetLastError()) + ")");
+    if (!m_rendering_context_handle) TOGL_LogFatalError(std::string() + "Can not create OpenGl Rendering Context. (windows error code:" + std::to_string(GetLastError()) + ")");
 
     if (!wglMakeCurrent(m_device_context_handle, m_rendering_context_handle)) {
-        TOGL_LogFatalError("Window::Create: Can not set created OpenGl Rendering Context to be current.");
+        TOGL_LogFatalError("Can not set created OpenGl Rendering Context to be current.");
     }
 
     // --- Creates OpenGL Rendering Context with required minimum version --- //
@@ -1305,17 +1297,17 @@ inline void TOGL_Window::Create(HWND window_handle) {
 
             HGLRC rendering_context_handle = togl_wglCreateContextAttribsARB(m_device_context_handle, 0, attribute_list);
             if (!rendering_context_handle) {
-                TOGL_LogFatalError(std::string() + "Window::Create: Can not create OpenGl Rendering Context for version " + std::to_string(m_data.opengl_verion.major) + "." + std::to_string(m_data.opengl_verion.minor) + ".");
+                TOGL_LogFatalError(std::string() + "Can not create OpenGl Rendering Context for version " + std::to_string(m_data.opengl_verion.major) + "." + std::to_string(m_data.opengl_verion.minor) + ".");
             }
 
             if (!wglMakeCurrent(m_device_context_handle, rendering_context_handle)) {
-                TOGL_LogFatalError(std::string() + "Window::Create: Can not set created OpenGl Rendering Context for version " + std::to_string(m_data.opengl_verion.major) + "." + std::to_string(m_data.opengl_verion.minor) + " to be current.");
+                TOGL_LogFatalError(std::string() + "Can not set created OpenGl Rendering Context for version " + std::to_string(m_data.opengl_verion.major) + "." + std::to_string(m_data.opengl_verion.minor) + " to be current.");
             }
 
             m_rendering_context_handle = rendering_context_handle ;
 
         } else {
-            TOGL_LogFatalError("Window::Create: Can not load wglCreateContextAttribsARB function.");
+            TOGL_LogFatalError("Can not load wglCreateContextAttribsARB function.");
         }
     }
 

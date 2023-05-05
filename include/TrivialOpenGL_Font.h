@@ -475,7 +475,6 @@ private:
 
         void AddErrMsg(const std::string& err_msg) {
             if (!m_err_msg.empty()) m_err_msg += "\n";
-            m_err_msg += "Font FrameBuffer Error: ";
             m_err_msg += err_msg;
         }
 
@@ -632,7 +631,6 @@ private:
 
     void AddErrMsg(const std::string& err_msg) {
         if (!m_err_msg.empty()) m_err_msg += "\n";
-        m_err_msg += "FontGenerator Error: ";
         m_err_msg += err_msg;
     }
 

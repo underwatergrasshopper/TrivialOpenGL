@@ -718,14 +718,14 @@ inline std::wstring TOGL_ToUTF16(const std::string& text_utf8) {
         // number of characters with '\0'
         int number = MultiByteToWideChar(CP_UTF8, 0, text_utf8.c_str(), -1, NULL, 0);
         if (number == 0) {
-            TOGL_LogFatalError("Error TOGL_ToUTF16: Can not convert a text from utf-16 to utf-8.");
+            TOGL_LogFatalError("Can not convert a text from utf-16 to utf-8.");
         }
 
         wchar_t* buffer = (number > _TOGL_CONVERSION_STACK_BUFFER_LENGTH) ? (new wchar_t[number]) : stack_buffer;
 
         number = MultiByteToWideChar(CP_UTF8, 0, text_utf8.c_str(), -1, buffer, number);
         if (number == 0) {
-            TOGL_LogFatalError("Error TOGL_ToUTF16: Can not convert a text from utf-16 to utf-8.");
+            TOGL_LogFatalError("Can not convert a text from utf-16 to utf-8.");
         }
 
         if (number > 1) text_utf16 = std::wstring(buffer, number - 1);
@@ -745,14 +745,14 @@ inline std::string TOGL_ToUTF8(const std::wstring& text_utf16) {
         // number of characters with '\0'
         int number = WideCharToMultiByte(CP_UTF8, 0, text_utf16.c_str(), -1, NULL, 0, NULL, NULL);
         if (number == 0) {
-            TOGL_LogFatalError("Error TOGL_ToUTF8: Can not convert a text from utf-8 to utf-16.");
+            TOGL_LogFatalError("Can not convert a text from utf-8 to utf-16.");
         }
 
         char* buffer = (number > _TOGL_CONVERSION_STACK_BUFFER_LENGTH) ? (new char[number]) : stack_buffer;
 
         number = WideCharToMultiByte(CP_UTF8, 0, text_utf16.c_str(), -1, buffer, number, NULL, NULL);
         if (number == 0) {
-            TOGL_LogFatalError("Error TOGL_ToUTF8: Can not convert a text from utf-8 to utf-16.");
+            TOGL_LogFatalError("Can not convert a text from utf-8 to utf-16.");
         }
 
         if (number > 1) text_utf8 = std::string(buffer, number - 1);
