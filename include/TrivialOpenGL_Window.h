@@ -288,6 +288,118 @@ private:
         MAX_NUM_OF_UTF16_CODE_UNITS     = 2,
     };
 
+   // Corrects window position and size to remove invisible window frame in Windows 10. 
+    class WindowAreaCorrector {
+    public:
+        WindowAreaCorrector() {
+            m_dwmapi_lib_handle = LoadLibraryA("Dwmapi.dll");
+            if (m_dwmapi_lib_handle) {
+                m_dwm_get_window_attribute          = (decltype(m_dwm_get_window_attribute)) GetProcAddress(m_dwmapi_lib_handle, "DwmGetWindowAttribute");
+            } else {
+                m_dwm_get_window_attribute          = nullptr;
+            }
+        }
+
+        virtual ~WindowAreaCorrector() {
+            FreeLibrary(m_dwmapi_lib_handle);
+        }
+
+        TOGL_AreaIU16 Get(HWND window_handle) const {
+            TOGL_AreaIU16 area = {};
+
+            if (m_dwm_get_window_attribute) {
+                RECT window_rect;
+                GetWindowRect(window_handle, &window_rect);
+
+                // Added TOGL_ prefix.
+                enum { TOGL_DWMWA_EXTENDED_FRAME_BOUNDS = 9 };
+                RECT actual_window_rect;
+
+                // Note: To return correct values, must be called after ShowWindow(window_handle, SW_SHOW).
+                m_dwm_get_window_attribute(window_handle, TOGL_DWMWA_EXTENDED_FRAME_BOUNDS, &actual_window_rect, sizeof(RECT));
+
+                RECT frame = {};
+                frame.left      = actual_window_rect.left   - window_rect.left;
+                frame.top       = actual_window_rect.top    - window_rect.top;
+                frame.right     = window_rect.right         - actual_window_rect.right;
+                frame.bottom    = window_rect.bottom        - actual_window_rect.bottom;
+
+                area = TOGL_AreaIU16(- frame.left, -frame.top, uint16_t(frame.left + frame.right), uint16_t(frame.top + frame.bottom));
+            }
+
+            return area;
+        }
+
+        // area         - Window area without invisible frame.
+        TOGL_AreaIU16 AddInvisibleFrameTo(const TOGL_AreaIU16& area, HWND window_hangle) const {
+            const TOGL_AreaIU16 correction = Get(window_hangle);
+            return TOGL_AreaIU16(
+                area.x      + correction.x,
+                area.y      + correction.y,
+                area.width  + correction.width,
+                area.height + correction.height
+            );
+        }
+
+        // size         - Window size without invisible frame.
+        TOGL_SizeU16 AddInvisibleFrameTo(const TOGL_SizeU16& size, HWND window_hangle) const {
+            const TOGL_AreaIU16 correction = Get(window_hangle);
+            return TOGL_SizeU16(
+                size.width  + correction.width,
+                size.height + correction.height
+            );
+        }
+
+        // pos          - Window position without invisible frame.
+        TOGL_PointI AddInvisibleFrameTo(const TOGL_PointI& pos, HWND window_hangle) const {
+            const TOGL_AreaIU16 correction = Get(window_hangle);
+            return {
+                pos.x + correction.x,
+                pos.y + correction.y,
+            };
+        }
+
+        // area         - Window area with invisible frame.
+        TOGL_AreaIU16 RemoveInvisibleFrameFrom(const TOGL_AreaIU16& area, HWND window_hangle) const {
+            const TOGL_AreaIU16 correction = Get(window_hangle);
+            return TOGL_AreaIU16(
+                area.x      - correction.x,
+                area.y      - correction.y,
+                area.width  - correction.width,
+                area.height - correction.height
+            );
+        }
+
+        // size         - Window size with invisible frame.
+        TOGL_SizeU16 RemoveInvisibleFrameFrom(const TOGL_SizeU16& size, HWND window_hangle) const {
+            const TOGL_AreaIU16 correction = Get(window_hangle);
+            return TOGL_SizeU16(
+                size.width  - correction.width,
+                size.height - correction.height
+            );
+        }
+
+        // pos          - Window position with invisible frame.
+        TOGL_PointI RemoveInvisibleFrameFrom(const TOGL_PointI& pos, HWND window_hangle) const {
+            const TOGL_AreaIU16 correction = Get(window_hangle);
+            return {
+                pos.x - correction.x,
+                pos.y - correction.y,
+            };
+        }
+    private:
+        HMODULE  m_dwmapi_lib_handle;
+
+        struct MARGINS {
+            int cxLeftWidth;
+            int cxRightWidth;
+            int cyTopHeight;
+            int cyBottomHeight;
+        };
+        
+        HRESULT (WINAPI *m_dwm_get_window_attribute)(HWND hwnd, DWORD dwAttribute, PVOID pvAttribute, DWORD cbAttribute);
+    };
+
     TOGL_Window();
     TOGL_NO_COPY(TOGL_Window);
 
@@ -356,7 +468,7 @@ private:
 
     uint64_t        m_dbg_message_id;
 
-    _TOGL_InnerUtility::WindowAreaCorrector   m_window_area_corrector;
+    WindowAreaCorrector   m_window_area_corrector;
 
     std::map<bool*, std::stack<bool>>   m_on_off_stack_map;
 
