@@ -69,7 +69,7 @@ public:
         Initialize({width, height});
     }
 
-    void Initialize(const TOGL::SizeU16& size) {
+    void Initialize(const TOGL_SizeU16& size) {
         m_size = size;
 
         glMatrixMode(GL_PROJECTION);
@@ -124,15 +124,15 @@ public:
 
         m_size = {width, height};
 
-        TOGL::RequestRedraw();
+        TOGL_RequestRedraw();
     }
 
-    TOGL::SizeU16 GetSize() const {
+    TOGL_SizeU16 GetSize() const {
         return m_size;
     }
 
 private:
-    TOGL::SizeU16   m_size;
+    TOGL_SizeU16   m_size;
 
     double          m_interval;         // in seconds
     double          m_speed;            // in degrees per second
@@ -146,12 +146,12 @@ private:
 void PrintWindowStates() {
     puts("NHMmFf");
     printf("%s%s%s%s%s%s\n", 
-        TOGL::IsNormal() ? "+" : " ",
-        TOGL::IsVisible() == false ? "+" : " ",
-        TOGL::IsWindowMaximized() ? "+" : " ",
-        TOGL::IsWindowMinimized() ? "+" : " ",
+        TOGL_IsNormal() ? "+" : " ",
+        TOGL_IsVisible() == false ? "+" : " ",
+        TOGL_IsMaximized() ? "+" : " ",
+        TOGL_IsMinimized() ? "+" : " ",
         " ",
-        TOGL::IsWindowedFullScreen() ? "+" : " ");
+        TOGL_IsFullScreen() ? "+" : " ");
 }
 
 void DisplayWindowInfo() {
@@ -198,23 +198,23 @@ void DisplayWindowInfo() {
     togl_print_i32(border.bottom);
     puts("");
 
-    const TOGL::SizeU16 screen_size = TOGL::GetScreenSize();
+    const TOGL_SizeU16 screen_size = TOGL_GetScreenSize();
     togl_print_i32(screen_size.width);
     togl_print_i32(screen_size.height);
 
-    const TOGL::SizeU16 work_area_size = TOGL::GetDesktopAreaSizeNoTaskBar();
+    const TOGL_SizeU16 work_area_size = TOGL_GetDesktopAreaSizeNoTaskBar();
     togl_print_i32(work_area_size.width);
     togl_print_i32(work_area_size.height);
     puts("");
 
-    const TOGL::AreaIU16 window_area = TOGL::GetArea();
+    const TOGL_AreaIU16 window_area = TOGL_GetArea();
     togl_print_i32(window_area.x);
     togl_print_i32(window_area.y);
     togl_print_i32(window_area.width);
     togl_print_i32(window_area.height);
     puts("");
 
-    const TOGL::AreaIU16 window_draw_area = TOGL::GetDrawArea();
+    const TOGL_AreaIU16 window_draw_area = TOGL_GetDrawArea();
     togl_print_i32(window_draw_area.x);
     togl_print_i32(window_draw_area.y);
     togl_print_i32(window_draw_area.width);
@@ -274,32 +274,32 @@ enum {
     FONT_SIZE = 16, // in pixels
 };
 
-static TOGL::Window&    s_window                    = TOGL::ToWindow();
-static TOGL::SizeU16    s_resolution;
+static TOGL_Window&    s_window                    = TOGL_ToWindow();
+static TOGL_SizeU16    s_resolution;
 static bool             s_is_client;
 static TestImage        s_test_image;
 static bool             s_is_display_mose_move_data;
 
 static DelayedActionManager s_actions;
 
-TOGL::FontStyle         s_font_style    = TOGL::FONT_STYLE_NORMAL;
-TOGL::FontCharSet       s_font_char_set = TOGL::FONT_CHAR_SET_ENGLISH;
+TOGL_FontStyleId         s_font_style    = TOGL_FONT_STYLE_ID_NORMAL;
+TOGL_FontCharSetId       s_font_char_set = TOGL_FONT_CHAR_SET_ID_ENGLISH;
 
-TOGL::Font              s_font;
-TOGL::TextDrawer        s_text_drawer;
+TOGL_Font              s_font;
+TOGL_TextDrawer        s_text_drawer;
 
 //------------------------------------------------------------------------------
 
 void LoadFont() {
-    s_font.Load("Courier New", FONT_SIZE, TOGL::FONT_SIZE_UNIT_PIXELS, s_font_style, s_font_char_set);
+    s_font.Load("Courier New", FONT_SIZE, TOGL_FONT_SIZE_UNIT_ID_PIXELS, s_font_style, s_font_char_set);
 
     s_text_drawer.SetColor(255, 255, 255, 255);
 }
 
 void DrawInfoText(const std::string& text = "") {
-    s_text_drawer.SetPos(10, TOGL::GetDrawAreaSize().height - s_font.GetGlyphHeight());
+    s_text_drawer.SetPos(10, TOGL_GetDrawAreaSize().height - s_font.GetGlyphHeight());
     
-    s_text_drawer.RenderText(s_font, TOGL::FineText(text));
+    s_text_drawer.RenderText(s_font, TOGL_FineText(text));
 }
 
 //------------------------------------------------------------------------------
@@ -406,7 +406,7 @@ public:
             } 
 
             std::set<std::string> options;
-            for (const auto& option : RemoveEmpty(TOGL::Split(raw_options, ' '))) options.insert(option);
+            for (const auto& option : RemoveEmpty(TOGL_Split(raw_options, ' '))) options.insert(option);
 
             auto IsContainAllIn = [](const std::set<std::string>& elements, const std::set<std::string>& container) -> std::string {
                 for (const auto& element : elements) {
@@ -545,7 +545,7 @@ bool SaveAsBMP(const std::string& file_name, const uint8_t* pixel_data, uint32_t
         }
 
         FILE* file = NULL;
-        is_success = _wfopen_s(&file, TOGL::ToUTF16(file_name).c_str(), L"wb") == 0 && file;
+        is_success = _wfopen_s(&file, TOGL_ToUTF16(file_name).c_str(), L"wb") == 0 && file;
 
         if (is_success) {
             is_success = fwrite(file_data, 1, file_size, file) == file_size;
@@ -834,13 +834,13 @@ int main(int argc, char *argv[]) {
     example_manager.AddExample("icon", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
         auto IsOption = [&options](const std::string& option) { return options.find(option) != options.end(); };
 
-        TOGL::Data data = {};
+        TOGL_Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
         data.icon_file_name     = "..\\..\\..\\..\\TrivialOpenGL_Example\\assets\\icon.ico";
 
-        return TOGL::Run(data);
+        return TOGL_Run(data);
     });
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -848,13 +848,13 @@ int main(int argc, char *argv[]) {
     ////////////////////////////////////////////////////////////////////////////////
 
     example_manager.AddExample("icon_resource", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
-        TOGL::Data data = {};
+        TOGL_Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
         data.icon_resource_id   = ICON_ID;
 
-        return TOGL::Run(data);
+        return TOGL_Run(data);
     });
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -862,14 +862,14 @@ int main(int argc, char *argv[]) {
     ////////////////////////////////////////////////////////////////////////////////
 
     example_manager.AddExample("custom_size", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
-        TOGL::Data data = {};
+        TOGL_Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
         data.area               = {0, 0, 400, 800};
-        data.style              = TOGL::STYLE_BIT_CENTERED;
+        data.style              = TOGL_STYLE_BIT_CENTERED;
 
-        return TOGL::Run(data);
+        return TOGL_Run(data);
     });
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -877,13 +877,13 @@ int main(int argc, char *argv[]) {
     ////////////////////////////////////////////////////////////////////////////////
 
     example_manager.AddExample("custom_area", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
-        TOGL::Data data = {};
+        TOGL_Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
         data.area               = {100, 200, 400, 800};
 
-        return TOGL::Run(data);
+        return TOGL_Run(data);
     });
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -891,13 +891,13 @@ int main(int argc, char *argv[]) {
     ////////////////////////////////////////////////////////////////////////////////
 
     example_manager.AddExample("no_area", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
-        TOGL::Data data = {};
+        TOGL_Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
         data.area               = {0, 0, 0, 0};
 
-        return TOGL::Run(data);
+        return TOGL_Run(data);
     });
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -905,13 +905,13 @@ int main(int argc, char *argv[]) {
     ////////////////////////////////////////////////////////////////////////////////
 
     example_manager.AddExample("no_resize", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
-        TOGL::Data data = {};
+        TOGL_Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
-        data.style              = TOGL::STYLE_BIT_NO_RESIZE;
+        data.style              = TOGL_STYLE_BIT_NO_RESIZE;
 
-        return TOGL::Run(data);
+        return TOGL_Run(data);
     });
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -919,13 +919,13 @@ int main(int argc, char *argv[]) {
     ////////////////////////////////////////////////////////////////////////////////
 
     example_manager.AddExample("no_maximize", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
-        TOGL::Data data = {};
+        TOGL_Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
-        data.style              = TOGL::STYLE_BIT_NO_MAXIMIZE;
+        data.style              = TOGL_STYLE_BIT_NO_MAXIMIZE;
 
-        return TOGL::Run(data);
+        return TOGL_Run(data);
     });
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -933,13 +933,13 @@ int main(int argc, char *argv[]) {
     ////////////////////////////////////////////////////////////////////////////////
 
     example_manager.AddExample("no_maximize_and_resize", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
-        TOGL::Data data = {};
+        TOGL_Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
-        data.style              = TOGL::STYLE_BIT_NO_MAXIMIZE | TOGL::STYLE_BIT_NO_RESIZE;
+        data.style              = TOGL_STYLE_BIT_NO_MAXIMIZE | TOGL_STYLE_BIT_NO_RESIZE;
 
-        return TOGL::Run(data);
+        return TOGL_Run(data);
     });
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -947,14 +947,14 @@ int main(int argc, char *argv[]) {
     ////////////////////////////////////////////////////////////////////////////////
 
     example_manager.AddExample("center", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
-        TOGL::Data data = {};
+        TOGL_Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
         data.area               = {0, 0, 400, 800};
-        data.style              = TOGL::STYLE_BIT_CENTERED;
+        data.style              = TOGL_STYLE_BIT_CENTERED;
 
-        return TOGL::Run(data);
+        return TOGL_Run(data);
     });
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -962,16 +962,16 @@ int main(int argc, char *argv[]) {
     ////////////////////////////////////////////////////////////////////////////////
 
     example_manager.AddExample("draw_area_size", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
-        TOGL::Data data = {};
+        TOGL_Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
         data.area               = {0, 0, 400, 200};
         data.style              = 0;
-        data.style              |= TOGL::STYLE_BIT_CENTERED;
-        data.style              |= TOGL::STYLE_BIT_DRAW_AREA_SIZE;
+        data.style              |= TOGL_STYLE_BIT_CENTERED;
+        data.style              |= TOGL_STYLE_BIT_DRAW_AREA_SIZE;
 
-        return TOGL::Run(data);
+        return TOGL_Run(data);
 
     });
 
@@ -980,16 +980,16 @@ int main(int argc, char *argv[]) {
     ////////////////////////////////////////////////////////////////////////////////
 
     example_manager.AddExample("draw_area_only", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
-        TOGL::Data data = {};
+        TOGL_Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
         data.area               = {0, 0, 400, 200};
         data.style              = 0;
-        data.style              |= TOGL::STYLE_BIT_CENTERED;
-        data.style              |= TOGL::STYLE_BIT_DRAW_AREA_ONLY;
+        data.style              |= TOGL_STYLE_BIT_CENTERED;
+        data.style              |= TOGL_STYLE_BIT_DRAW_AREA_ONLY;
 
-        return TOGL::Run(data);
+        return TOGL_Run(data);
     });
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -997,14 +997,14 @@ int main(int argc, char *argv[]) {
     ////////////////////////////////////////////////////////////////////////////////
 
     example_manager.AddExample("redraw_on_change_or_request", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
-        TOGL::Data data = {};
+        TOGL_Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
-        data.style              = TOGL::STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
-        data.log_level          = TOGL::LOG_LEVEL_DEBUG;
+        data.style              = TOGL_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
+        data.log_level          = TOGL_LOG_LEVEL_DEBUG;
 
-        return TOGL::Run(data);
+        return TOGL_Run(data);
 
     });
 
@@ -1013,12 +1013,12 @@ int main(int argc, char *argv[]) {
     ////////////////////////////////////////////////////////////////////////////////
 
     example_manager.AddExample("draw_triangle", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
-        TOGL::Data data = {};
+        TOGL_Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
         data.icon_resource_id   = ICON_ID;
-        data.log_level          = TOGL::LOG_LEVEL_DEBUG;
+        data.log_level          = TOGL_LOG_LEVEL_DEBUG;
 
         data.do_on_create = []() {
             glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
@@ -1045,7 +1045,7 @@ int main(int argc, char *argv[]) {
             glEnd();
         };
 
-        return TOGL::Run(data);
+        return TOGL_Run(data);
     });
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -1068,22 +1068,22 @@ int main(int argc, char *argv[]) {
 
         s_resolution = {600, 300};
 
-        TOGL::Data data = {};
+        TOGL_Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
         data.area               = {0, 0, s_resolution.width, s_resolution.height};
         data.style              = 0;
-        data.style              |= TOGL::STYLE_BIT_CENTERED;
+        data.style              |= TOGL_STYLE_BIT_CENTERED;
         data.icon_resource_id   = ICON_ID;
 
-        if (!IsOption("no_debug"))                      data.log_level = TOGL::LOG_LEVEL_DEBUG;
+        if (!IsOption("no_debug"))                      data.log_level = TOGL_LOG_LEVEL_DEBUG;
 
-        if (IsOption("draw_area_size"))                 data.style |= TOGL::STYLE_BIT_DRAW_AREA_SIZE;
-        if (IsOption("draw_area_only"))                 data.style |= TOGL::STYLE_BIT_DRAW_AREA_ONLY;
-        if (IsOption("redraw_on_change_or_request"))    data.style |= TOGL::STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
-        if (IsOption("no_resize"))                      data.style |= TOGL::STYLE_BIT_NO_RESIZE;
-        if (IsOption("no_maximize"))                    data.style |= TOGL::STYLE_BIT_NO_MAXIMIZE;
+        if (IsOption("draw_area_size"))                 data.style |= TOGL_STYLE_BIT_DRAW_AREA_SIZE;
+        if (IsOption("draw_area_only"))                 data.style |= TOGL_STYLE_BIT_DRAW_AREA_ONLY;
+        if (IsOption("redraw_on_change_or_request"))    data.style |= TOGL_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
+        if (IsOption("no_resize"))                      data.style |= TOGL_STYLE_BIT_NO_RESIZE;
+        if (IsOption("no_maximize"))                    data.style |= TOGL_STYLE_BIT_NO_MAXIMIZE;
 
         if (IsOption("notify_any_message"))             data.special_debug.is_notify_any_message        = true;
         if (IsOption("notify_draw_call"))               data.special_debug.is_notify_draw_call          = true;
@@ -1092,7 +1092,7 @@ int main(int argc, char *argv[]) {
         if (IsOption("notify_character_message"))       data.special_debug.is_notify_character_message  = true;
 
         data.do_on_create = []() {
-            s_test_image.Initialize(TOGL::GetDrawAreaSize());
+            s_test_image.Initialize(TOGL_GetDrawAreaSize());
 
             LoadFont();
         };
@@ -1124,65 +1124,65 @@ int main(int argc, char *argv[]) {
             s_test_image.Resize(width, height);
         };
 
-        data.do_on_key = [](TOGL::KeyId key_id, bool is_down, const TOGL::Extra& extra) {
-            auto& window = TOGL::ToWindow();
+        data.do_on_key = [](TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra) {
+            auto& window = TOGL_ToWindow();
 
             if (!is_down) {
                 if (!s_is_client) {
                     switch (key_id) {
-                    case TOGL::KEY_ID_1:            window.MoveTo(0, 0); break;
-                    case TOGL::KEY_ID_2:            window.MoveTo(10, 100); break;
+                    case KEY_ID_1:            window.MoveTo(0, 0); break;
+                    case KEY_ID_2:            window.MoveTo(10, 100); break;
 
-                    case TOGL::KEY_ID_3:            window.Resize(400, 200); break;
-                    case TOGL::KEY_ID_4:            window.Resize(800, 400); break;
+                    case KEY_ID_3:            window.Resize(400, 200); break;
+                    case KEY_ID_4:            window.Resize(800, 400); break;
 
-                    case TOGL::KEY_ID_5:            window.SetArea(100, 10, 800, 400); break;
-                    case TOGL::KEY_ID_6:            window.SetArea(window.GetArea()); break;
-                    case TOGL::KEY_ID_7:            window.SetArea(TOGL::GetDesktopAreaNoTaskBar()); break;
-                    case TOGL::KEY_ID_8:            window.SetArea({{}, TOGL::GetScreenSize()}); break;
+                    case KEY_ID_5:            window.SetArea(100, 10, 800, 400); break;
+                    case KEY_ID_6:            window.SetArea(window.GetArea()); break;
+                    case KEY_ID_7:            window.SetArea(TOGL_GetDesktopAreaNoTaskBar()); break;
+                    case KEY_ID_8:            window.SetArea({{}, TOGL_GetScreenSize()}); break;
 
-                    case TOGL::KEY_ID_C:            window.Center(s_resolution, s_is_client); break;
+                    case KEY_ID_C:            window.Center(s_resolution, s_is_client); break;
 
-                    case TOGL::KEY_ID_ARROW_LEFT:   window.MoveBy(-30, 0); break;
-                    case TOGL::KEY_ID_ARROW_RIGHT:  window.MoveBy(30, 0); break;
+                    case KEY_ID_ARROW_LEFT:   window.MoveBy(-30, 0); break;
+                    case KEY_ID_ARROW_RIGHT:  window.MoveBy(30, 0); break;
 
-                    case TOGL::KEY_ID_X:            window.RequestClose(); break;
+                    case KEY_ID_X:            window.RequestClose(); break;
 
-                    case TOGL::KEY_ID_I:            DisplayWindowInfo(); break;
+                    case KEY_ID_I:            DisplayWindowInfo(); break;
 
-                    case TOGL::KEY_ID_T:            s_is_client = !s_is_client; break;
+                    case KEY_ID_T:            s_is_client = !s_is_client; break;
                     default: break;
                     }
                 } else {
                     switch (key_id) {
-                    case TOGL::KEY_ID_1:            window.MoveTo(0, 0, true); break;
-                    case TOGL::KEY_ID_2:            window.MoveTo(10, 100, true); break;
+                    case KEY_ID_1:            window.MoveTo(0, 0, true); break;
+                    case KEY_ID_2:            window.MoveTo(10, 100, true); break;
 
-                    case TOGL::KEY_ID_3:            window.Resize(400, 200, true); break;
-                    case TOGL::KEY_ID_4:            window.Resize(800, 400, true); break;
+                    case KEY_ID_3:            window.Resize(400, 200, true); break;
+                    case KEY_ID_4:            window.Resize(800, 400, true); break;
 
-                    case TOGL::KEY_ID_5:            window.SetArea(100, 10, 800, 400, false); break;
-                    case TOGL::KEY_ID_6:            window.SetArea(window.GetDrawArea(), false); break;
-                    case TOGL::KEY_ID_7:            window.SetArea(TOGL::GetDesktopAreaNoTaskBar(), false); break;
-                    case TOGL::KEY_ID_8:            window.SetArea({{}, TOGL::GetScreenSize()}, false); break;
+                    case KEY_ID_5:            window.SetArea(100, 10, 800, 400, false); break;
+                    case KEY_ID_6:            window.SetArea(window.GetDrawArea(), false); break;
+                    case KEY_ID_7:            window.SetArea(TOGL_GetDesktopAreaNoTaskBar(), false); break;
+                    case KEY_ID_8:            window.SetArea({{}, TOGL_GetScreenSize()}, false); break;
 
-                    case TOGL::KEY_ID_C:            window.Center(s_resolution, s_is_client); break;
+                    case KEY_ID_C:            window.Center(s_resolution, s_is_client); break;
 
-                    case TOGL::KEY_ID_ARROW_LEFT:   window.MoveBy(-30, 0); break;
-                    case TOGL::KEY_ID_ARROW_RIGHT:  window.MoveBy(30, 0); break;
+                    case KEY_ID_ARROW_LEFT:   window.MoveBy(-30, 0); break;
+                    case KEY_ID_ARROW_RIGHT:  window.MoveBy(30, 0); break;
 
-                    case TOGL::KEY_ID_X:            window.RequestClose(); break;
+                    case KEY_ID_X:            window.RequestClose(); break;
 
-                    case TOGL::KEY_ID_I:            DisplayWindowInfo(); break;
+                    case KEY_ID_I:            DisplayWindowInfo(); break;
 
-                    case TOGL::KEY_ID_T:            s_is_client = !s_is_client; break;
+                    case KEY_ID_T:            s_is_client = !s_is_client; break;
                     default: break;
                     }
                 }
             }
         };
 
-        return TOGL::Run(data);
+        return TOGL_Run(data);
 
     });
 
@@ -1195,22 +1195,22 @@ int main(int argc, char *argv[]) {
 
         s_resolution = {800, 400};
 
-        TOGL::Data data = {};
+        TOGL_Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
         data.area               = {0, 0, s_resolution.width, s_resolution.height};
         data.style              = 0;
-        data.style              |= TOGL::STYLE_BIT_CENTERED;
+        data.style              |= TOGL_STYLE_BIT_CENTERED;
         data.icon_resource_id   = ICON_ID;
 
-        if (!IsOption("no_debug"))                      data.log_level = TOGL::LOG_LEVEL_DEBUG;
+        if (!IsOption("no_debug"))                      data.log_level = TOGL_LOG_LEVEL_DEBUG;
 
-        if (IsOption("draw_area_size"))                 data.style |= TOGL::STYLE_BIT_DRAW_AREA_SIZE;
-        if (IsOption("draw_area_only"))                 data.style |= TOGL::STYLE_BIT_DRAW_AREA_ONLY;
-        if (IsOption("redraw_on_change_or_request"))    data.style |= TOGL::STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
-        if (IsOption("no_resize"))                      data.style |= TOGL::STYLE_BIT_NO_RESIZE;
-        if (IsOption("no_maximize"))                    data.style |= TOGL::STYLE_BIT_NO_MAXIMIZE;
+        if (IsOption("draw_area_size"))                 data.style |= TOGL_STYLE_BIT_DRAW_AREA_SIZE;
+        if (IsOption("draw_area_only"))                 data.style |= TOGL_STYLE_BIT_DRAW_AREA_ONLY;
+        if (IsOption("redraw_on_change_or_request"))    data.style |= TOGL_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
+        if (IsOption("no_resize"))                      data.style |= TOGL_STYLE_BIT_NO_RESIZE;
+        if (IsOption("no_maximize"))                    data.style |= TOGL_STYLE_BIT_NO_MAXIMIZE;
 
         if (IsOption("notify_any_message"))             data.special_debug.is_notify_any_message        = true;
         if (IsOption("notify_draw_call"))               data.special_debug.is_notify_draw_call          = true;
@@ -1218,11 +1218,11 @@ int main(int argc, char *argv[]) {
         if (IsOption("notify_key_message"))             data.special_debug.is_notify_key_message        = true;
         if (IsOption("notify_character_message"))       data.special_debug.is_notify_character_message  = true;
 
-        s_font_char_set = IsOption("unicode") ? TOGL::FONT_CHAR_SET_RANGE_0000_FFFF : TOGL::FONT_CHAR_SET_ENGLISH;
-        s_font_style    = IsOption("bold") ? TOGL::FONT_STYLE_BOLD : TOGL::FONT_STYLE_NORMAL;
+        s_font_char_set = IsOption("unicode") ? TOGL_FONT_CHAR_SET_ID_RANGE_0000_FFFF : TOGL_FONT_CHAR_SET_ID_ENGLISH;
+        s_font_style    = IsOption("bold") ? TOGL_FONT_STYLE_ID_BOLD : TOGL_FONT_STYLE_ID_NORMAL;
 
         data.do_on_create = []() {
-            s_test_image.Initialize(TOGL::GetDrawAreaSize());
+            s_test_image.Initialize(TOGL_GetDrawAreaSize());
 
             LoadFont();
 
@@ -1233,7 +1233,7 @@ int main(int argc, char *argv[]) {
             
             s_test_image.Animate();
             
-            TOGL::Window& window = TOGL::ToWindow();
+            TOGL_Window& window = TOGL_ToWindow();
 
             glColor3f(1, 0.5, 0);
             glPushMatrix();
@@ -1242,9 +1242,9 @@ int main(int argc, char *argv[]) {
             s_font.RenderGlyphs(u8"Somme text. Xj\u3400\u5016\u9D9B\u0001\U00024B62");
             glPopMatrix();
 
-            TOGL::TextDrawer text_drawer;
+            TOGL_TextDrawer text_drawer;
             
-            //text_drawer.SetOrientation(TOGL::TEXT_DRAWER_ORIENTATION_LEFT_TOP);
+            //text_drawer.SetOrientation(TEXT_DRAWER_ORIENTATION_LEFT_TOP);
 
             text_drawer.SetPos(50, 100);
             text_drawer.SetColor(255, 0, 0, 255);
@@ -1253,8 +1253,8 @@ int main(int argc, char *argv[]) {
             text_drawer.RenderText(s_font, u8"\n\tTab.\b");
 
 
-            const TOGL::FineText text = TOGL::FineText(
-                TOGL::Color4U8(0, 0, 0, 255),
+            const TOGL_FineText text = TOGL_FineText(
+                TOGL_Color4U8(0, 0, 0, 255),
                 u8"Some text. Xj\u3400\u5016\u9D9B\u0001\U00024B62 "
                 u8"Many words in line. Many words in line. Many words in line. Many words in line. Many words in line. Many words in line.\n"
                 u8"Many words in line with \ttab.\n"
@@ -1267,7 +1267,7 @@ int main(int argc, char *argv[]) {
                 u8"Very-long-text-to-split-apart. ");
             text_drawer.SetLineWrapWidth(s_test_image.GetSize().width - 10);
 
-            const TOGL::SizeU text_size = text_drawer.GetTextSize(s_font, text);
+            const TOGL_SizeU text_size = text_drawer.GetTextSize(s_font, text);
 
             glColor3f(1, 1, 1);
             DrawRectangle(0, s_test_image.GetSize().height - text_size.height, s_test_image.GetSize().width - 10, text_size.height);
@@ -1283,14 +1283,14 @@ int main(int argc, char *argv[]) {
             s_test_image.Resize(width, height);
         };
 
-        data.do_on_key = [](TOGL::KeyId key_id, bool is_down, const TOGL::Extra& extra) {
-            auto& window = TOGL::ToWindow();
+        data.do_on_key = [](TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra) {
+            auto& window = TOGL_ToWindow();
 
             if (!is_down && key_id == 'X') window.RequestClose();
             if (!is_down && key_id == 'R') window.Center(500, 500);
         };
         
-        return TOGL::Run(data);
+        return TOGL_Run(data);
     });
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -1304,22 +1304,22 @@ int main(int argc, char *argv[]) {
 
         s_resolution = {800, 400};
 
-        TOGL::Data data = {};
+        TOGL_Data data = {};
 
         data.window_name            = "TrivialOpenGL_Example ";
         data.window_name            += name;
         data.area                   = {0, 0, s_resolution.width, s_resolution.height};
         data.style                  = 0;
-        data.style                  |= TOGL::STYLE_BIT_CENTERED;
+        data.style                  |= TOGL_STYLE_BIT_CENTERED;
         data.icon_resource_id       = ICON_ID;
 
-        if (!IsOption("no_debug"))                      data.log_level = TOGL::LOG_LEVEL_DEBUG;
+        if (!IsOption("no_debug"))                      data.log_level = TOGL_LOG_LEVEL_DEBUG;
 
-        if (IsOption("draw_area_size"))                 data.style |= TOGL::STYLE_BIT_DRAW_AREA_SIZE;
-        if (IsOption("draw_area_only"))                 data.style |= TOGL::STYLE_BIT_DRAW_AREA_ONLY;
-        if (IsOption("redraw_on_change_or_request"))    data.style |= TOGL::STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
-        if (IsOption("no_resize"))                      data.style |= TOGL::STYLE_BIT_NO_RESIZE;
-        if (IsOption("no_maximize"))                    data.style |= TOGL::STYLE_BIT_NO_MAXIMIZE;
+        if (IsOption("draw_area_size"))                 data.style |= TOGL_STYLE_BIT_DRAW_AREA_SIZE;
+        if (IsOption("draw_area_only"))                 data.style |= TOGL_STYLE_BIT_DRAW_AREA_ONLY;
+        if (IsOption("redraw_on_change_or_request"))    data.style |= TOGL_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
+        if (IsOption("no_resize"))                      data.style |= TOGL_STYLE_BIT_NO_RESIZE;
+        if (IsOption("no_maximize"))                    data.style |= TOGL_STYLE_BIT_NO_MAXIMIZE;
 
         if (IsOption("notify_any_message"))             data.special_debug.is_notify_any_message        = true;
         if (IsOption("notify_draw_call"))               data.special_debug.is_notify_draw_call          = true;
@@ -1329,15 +1329,15 @@ int main(int argc, char *argv[]) {
 
         if (IsOption("full_screen_at_start")) {
             data.do_on_create = []() {
-                s_test_image.Initialize(TOGL::GetDrawAreaSize());
+                s_test_image.Initialize(TOGL_GetDrawAreaSize());
 
-                TOGL::GoWindowedFullScreen();
+                TOGL_GoWindowedFullScreen();
 
                 LoadFont();
             };
         } else {
             data.do_on_create = []() {
-                s_test_image.Initialize(TOGL::GetDrawAreaSize());
+                s_test_image.Initialize(TOGL_GetDrawAreaSize());
 
                 LoadFont();
             };
@@ -1382,14 +1382,14 @@ int main(int argc, char *argv[]) {
             puts(message.c_str());
         };
 
-        data.do_on_state_change = [](TOGL::WindowState window_state) {
+        data.do_on_state_change = [](TOGL_WindowStateId window_state) {
             std::string message = "Changed Window State to: ";
 
             switch (window_state) {
-            case TOGL::WINDOW_STATE_NORMAL:                 message += "NORMAL"; break;
-            case TOGL::WINDOW_STATE_MAXIMIZED:              message += "MAXIMIZED"; break;
-            case TOGL::WINDOW_STATE_MINIMIZED:              message += "MINIMIZED"; break;
-            case TOGL::WINDOW_STATE_WINDOWED_FULL_SCREENED: message += "WINDOWED_FULL_SCREENED"; break;
+            case TOGL_WINDOW_STATE_ID_NORMAL:                 message += "NORMAL"; break;
+            case TOGL_WINDOW_STATE_ID_MAXIMIZED:              message += "MAXIMIZED"; break;
+            case TOGL_WINDOW_STATE_ID_MINIMIZED:              message += "MINIMIZED"; break;
+            case TOGL_WINDOW_STATE_ID_WINDOWED_FULL_SCREENED: message += "WINDOWED_FULL_SCREENED"; break;
             }
 
             puts(message.c_str());
@@ -1407,158 +1407,158 @@ int main(int argc, char *argv[]) {
             puts(is_gain ? "On Foreground Gain" : "On Foreground Lose");
         };
 
-        data.do_on_key = [](TOGL::KeyId key_id, bool is_down, const TOGL::Extra& extra) {
+        data.do_on_key = [](TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra) {
             if (!is_down) {
 
                 switch (key_id) {
 
-                case 'X':               TOGL::RequestClose(); break;
-                case TOGL::KEY_ID_R:    TOGL::RequestRedraw(); break;
-                case TOGL::KEY_ID_C:    TOGL::Center(s_resolution, false); break;
-                case TOGL::KEY_ID_V:    TOGL::Center(s_resolution, true); break;
+                case 'X':               TOGL_RequestClose(); break;
+                case KEY_ID_R:    TOGL_RequestRedraw(); break;
+                case KEY_ID_C:    TOGL_Center(s_resolution, false); break;
+                case KEY_ID_V:    TOGL_Center(s_resolution, true); break;
 
                 case 'F':
                     s_actions.Add(0, [](){
                         // Moves behind window to foreground.
                         SetForegroundWindow(GetNextWindow(GetForegroundWindow(), GW_HWNDNEXT));
-                        togl_print_i32(TOGL::IsForeground());
+                        togl_print_i32(TOGL_IsForeground());
 
                         puts("---");
                     });
 
                     s_actions.Add(1, [](){
 
-                        TOGL::GoForeground();
-                        togl_print_i32(TOGL::IsForeground());
+                        TOGL_GoForeground();
+                        togl_print_i32(TOGL_IsForeground());
 
                         puts("---");
                     });
 
                     s_actions.Add(1, [](){
 
-                        TOGL::Minimize();
-                        togl_print_i32(TOGL::IsForeground());
+                        TOGL_Minimize();
+                        togl_print_i32(TOGL_IsForeground());
 
                         puts("---");
                     });
 
                     s_actions.Add(1, [](){
 
-                        TOGL::Center(s_resolution);
-                        //TOGL::GoForeground(); // redundant
-                        togl_print_i32(TOGL::IsForeground());
+                        TOGL_Center(s_resolution);
+                        //GoForeground(); // redundant
+                        togl_print_i32(TOGL_IsForeground());
 
                         puts("---");
                     });
 
                     s_actions.Add(1, [](){
 
-                        TOGL::Hide();
-                        togl_print_i32(TOGL::IsForeground());
+                        TOGL_Hide();
+                        togl_print_i32(TOGL_IsForeground());
 
                         puts("---");
                     });
 
                     s_actions.Add(1, [](){
 
-                        TOGL::Show();
-                        //TOGL::GoForeground(); // redundant
-                        togl_print_i32(TOGL::IsForeground());
+                        TOGL_Show();
+                        //GoForeground(); // redundant
+                        togl_print_i32(TOGL_IsForeground());
 
                         puts("Finished");
                     });
                     break;
 
-                case TOGL::KEY_ID_ARROW_LEFT:
-                    TOGL::MoveBy(-30, 0);
+                case KEY_ID_ARROW_LEFT:
+                    TOGL_MoveBy(-30, 0);
                     break;
 
-                case TOGL::KEY_ID_ARROW_RIGHT:
-                    TOGL::MoveBy(30, 0);
+                case KEY_ID_ARROW_RIGHT:
+                    TOGL_MoveBy(30, 0);
                     break;
 
-                case TOGL::KEY_ID_ARROW_UP:
-                    TOGL::MoveBy(0, -30);
+                case KEY_ID_ARROW_UP:
+                    TOGL_MoveBy(0, -30);
                     break;
 
-                case TOGL::KEY_ID_ARROW_DOWN:
-                    TOGL::MoveBy(0, 30);
+                case KEY_ID_ARROW_DOWN:
+                    TOGL_MoveBy(0, 30);
                     break;
 
-                case TOGL::KEY_ID_0: 
+                case KEY_ID_0: 
                     s_actions.Add(0, [](){
                         puts("--- Show --");
-                        TOGL::Hide();
+                        TOGL_Hide();
                         PrintWindowStates();
                     });
                     
                     s_actions.Add(1, [](){
                         puts("---");
-                        TOGL::Show(); 
+                        TOGL_Show(); 
                         PrintWindowStates();
                     });
                     
                     s_actions.Add(1, [](){
                         puts("--- Restore ---");
-                        TOGL::Hide();
+                        TOGL_Hide();
                         PrintWindowStates();
                     });
                     
                     s_actions.Add(1, [](){
                         puts("---");
-                        TOGL::Resize(s_resolution, TOGL::GetStyle() & TOGL::STYLE_BIT_DRAW_AREA_SIZE); 
+                        TOGL_Resize(s_resolution, TOGL_GetStyle() & TOGL_STYLE_BIT_DRAW_AREA_SIZE); 
                         PrintWindowStates();
                     });
                     
                     s_actions.Add(1, [](){
                         puts("--- Minimize ---");
-                        TOGL::Hide();
+                        TOGL_Hide();
                         PrintWindowStates();
                     });
                     
                     s_actions.Add(1, [](){
                         puts("---");
-                        TOGL::Minimize(); 
+                        TOGL_Minimize(); 
                         PrintWindowStates();
                     
                     });
 
                     s_actions.Add(1, [](){
                         puts("--- Maximize ---");
-                        TOGL::Hide();
+                        TOGL_Hide();
                         PrintWindowStates();
 
                     });
 
                     s_actions.Add(1, [](){
                         puts("---");
-                        TOGL::Maximize(); 
+                        TOGL_Maximize(); 
                         PrintWindowStates();
                     });
 
                     s_actions.Add(1, [](){
                         puts("--- Windowed Full Screen ---");
-                        TOGL::Hide();
+                        TOGL_Hide();
                         PrintWindowStates();
 
                     });
 
                     s_actions.Add(1, [](){
                         puts("---");
-                        TOGL::GoWindowedFullScreen(); 
+                        TOGL_GoWindowedFullScreen(); 
                         PrintWindowStates();
                     });
 
                     s_actions.Add(1, [](){
                         puts("--- Center ---");
-                        TOGL::Hide();
+                        TOGL_Hide();
                         PrintWindowStates();
 
                     });
 
                     s_actions.Add(1, [](){
                         puts("---");
-                        TOGL::Center(s_resolution); 
+                        TOGL_Center(s_resolution); 
                         PrintWindowStates();
 
                         puts("Finished");
@@ -1569,103 +1569,103 @@ int main(int argc, char *argv[]) {
                 case '1':
                     s_actions.Add(0, [](){
                         puts("---");
-                        TOGL::Hide();
+                        TOGL_Hide();
                         PrintWindowStates();
 
-                        togl_print_i32(TOGL::GetArea().x);
-                        togl_print_i32(TOGL::GetArea().y);
-                        togl_print_i32(TOGL::GetArea().width);
-                        togl_print_i32(TOGL::GetArea().height);
+                        togl_print_i32(TOGL_GetArea().x);
+                        togl_print_i32(TOGL_GetArea().y);
+                        togl_print_i32(TOGL_GetArea().width);
+                        togl_print_i32(TOGL_GetArea().height);
 
-                        togl_print_i32(TOGL::IsForeground());
+                        togl_print_i32(TOGL_IsForeground());
                     });
 
                     s_actions.Add(1, [](){
                         puts("---");
-                        TOGL::Show(); 
+                        TOGL_Show(); 
 
-                        togl_print_i32(TOGL::IsForeground());
+                        togl_print_i32(TOGL_IsForeground());
 
                         PrintWindowStates();
                     });
                     break;
 
-                case TOGL::KEY_ID_2: 
+                case KEY_ID_2: 
                     s_actions.Add(0, [](){
                         puts("---");
-                        TOGL::Minimize();
+                        TOGL_Minimize();
                         PrintWindowStates();
 
-                        togl_print_i32(TOGL::GetArea().x);
-                        togl_print_i32(TOGL::GetArea().y);
-                        togl_print_i32(TOGL::GetArea().width);
-                        togl_print_i32(TOGL::GetArea().height);
+                        togl_print_i32(TOGL_GetArea().x);
+                        togl_print_i32(TOGL_GetArea().y);
+                        togl_print_i32(TOGL_GetArea().width);
+                        togl_print_i32(TOGL_GetArea().height);
                     });
 
                     s_actions.Add(1, [](){
                         puts("---");
 
-                        TOGL::Center(s_resolution);
+                        TOGL_Center(s_resolution);
                         PrintWindowStates();
                     });
                     break;
 
-                case TOGL::KEY_ID_W: 
+                case KEY_ID_W: 
                     s_actions.Add(0, [](){
                         puts("---");
-                        TOGL::Minimize();
+                        TOGL_Minimize();
                         PrintWindowStates();
 
-                        togl_print_i32(TOGL::GetArea().x);
-                        togl_print_i32(TOGL::GetArea().y);
-                        togl_print_i32(TOGL::GetArea().width);
-                        togl_print_i32(TOGL::GetArea().height);
+                        togl_print_i32(TOGL_GetArea().x);
+                        togl_print_i32(TOGL_GetArea().y);
+                        togl_print_i32(TOGL_GetArea().width);
+                        togl_print_i32(TOGL_GetArea().height);
                     });
 
                     s_actions.Add(1, [](){
-                        TOGL::MoveBy(30, 0);
+                        TOGL_MoveBy(30, 0);
                         PrintWindowStates();
                     });
                     break;
 
-                case TOGL::KEY_ID_3:
+                case KEY_ID_3:
                     puts("---");
-                    TOGL::Center(s_resolution);
+                    TOGL_Center(s_resolution);
                     PrintWindowStates();
                     break;
 
-                case TOGL::KEY_ID_4:
+                case KEY_ID_4:
                     puts("---");
-                    TOGL::Maximize(); 
+                    TOGL_Maximize(); 
                     PrintWindowStates();
                     break;
 
-                case TOGL::KEY_ID_5:
+                case KEY_ID_5:
                     puts("---");
-                    TOGL::GoWindowedFullScreen(); 
+                    TOGL_GoWindowedFullScreen(); 
                     PrintWindowStates();
                     break;
 
-                case TOGL::KEY_ID_6:
+                case KEY_ID_6:
                     s_actions.Add(0, [](){
                         puts("---");
-                        TOGL::Hide();
+                        TOGL_Hide();
                         PrintWindowStates();
                     });
 
                     s_actions.Add(1, [](){
-                        TOGL::GoWindowedFullScreen(); 
+                        TOGL_GoWindowedFullScreen(); 
                         PrintWindowStates();
                     });
                     break;
 
-                case TOGL::KEY_ID_7:
+                case KEY_ID_7:
                     puts("---");
-                    TOGL::SetArea(100, 50, 300, 600);
+                    TOGL_SetArea(100, 50, 300, 600);
                     PrintWindowStates();
                     break;
 
-                case TOGL::KEY_ID_8: {
+                case KEY_ID_8: {
                     DEVMODEW dev_mode = {};
                     dev_mode.dmSize = sizeof(DEVMODEW);
 
@@ -1686,19 +1686,19 @@ int main(int argc, char *argv[]) {
                     break;
                 }
 
-                case TOGL::KEY_ID_9:
+                case KEY_ID_9:
                     ChangeDisplaySettingsW(NULL, CDS_RESET);
                     break;
 
-                case TOGL::KEY_ID_I: 
+                case KEY_ID_I: 
                     DisplayWindowInfo(); 
                     break;
 
-                case TOGL::KEY_ID_D: 
-                    if (TOGL::GetLogLevel() == TOGL::LOG_LEVEL_DEBUG) {
-                        TOGL::SetLogLevel(TOGL::LOG_LEVEL_ERROR);
+                case KEY_ID_D: 
+                    if (TOGL_GetLogLevel() == TOGL_LOG_LEVEL_DEBUG) {
+                        TOGL_SetLogLevel(TOGL_LOG_LEVEL_ERROR);
                     } else {
-                        TOGL::SetLogLevel(TOGL::LOG_LEVEL_DEBUG);
+                        TOGL_SetLogLevel(TOGL_LOG_LEVEL_DEBUG);
                     }
                     break;
                 default: break;
@@ -1706,7 +1706,7 @@ int main(int argc, char *argv[]) {
             }
         };
 
-        return TOGL::Run(data);
+        return TOGL_Run(data);
 
     });
 
@@ -1717,7 +1717,7 @@ int main(int argc, char *argv[]) {
     example_manager.AddExample("opengl_version", {"wrong"}, {}, [](const std::string& name, const std::set<std::string>& options) {
         auto IsOption = [&options](const std::string& option) { return options.find(option) != options.end(); };
 
-        TOGL::Data data = {};
+        TOGL_Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
@@ -1726,10 +1726,10 @@ int main(int argc, char *argv[]) {
         } else {
             data.opengl_verion      = {3, 3};
         }
-        data.log_level          = TOGL::LOG_LEVEL_DEBUG;
+        data.log_level          = TOGL_LOG_LEVEL_DEBUG;
 
         data.do_on_create = []() {
-            auto version = TOGL::GetOpenGL_Version();
+            auto version = TOGL_GetOpenGL_Version();
             printf("%d.%d\n", version.major, version.minor);
 
             glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
@@ -1756,11 +1756,11 @@ int main(int argc, char *argv[]) {
             glEnd();
         };
 
-        data.do_on_key = [](TOGL::KeyId key_id, bool is_down, const TOGL::Extra& extra) {
-            if (!is_down && key_id == 'X') TOGL::RequestClose();
+        data.do_on_key = [](TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra) {
+            if (!is_down && key_id == 'X') TOGL_RequestClose();
         };
 
-        return TOGL::Run(data);
+        return TOGL_Run(data);
     });
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -1772,22 +1772,22 @@ int main(int argc, char *argv[]) {
 
         s_resolution = {600, 300};
 
-        TOGL::Data data = {};
+        TOGL_Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
         data.area               = {0, 0, s_resolution.width, s_resolution.height};
         data.style              = 0;
-        data.style              |= TOGL::STYLE_BIT_CENTERED;
+        data.style              |= TOGL_STYLE_BIT_CENTERED;
         data.icon_resource_id   = ICON_ID;
 
-        if (!IsOption("no_debug"))                      data.log_level = TOGL::LOG_LEVEL_DEBUG;
+        if (!IsOption("no_debug"))                      data.log_level = TOGL_LOG_LEVEL_DEBUG;
 
-        if (IsOption("draw_area_size"))                 data.style |= TOGL::STYLE_BIT_DRAW_AREA_SIZE;
-        if (IsOption("draw_area_only"))                 data.style |= TOGL::STYLE_BIT_DRAW_AREA_ONLY;
-        if (IsOption("redraw_on_change_or_request"))    data.style |= TOGL::STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
-        if (IsOption("no_resize"))                      data.style |= TOGL::STYLE_BIT_NO_RESIZE;
-        if (IsOption("no_maximize"))                    data.style |= TOGL::STYLE_BIT_NO_MAXIMIZE;
+        if (IsOption("draw_area_size"))                 data.style |= TOGL_STYLE_BIT_DRAW_AREA_SIZE;
+        if (IsOption("draw_area_only"))                 data.style |= TOGL_STYLE_BIT_DRAW_AREA_ONLY;
+        if (IsOption("redraw_on_change_or_request"))    data.style |= TOGL_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
+        if (IsOption("no_resize"))                      data.style |= TOGL_STYLE_BIT_NO_RESIZE;
+        if (IsOption("no_maximize"))                    data.style |= TOGL_STYLE_BIT_NO_MAXIMIZE;
 
         if (IsOption("notify_any_message"))             data.special_debug.is_notify_any_message        = true;
         if (IsOption("notify_draw_call"))               data.special_debug.is_notify_draw_call          = true;
@@ -1796,7 +1796,7 @@ int main(int argc, char *argv[]) {
         if (IsOption("notify_character_message"))       data.special_debug.is_notify_character_message  = true;
 
         data.do_on_create = []() {
-            s_test_image.Initialize(TOGL::GetDrawAreaSize());
+            s_test_image.Initialize(TOGL_GetDrawAreaSize());
 
             LoadFont();
         };
@@ -1817,19 +1817,19 @@ int main(int argc, char *argv[]) {
             s_test_image.Resize(width, height);
         };
 
-        data.do_on_key = [](TOGL::KeyId key_id, bool is_down, const TOGL::Extra& extra) {
+        data.do_on_key = [](TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra) {
             std::string message = "Key: ";
 
-            message += TOGL::KeyIdToStr(key_id);
+            message += TOGL_KeyIdToStr(key_id);
             message += is_down ? " down" : " up";
-            message += TOGL::ExtraToStr(extra);
+            message += TOGL_ExtraToStr(extra);
 
             puts(message.c_str());
 
             if (is_down) {
                 switch (key_id) {
                 case 'X':
-                    TOGL::RequestClose();
+                    TOGL_RequestClose();
                     break;
 
                 case 'S':
@@ -1842,11 +1842,11 @@ int main(int argc, char *argv[]) {
 
                     break;
                 case 'D':
-                    if (TOGL::GetLogLevel() == TOGL::LOG_LEVEL_DEBUG) {
-                        TOGL::SetLogLevel(TOGL::LOG_LEVEL_INFO);
+                    if (TOGL_GetLogLevel() == TOGL_LOG_LEVEL_DEBUG) {
+                        TOGL_SetLogLevel(TOGL_LOG_LEVEL_INFO);
                         puts("Log Level: DEBUG -> INFO");
                     } else {
-                        TOGL::SetLogLevel(TOGL::LOG_LEVEL_DEBUG);
+                        TOGL_SetLogLevel(TOGL_LOG_LEVEL_DEBUG);
                         puts("Log Level: INFO -> DEBUG");
                     }
                     break;
@@ -1854,15 +1854,15 @@ int main(int argc, char *argv[]) {
                 case 'I': {
                     DisplayWindowInfo();
 
-                    togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_CAPS_LOCK));
-                    togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_INSERT));
-                    togl_print_i32(TOGL::IsKeyToggled(TOGL::KEY_ID_NUMLOCK));
+                    togl_print_i32(TOGL_IsKeyToggled(KEY_ID_CAPS_LOCK));
+                    togl_print_i32(TOGL_IsKeyToggled(KEY_ID_INSERT));
+                    togl_print_i32(TOGL_IsKeyToggled(KEY_ID_NUMLOCK));
 
-                    const TOGL::PointI cursor_pos_in_screen = TOGL::GetCursorPosInScreen();
+                    const TOGL_PointI cursor_pos_in_screen = TOGL_GetCursorPosInScreen();
                     togl_print_i32(cursor_pos_in_screen.x);
                     togl_print_i32(cursor_pos_in_screen.y);
 
-                    const TOGL::PointI cursor_pos_in_draw_area = TOGL::GetCursorPosInDrawArea();
+                    const TOGL_PointI cursor_pos_in_draw_area = TOGL_GetCursorPosInDrawArea();
                     togl_print_i32(cursor_pos_in_draw_area.x);
                     togl_print_i32(cursor_pos_in_draw_area.y);
                     break;
@@ -1907,7 +1907,7 @@ int main(int argc, char *argv[]) {
             printf("On Char UTF32: %08X\n", uint32_t(code));
         };
 
-        return TOGL::Run(data);
+        return TOGL_Run(data);
 
     });
 
@@ -1920,22 +1920,22 @@ int main(int argc, char *argv[]) {
 
         s_resolution = {600, 300};
 
-        TOGL::Data data = {};
+        TOGL_Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
         data.area               = {0, 0, s_resolution.width, s_resolution.height};
         data.style              = 0;
-        data.style              |= TOGL::STYLE_BIT_CENTERED;
+        data.style              |= TOGL_STYLE_BIT_CENTERED;
         data.icon_resource_id   = ICON_ID;
-        data.log_level          = TOGL::LOG_LEVEL_DEBUG;
+        data.log_level          = TOGL_LOG_LEVEL_DEBUG;
 
         if (IsOption("100ms"))  data.timer_time_interval = 100;
         if (IsOption("500ms"))  data.timer_time_interval = 500;
         if (IsOption("1s"))     data.timer_time_interval = 1000;
         
         data.do_on_create = []() {
-            s_test_image.Initialize(TOGL::GetDrawAreaSize());
+            s_test_image.Initialize(TOGL_GetDrawAreaSize());
         };
 
         data.draw = []() {
@@ -1950,11 +1950,11 @@ int main(int argc, char *argv[]) {
             printf("Do On Time (%dms)\n", time_interval);
         };
 
-        data.do_on_key = [](TOGL::KeyId key_id, bool is_down, const TOGL::Extra& extra) {
-            if (key_id == 'X' && !is_down) TOGL::RequestClose();
+        data.do_on_key = [](TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra) {
+            if (key_id == 'X' && !is_down) TOGL_RequestClose();
         };
 
-        return TOGL::Run(data);
+        return TOGL_Run(data);
 
     });
 
@@ -1967,15 +1967,15 @@ int main(int argc, char *argv[]) {
 
         s_resolution = {800, 400};
 
-        TOGL::Data data = {};
+        TOGL_Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
         data.area               = {0, 0, s_resolution.width, s_resolution.height};
         data.style              = 0;
-        data.style              |= TOGL::STYLE_BIT_CENTERED;
+        data.style              |= TOGL_STYLE_BIT_CENTERED;
         data.icon_resource_id   = ICON_ID;
-        data.log_level          = TOGL::LOG_LEVEL_DEBUG;
+        data.log_level          = TOGL_LOG_LEVEL_DEBUG;
         
         data.do_on_create = []() {
             s_test_font.Create(s_resolution.width, s_resolution.height);
@@ -2011,11 +2011,11 @@ int main(int argc, char *argv[]) {
             glViewport(0, 0, width, height);
         };
 
-        data.do_on_key = [](TOGL::KeyId key_id, bool is_down, const TOGL::Extra& extra) {
-            if (key_id == 'X' && !is_down) TOGL::RequestClose();
+        data.do_on_key = [](TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra) {
+            if (key_id == 'X' && !is_down) TOGL_RequestClose();
         };
 
-        return TOGL::Run(data);
+        return TOGL_Run(data);
     });
 
     //------------------------------------------------------------------------------

@@ -7,11 +7,12 @@
 #define TRIVIALOPENGL_UTILITY_H_
 
 #include "TrivialOpenGL_Headers.h"
-#include "TrivialOpenGL_Debug.h"
 
 //==============================================================================
 // Declarations
 //==============================================================================
+
+#define togl_print_i32(variable) { printf(#variable"=%d\n", int(variable)); fflush(stdout); } (void)0
 
 // Disables copy ability of class.
 #define TOGL_NO_COPY(Class) \
@@ -20,945 +21,939 @@
 
 #define TOGL_CASE_STR(name) case name: return #name
 
-namespace TrivialOpenGL {
-    //--------------------------------------------------------------------------
-    // Version
-    //--------------------------------------------------------------------------
 
-    struct Version {
-        int major;
-        int minor;
-    };
+//--------------------------------------------------------------------------
+// TOGL_GL_Version
+//--------------------------------------------------------------------------
 
-    //--------------------------------------------------------------------------
-    // Point
-    //--------------------------------------------------------------------------
+struct TOGL_GL_Version {
+    int major;
+    int minor;
+};
 
-    template <typename Type>
-    struct Point {
-        Type x;
-        Type y;
+//--------------------------------------------------------------------------
+// TOGL_Point
+//--------------------------------------------------------------------------
 
-        Point() : x(Type()), y(Type()) {}
+template <typename Type>
+struct TOGL_Point {
+    Type x;
+    Type y;
 
-        explicit Point(const Type& s) : x(s), y(s) {}
+    TOGL_Point() : x(Type()), y(Type()) {}
 
-        Point(const Type& x, const Type& y) : x(x), y(y) {}
+    explicit TOGL_Point(const Type& s) : x(s), y(s) {}
 
-        template <typename SizeType>
-        explicit Point(const Point<SizeType>& p) : x(Type(p.x)), y(Type(p.y)) {}
+    TOGL_Point(const Type& x, const Type& y) : x(x), y(y) {}
 
-        virtual ~Point() {}
-    };
+    template <typename SizeType>
+    explicit TOGL_Point(const TOGL_Point<SizeType>& p) : x(Type(p.x)), y(Type(p.y)) {}
 
-    using PointI16  = Point<int16_t>;
-    using PointI    = Point<int32_t>;
-    using PointI64  = Point<int64_t>;
+    virtual ~TOGL_Point() {}
+};
 
-    using PointU16  = Point<uint16_t>;
-    using PointU    = Point<uint32_t>;
-    using PointU64  = Point<uint64_t>;
+using TOGL_PointI16  = TOGL_Point<int16_t>;
+using TOGL_PointI    = TOGL_Point<int32_t>;
+using TOGL_PointI64  = TOGL_Point<int64_t>;
 
-    using PointF    = Point<float>;
-    using PointD    = Point<float>;
+using TOGL_PointU16  = TOGL_Point<uint16_t>;
+using TOGL_PointU    = TOGL_Point<uint32_t>;
+using TOGL_PointU64  = TOGL_Point<uint64_t>;
 
-    template <typename Type>
-    inline bool operator==(const Point<Type>& l, const Point<Type>& r) {
-        return l.x == r.x && l.y == r.y;
-    }
+using TOGL_PointF    = TOGL_Point<float>;
+using TOGL_PointD    = TOGL_Point<float>;
 
-    template <typename Type>
-    inline bool operator!=(const Point<Type>& l, const Point<Type>& r) {
-        return l.x != r.x || l.y != r.y;
-    }
+template <typename Type>
+inline bool operator==(const TOGL_Point<Type>& l, const TOGL_Point<Type>& r) {
+    return l.x == r.x && l.y == r.y;
+}
 
-    template <typename Type>
-    inline bool operator>(const Point<Type>& l, const Point<Type>& r) {
-        return l.x > r.x && l.y > r.y;
-    }
+template <typename Type>
+inline bool operator!=(const TOGL_Point<Type>& l, const TOGL_Point<Type>& r) {
+    return l.x != r.x || l.y != r.y;
+}
 
-    template <typename Type>
-    inline bool operator<(const Point<Type>& l, const Point<Type>& r) {
-        return l.x < r.x && l.y < r.y;
-    }
+template <typename Type>
+inline bool operator>(const TOGL_Point<Type>& l, const TOGL_Point<Type>& r) {
+    return l.x > r.x && l.y > r.y;
+}
 
-    template <typename Type>
-    inline bool operator>=(const Point<Type>& l, const Point<Type>& r) {
-        return l.x >= r.x && l.y >= r.y;
-    }
+template <typename Type>
+inline bool operator<(const TOGL_Point<Type>& l, const TOGL_Point<Type>& r) {
+    return l.x < r.x && l.y < r.y;
+}
 
-    template <typename Type>
-    inline bool operator<=(const Point<Type>& l, const Point<Type>& r) {
-        return l.x <= r.x && l.y <= r.y;
-    }
+template <typename Type>
+inline bool operator>=(const TOGL_Point<Type>& l, const TOGL_Point<Type>& r) {
+    return l.x >= r.x && l.y >= r.y;
+}
 
-
-    template <typename Type>
-    inline Point<Type> operator+(const Point<Type>& l, const Point<Type>& r) {
-        return {l.x + r.x, l.y + r.y};
-    }
-
-    template <typename Type>
-    inline Point<Type> operator-(const Point<Type>& l, const Point<Type>& r) {
-        return {l.x - r.x, l.y - r.y};
-    }
-
-    template <typename Type>
-    inline Point<Type> operator*(const Point<Type>& l, const Type& r) {
-        return {l.x * r, l.y * r};
-    }
-
-    template <typename Type>
-    inline Point<Type> operator/(const Point<Type>& l, const Type& r) {
-        return {l.x / r, l.y / r};
-    }
+template <typename Type>
+inline bool operator<=(const TOGL_Point<Type>& l, const TOGL_Point<Type>& r) {
+    return l.x <= r.x && l.y <= r.y;
+}
 
 
-    template <typename Type>
-    inline Point<Type>& operator+=(Point<Type>& l, const Point<Type>& r) {
-        l = l + r;
-        return l;
-    }
+template <typename Type>
+inline TOGL_Point<Type> operator+(const TOGL_Point<Type>& l, const TOGL_Point<Type>& r) {
+    return {l.x + r.x, l.y + r.y};
+}
+
+template <typename Type>
+inline TOGL_Point<Type> operator-(const TOGL_Point<Type>& l, const TOGL_Point<Type>& r) {
+    return {l.x - r.x, l.y - r.y};
+}
+
+template <typename Type>
+inline TOGL_Point<Type> operator*(const TOGL_Point<Type>& l, const Type& r) {
+    return {l.x * r, l.y * r};
+}
+
+template <typename Type>
+inline TOGL_Point<Type> operator/(const TOGL_Point<Type>& l, const Type& r) {
+    return {l.x / r, l.y / r};
+}
+
+
+template <typename Type>
+inline TOGL_Point<Type>& operator+=(TOGL_Point<Type>& l, const TOGL_Point<Type>& r) {
+    l = l + r;
+    return l;
+}
     
-    template <typename Type>
-    inline Point<Type>& operator-=(Point<Type>& l, const Point<Type>& r) {
-        l = l - r;
-        return l;
-    }
+template <typename Type>
+inline TOGL_Point<Type>& operator-=(TOGL_Point<Type>& l, const TOGL_Point<Type>& r) {
+    l = l - r;
+    return l;
+}
     
-    template <typename Type>
-    inline Point<Type>& operator*=(Point<Type>& l, const Type& r) {
-        l = l * r;
-        return l;
-    }
+template <typename Type>
+inline TOGL_Point<Type>& operator*=(TOGL_Point<Type>& l, const Type& r) {
+    l = l * r;
+    return l;
+}
     
-    template <typename Type>
-    inline Point<Type>& operator/=(Point<Type>& l, const Type& r) {
-        l = l / r;
-        return l;
+template <typename Type>
+inline TOGL_Point<Type>& operator/=(TOGL_Point<Type>& l, const Type& r) {
+    l = l / r;
+    return l;
+}
+
+//--------------------------------------------------------------------------
+// TOGL_Size
+//--------------------------------------------------------------------------
+
+template <typename Type>
+struct TOGL_Size {
+    Type width;
+    Type height;
+
+    TOGL_Size() : width(Type()), height(Type()) {}
+
+    template <typename Type2>
+    explicit TOGL_Size(const Type2& s) : width(s), height(s) {}
+
+    template <typename WidthType, typename HeightType>
+    TOGL_Size(const WidthType& width, const HeightType& height) : width(Type(width)), height(Type(height)) {}
+
+    template <typename SizeType>
+    explicit TOGL_Size(const TOGL_Size<SizeType>& s) : width(Type(s.width)), height(Type(s.height)) {}
+
+    virtual ~TOGL_Size() {}
+};
+
+using TOGL_SizeI16  = TOGL_Size<int16_t>;
+using TOGL_SizeI    = TOGL_Size<int32_t>;
+using TOGL_SizeI64  = TOGL_Size<int64_t>;
+
+using TOGL_SizeU16  = TOGL_Size<uint16_t>;
+using TOGL_SizeU    = TOGL_Size<uint32_t>;
+using TOGL_SizeU64  = TOGL_Size<uint64_t>;
+
+using TOGL_SizeF    = TOGL_Size<float>;
+using TOGL_SizeD    = TOGL_Size<float>;
+
+template <typename Type>
+inline bool operator==(const TOGL_Size<Type>& l, const TOGL_Size<Type>& r) {
+    return l.width == r.width && l.height == r.height;
+}
+
+template <typename Type>
+inline bool operator!=(const TOGL_Size<Type>& l, const TOGL_Size<Type>& r) {
+    return l.width != r.width || l.height != r.height;
+}
+
+template <typename Type>
+inline bool operator>(const TOGL_Size<Type>& l, const TOGL_Size<Type>& r) {
+    return l.width > r.width && l.height > r.height;
+}
+
+template <typename Type>
+inline bool operator<(const TOGL_Size<Type>& l, const TOGL_Size<Type>& r) {
+    return l.width < r.width && l.height < r.height;
+}
+
+template <typename Type>
+inline bool operator>=(const TOGL_Size<Type>& l, const TOGL_Size<Type>& r) {
+    return l.width >= r.width && l.height >= r.height;
+}
+
+template <typename Type>
+inline bool operator<=(const TOGL_Size<Type>& l, const TOGL_Size<Type>& r) {
+    return l.width <= r.width && l.height <= r.height;
+}
+
+
+template <typename Type>
+inline TOGL_Size<Type> operator+(const TOGL_Size<Type>& l, const TOGL_Size<Type>& r) {
+    return {l.width + r.width, l.height + r.height};
+}
+
+template <typename Type>
+inline TOGL_Size<Type> operator-(const TOGL_Size<Type>& l, const TOGL_Size<Type>& r) {
+    return {l.width - r.width, l.height - r.height};
+}
+
+template <typename Type>
+inline TOGL_Size<Type> operator*(const TOGL_Size<Type>& l, const Type& r) {
+    return {l.width * r, l.height * r};
+}
+
+template <typename Type>
+inline TOGL_Size<Type> operator/(const TOGL_Size<Type>& l, const Type& r) {
+    return {l.width / r, l.height / r};
+}
+
+
+template <typename Type>
+inline TOGL_Size<Type>& operator+=(TOGL_Size<Type>& l, const TOGL_Size<Type>& r) {
+    l = l + r;
+    return l;
+}
+
+template <typename Type>
+inline TOGL_Size<Type>& operator-=(TOGL_Size<Type>& l, const TOGL_Size<Type>& r) {
+    l = l - r;
+    return l;
+}
+
+template <typename Type>
+inline TOGL_Size<Type>& operator*=(TOGL_Size<Type>& l, const Type& r) {
+    l = l * r;
+    return l;
+}
+
+template <typename Type>
+inline TOGL_Size<Type>& operator/=(TOGL_Size<Type>& l, const Type& r) {
+    l = l / r;
+    return l;
+}
+
+//--------------------------------------------------------------------------
+// TOGL_Area
+//--------------------------------------------------------------------------
+
+template <typename PointType, typename SizeType = PointType>
+struct TOGL_Area {
+    PointType  x;
+    PointType  y;
+    SizeType   width;
+    SizeType   height;
+
+    TOGL_Area() : x(PointType()), y(PointType()), width(SizeType()), height(SizeType()) {}
+
+    TOGL_Area(const PointType& x, const PointType& y, const SizeType& width, const SizeType& height) : x(x), y(y), width(width), height(height) {}
+
+    template <typename PointType2, typename SizeType2 = PointType2>
+    explicit TOGL_Area(const TOGL_Area<PointType2, SizeType2>& area) : x(PointType(area.x)), y(PointType(area.y)), width(SizeType(area.width)), height(SizeType(area.height)) {}
+
+    TOGL_Area(const TOGL_Point<PointType>& pos, const TOGL_Size<SizeType>& size) : x(pos.x), y(pos.y), width(size.width), height(size.height) {}
+
+    explicit TOGL_Area(const TOGL_Point<PointType>& pos) : x(pos.x), y(pos.y), width(SizeType()), height(SizeType()) {}
+    explicit TOGL_Area(const TOGL_Size<SizeType>& size) : x(PointType()), y(PointType()), width(size.width), height(size.height) {}
+
+    void SetPos(const TOGL_Point<PointType>& pos) {  
+        x = pos.x;
+        y = pos.y;
     }
 
-    //--------------------------------------------------------------------------
-    // Size
-    //--------------------------------------------------------------------------
+    void SetSize(const TOGL_Size<SizeType>& size) {  
+        width   = size.width;
+        height  = size.height;
+    }
 
-    template <typename Type>
-    struct Size {
-        Type width;
-        Type height;
+    TOGL_Point<PointType> GetPos() const { return TOGL_Point<PointType>(x, y); }
+    TOGL_Size<SizeType> GetSize() const { return TOGL_Size<SizeType>(width, height); }
 
-        Size() : width(Type()), height(Type()) {}
+    bool IsIn(const TOGL_Point<PointType>& pos) const {
+        return TOGL_Point<PointType>(x, y) <= pos && pos < TOGL_Point<PointType>(x + width, y + height);
+    }
 
-        template <typename Type2>
-        explicit Size(const Type2& s) : width(s), height(s) {}
+    virtual ~TOGL_Area() {}
+};
 
-        template <typename WidthType, typename HeightType>
-        Size(const WidthType& width, const HeightType& height) : width(Type(width)), height(Type(height)) {}
+using TOGL_AreaI    = TOGL_Area<int32_t>;
+using TOGL_AreaI64  = TOGL_Area<int64_t>;
 
-        template <typename SizeType>
-        explicit Size(const Size<SizeType>& s) : width(Type(s.width)), height(Type(s.height)) {}
+using TOGL_AreaU    = TOGL_Area<uint32_t>;
+using TOGL_AreaU64  = TOGL_Area<uint64_t>;
 
-        virtual ~Size() {}
+using TOGL_AreaF    = TOGL_Area<float>;
+using TOGL_AreaD    = TOGL_Area<float>;
+
+using TOGL_AreaIU   = TOGL_Area<int32_t, uint32_t>;
+using TOGL_AreaIU16 = TOGL_Area<int32_t, uint16_t>;
+
+template <typename PointType, typename SizeType = PointType>
+inline bool operator==(const TOGL_Area<PointType, SizeType>& l, const TOGL_Area<PointType, SizeType>& r) {
+    return l.x == r.x && l.y == r.y && l.width == r.width && l.height == r.height;
+}
+
+template <typename PointType, typename SizeType = PointType>
+inline bool operator!=(const TOGL_Area<PointType, SizeType>& l, const TOGL_Area<PointType, SizeType>& r) {
+    return l.x != r.x || l.y != r.y || l.width != r.width || l.height != r.height;
+}
+
+template <typename PointType, typename SizeType = PointType>
+inline RECT MakeRECT(const TOGL_Area<PointType, SizeType>& area) {
+    return {LONG(area.x), LONG(area.y), LONG(area.x + area.width), LONG(area.y + area.height)};
+}
+
+inline TOGL_AreaI TOGL_MakeArea(const RECT& r) {
+    return {
+        r.left,
+        r.top,
+        r.right - r.left,
+        r.bottom - r.top
     };
+}
 
-    using SizeI16  = Size<int16_t>;
-    using SizeI    = Size<int32_t>;
-    using SizeI64  = Size<int64_t>;
+inline TOGL_AreaIU TOGL_MakeAreaIU(const RECT& r) {
+    return TOGL_AreaIU(
+        r.left,
+        r.top,
+        r.right - r.left,
+        r.bottom - r.top
+    );
+}
 
-    using SizeU16  = Size<uint16_t>;
-    using SizeU    = Size<uint32_t>;
-    using SizeU64  = Size<uint64_t>;
+inline TOGL_AreaIU16 TOGL_MakeAreaIU16(const RECT& r) {
+    return TOGL_AreaIU16(
+        r.left,
+        r.top,
+        uint16_t(r.right - r.left),
+        uint16_t(r.bottom - r.top)
+    );
+}
 
-    using SizeF    = Size<float>;
-    using SizeD    = Size<float>;
+//--------------------------------------------------------------------------
+// TOGL_Color
+//--------------------------------------------------------------------------
 
-    template <typename Type>
-    inline bool operator==(const Size<Type>& l, const Size<Type>& r) {
-        return l.width == r.width && l.height == r.height;
+template <typename Type>
+struct TOGL_Color4 {
+    Type r;
+    Type g;
+    Type b;
+    Type a;
+
+    TOGL_Color4() : r(0), g(0), b(0), a(0) {}
+
+    template <typename TypeR, typename TypeG, typename TypeB, typename TypeA>
+    TOGL_Color4(const TypeR& r, const TypeG& g, const TypeB& b, const TypeA& a) : r(Type(r)), g(Type(g)), b(Type(b)), a(Type(a)) {}
+
+    Type* ToData() {
+        return (Type*)this;
     }
 
-    template <typename Type>
-    inline bool operator!=(const Size<Type>& l, const Size<Type>& r) {
-        return l.width != r.width || l.height != r.height;
+    const Type* ToData() const {
+        return (const Type*)this;
     }
+};
 
-    template <typename Type>
-    inline bool operator>(const Size<Type>& l, const Size<Type>& r) {
-        return l.width > r.width && l.height > r.height;
-    }
+using TOGL_Color4U8 = TOGL_Color4<uint8_t>;
 
-    template <typename Type>
-    inline bool operator<(const Size<Type>& l, const Size<Type>& r) {
-        return l.width < r.width && l.height < r.height;
-    }
+//--------------------------------------------------------------------------
+// TOGL_Global
+//--------------------------------------------------------------------------
 
-    template <typename Type>
-    inline bool operator>=(const Size<Type>& l, const Size<Type>& r) {
-        return l.width >= r.width && l.height >= r.height;
-    }
+// Makes global object of specified type in header-only library.
+template <typename Type>
+class TOGL_Global {
+public:
+    static Type& To() { return sm_object; }
+private:
+    static Type sm_object;
+};
 
-    template <typename Type>
-    inline bool operator<=(const Size<Type>& l, const Size<Type>& r) {
-        return l.width <= r.width && l.height <= r.height;
-    }
+template <typename Type>
+Type TOGL_Global<Type>::sm_object;
 
+//--------------------------------------------------------------------------
+// Conversion
+//--------------------------------------------------------------------------
 
-    template <typename Type>
-    inline Size<Type> operator+(const Size<Type>& l, const Size<Type>& r) {
-        return {l.width + r.width, l.height + r.height};
-    }
+// Converts ascii string to utf-16 string.
+std::wstring TOGL_ASCII_ToUTF16(const std::string& text_ascii);
 
-    template <typename Type>
-    inline Size<Type> operator-(const Size<Type>& l, const Size<Type>& r) {
-        return {l.width - r.width, l.height - r.height};
-    }
+// Converts utf-8 string to utf-16 string.
+std::wstring TOGL_ToUTF16(const std::string& text_utf8);
 
-    template <typename Type>
-    inline Size<Type> operator*(const Size<Type>& l, const Type& r) {
-        return {l.width * r, l.height * r};
-    }
+// Converts utf-16 string to utf-8 string.
+std::string TOGL_ToUTF8(const std::wstring& text_utf16);
 
-    template <typename Type>
-    inline Size<Type> operator/(const Size<Type>& l, const Type& r) {
-        return {l.width / r, l.height / r};
-    }
+//--------------------------------------------------------------------------
+// Log
+//--------------------------------------------------------------------------
 
+enum TOGL_LogMessageTypeId {
+    TOGL_LOG_MESSAGE_TYPE_ID_FATAL_ERROR,
+    TOGL_LOG_MESSAGE_TYPE_ID_ERROR,
+    TOGL_LOG_MESSAGE_TYPE_ID_WARNING,
+    TOGL_LOG_MESSAGE_TYPE_ID_INFO,
+    TOGL_LOG_MESSAGE_TYPE_ID_DEBUG,
+};
+using TOGL_CustomLogFnP_T = void (*)(TOGL_LogMessageTypeId message_type, const char* message);
 
-    template <typename Type>
-    inline Size<Type>& operator+=(Size<Type>& l, const Size<Type>& r) {
-        l = l + r;
-        return l;
-    }
+using TOGL_LogLevel = uint32_t;
+enum : TOGL_LogLevel {
+    TOGL_LOG_LEVEL_ERROR         = 0,    // log errors
+    TOGL_LOG_LEVEL_WARNING       = 1,    // log errors, warnings
+    TOGL_LOG_LEVEL_INFO          = 2,    // log errors, warnings, infos
+    TOGL_LOG_LEVEL_DEBUG         = 3,    // log errors, warnings, infos, debugs
+};                                 
 
-    template <typename Type>
-    inline Size<Type>& operator-=(Size<Type>& l, const Size<Type>& r) {
-        l = l - r;
-        return l;
-    }
+// Sets current log level.
+void TOGL_SetLogLevel(TOGL_LogLevel log_level);
+TOGL_LogLevel TOGL_GetLogLevel();
 
-    template <typename Type>
-    inline Size<Type>& operator*=(Size<Type>& l, const Type& r) {
-        l = l * r;
-        return l;
-    }
+// Returns true if log_level is less or equal to current log level.
+bool TOGL_IsLogLevelAtLeast(TOGL_LogLevel log_level);
 
-    template <typename Type>
-    inline Size<Type>& operator/=(Size<Type>& l, const Type& r) {
-        l = l / r;
-        return l;
-    }
+// Logs message to standard output (by default) or redirect to custom function (provided by SetHandleLogFunction).
+// message      - Message in ascii encoding.
 
-    //--------------------------------------------------------------------------
-    // Area
-    //--------------------------------------------------------------------------
+void TOGL_LogDebug(const std::string& message);
+void TOGL_LogInfo(const std::string& message);
+void TOGL_LogWarning(const std::string& message);
+void TOGL_LogError(const std::string& message);
+void TOGL_LogFatalError(const std::string& message);
 
-    template <typename PointType, typename SizeType = PointType>
-    struct Area {
-        PointType  x;
-        PointType  y;
-        SizeType   width;
-        SizeType   height;
+void TOGL_SetCustomLogFunction(TOGL_CustomLogFnP_T custom_log);
 
-        Area() : x(PointType()), y(PointType()), width(SizeType()), height(SizeType()) {}
+// Singleton.
+class TOGL_Logger {
+public:
+    friend TOGL_Global<TOGL_Logger>;
 
-        Area(const PointType& x, const PointType& y, const SizeType& width, const SizeType& height) : x(x), y(y), width(width), height(height) {}
+    virtual ~TOGL_Logger() {}
 
-        template <typename PointType2, typename SizeType2 = PointType2>
-        explicit Area(const Area<PointType2, SizeType2>& area) : x(PointType(area.x)), y(PointType(area.y)), width(SizeType(area.width)), height(SizeType(area.height)) {}
-
-        Area(const Point<PointType>& pos, const Size<SizeType>& size) : x(pos.x), y(pos.y), width(size.width), height(size.height) {}
-
-        explicit Area(const Point<PointType>& pos) : x(pos.x), y(pos.y), width(SizeType()), height(SizeType()) {}
-        explicit Area(const Size<SizeType>& size) : x(PointType()), y(PointType()), width(size.width), height(size.height) {}
-
-        void SetPos(const Point<PointType>& pos) {  
-            x = pos.x;
-            y = pos.y;
-        }
-
-        void SetSize(const Size<SizeType>& size) {  
-            width   = size.width;
-            height  = size.height;
-        }
-
-        Point<PointType> GetPos() const { return Point<PointType>(x, y); }
-        Size<SizeType> GetSize() const { return Size<SizeType>(width, height); }
-
-        bool IsIn(const Point<PointType>& pos) const {
-            return Point<PointType>(x, y) <= pos && pos < Point<PointType>(x + width, y + height);
-        }
-
-        virtual ~Area() {}
-    };
-
-    using AreaI    = Area<int32_t>;
-    using AreaI64  = Area<int64_t>;
-
-    using AreaU    = Area<uint32_t>;
-    using AreaU64  = Area<uint64_t>;
-
-    using AreaF    = Area<float>;
-    using AreaD    = Area<float>;
-
-    using AreaIU   = Area<int32_t, uint32_t>;
-    using AreaIU16 = Area<int32_t, uint16_t>;
-
-    template <typename PointType, typename SizeType = PointType>
-    inline bool operator==(const Area<PointType, SizeType>& l, const Area<PointType, SizeType>& r) {
-        return l.x == r.x && l.y == r.y && l.width == r.width && l.height == r.height;
-    }
-
-    template <typename PointType, typename SizeType = PointType>
-    inline bool operator!=(const Area<PointType, SizeType>& l, const Area<PointType, SizeType>& r) {
-        return l.x != r.x || l.y != r.y || l.width != r.width || l.height != r.height;
-    }
-
-    template <typename PointType, typename SizeType = PointType>
-    inline RECT MakeRECT(const Area<PointType, SizeType>& area) {
-        return {LONG(area.x), LONG(area.y), LONG(area.x + area.width), LONG(area.y + area.height)};
-    }
-
-    inline AreaI MakeArea(const RECT& r) {
-        return {
-            r.left,
-            r.top,
-            r.right - r.left,
-            r.bottom - r.top
-        };
-    }
-
-    inline AreaIU MakeAreaIU(const RECT& r) {
-        return AreaIU(
-            r.left,
-            r.top,
-            r.right - r.left,
-            r.bottom - r.top
-        );
-    }
-
-    inline AreaIU16 MakeAreaIU16(const RECT& r) {
-        return AreaIU16(
-            r.left,
-            r.top,
-            uint16_t(r.right - r.left),
-            uint16_t(r.bottom - r.top)
-        );
-    }
-
-    //--------------------------------------------------------------------------
-    // Color
-    //--------------------------------------------------------------------------
-
-    template <typename Type>
-    struct Color4 {
-        Type r;
-        Type g;
-        Type b;
-        Type a;
-
-        Color4() : r(0), g(0), b(0), a(0) {}
-
-        template <typename TypeR, typename TypeG, typename TypeB, typename TypeA>
-        Color4(const TypeR& r, const TypeG& g, const TypeB& b, const TypeA& a) : r(Type(r)), g(Type(g)), b(Type(b)), a(Type(a)) {}
-
-        Type* ToData() {
-            return (Type*)this;
-        }
-
-        const Type* ToData() const {
-            return (const Type*)this;
-        }
-    };
-
-    using Color4U8 = Color4<uint8_t>;
-
-    //--------------------------------------------------------------------------
-    // Global
-    //--------------------------------------------------------------------------
-
-    // Makes global object of specified type in header-only library.
-    template <typename Type>
-    class Global {
-    public:
-        static Type& To() { return sm_object; }
-    private:
-        static Type sm_object;
-    };
-
-    template <typename Type>
-    Type Global<Type>::sm_object;
-
-    //--------------------------------------------------------------------------
-    // Conversion
-    //--------------------------------------------------------------------------
-
-    enum { CONV_STACK_DEF_BUFFER_SIZE = 4096 };
-
-    // Converts ascii string to utf-16 string.
-    std::wstring ASCII_ToUTF16(const std::string& text_ascii);
-
-    // Converts utf-8 string to utf-16 string.
-    std::wstring ToUTF16(const std::string& text_utf8);
-
-    // Converts utf-16 string to utf-8 string.
-    std::string ToUTF8(const std::wstring& text_utf16);
-
-    //--------------------------------------------------------------------------
-    // Log
-    //--------------------------------------------------------------------------
-
-    enum LogMessageType {
-        LOG_MESSAGE_TYPE_FATAL_ERROR,
-        LOG_MESSAGE_TYPE_ERROR,
-        LOG_MESSAGE_TYPE_WARNING,
-        LOG_MESSAGE_TYPE_INFO,
-        LOG_MESSAGE_TYPE_DEBUG,
-    };
-    using CustomLogFnP_T = void (*)(LogMessageType message_type, const char* message);
-
-    using LogLevel = uint32_t;
-    enum : LogLevel {
-        LOG_LEVEL_ERROR         = 0,    // log errors
-        LOG_LEVEL_WARNING       = 1,    // log errors, warnings
-        LOG_LEVEL_INFO          = 2,    // log errors, warnings, infos
-        LOG_LEVEL_DEBUG         = 3,    // log errors, warnings, infos, debugs
-    };                                 
-
-    // Sets current log level.
-    void SetLogLevel(LogLevel log_level);
-    LogLevel GetLogLevel();
-
-    // Returns true if log_level is less or equal to current log level.
-    bool IsLogLevelAtLeast(LogLevel log_level);
-
-    // Logs message to standard output (by default) or redirect to custom function (provided by SetHandleLogFunction).
     // message      - Message in ascii encoding.
 
-    void LogDebug(const std::string& message);
-    void LogInfo(const std::string& message);
-    void LogWarning(const std::string& message);
-    void LogError(const std::string& message);
-    void LogFatalError(const std::string& message);
-
-    void SetCustomLogFunction(CustomLogFnP_T custom_log);
-
-    // Singleton.
-    class Logger {
-    public:
-        friend Global<Logger>;
-
-        virtual ~Logger() {}
-
-        // message      - Message in ascii encoding.
-
-        void LogDebug(const std::string& message) {
-            if (IsLogLevelAtLeast(LOG_LEVEL_DEBUG)) Log(LOG_MESSAGE_TYPE_DEBUG, message);
-        }
-
-        void LogInfo(const std::string& message) {
-            if (IsLogLevelAtLeast(LOG_LEVEL_INFO)) Log(LOG_MESSAGE_TYPE_INFO, message);
-        }
-
-        void LogWarning(const std::string& message) {
-            if (IsLogLevelAtLeast(LOG_LEVEL_WARNING)) Log(LOG_MESSAGE_TYPE_WARNING, message);
-        }
-
-        void LogError(const std::string& message) {
-            Log(LOG_MESSAGE_TYPE_ERROR, message);
-        }
-
-        // This function exits executable with error code EXIT_FAILURE.
-        void LogFatalError(const std::string& message) {
-            Log(LOG_MESSAGE_TYPE_FATAL_ERROR, message);
-        }
-
-        void SetLogLevel(LogLevel log_level) {
-            m_log_level = log_level;
-        }
-
-        LogLevel GetLogLevel() const {
-            return m_log_level;
-        }
-
-        bool IsLogLevelAtLeast(LogLevel log_level) {
-            return log_level <= m_log_level;
-        }
-
-        void SetCustomLogFunction(CustomLogFnP_T custom_log) {
-            m_custom_log = custom_log;
-        }
-
-    private:
-        Logger() {
-            m_log_level     = LOG_LEVEL_INFO;
-            m_custom_log    = nullptr;
-        }
-
-        static std::string GetMessagePrefix(LogMessageType log_message_type) {
-            switch (log_message_type) {
-            case LOG_MESSAGE_TYPE_FATAL_ERROR:  return "(TOGL) Fatal Error: ";
-            case LOG_MESSAGE_TYPE_ERROR:        return "(TOGL) Error: ";
-            case LOG_MESSAGE_TYPE_WARNING:      return "(TOGL) Warning: ";
-            case LOG_MESSAGE_TYPE_INFO:         return "(TOGL) Info: ";
-            case LOG_MESSAGE_TYPE_DEBUG:        return "(TOGL) Debug: ";
-            }
-            return "";
-        }
-
-        void Log(LogMessageType message_type, const std::string& message) {
-            if (m_custom_log) {
-                m_custom_log(message_type, message.c_str());
-            } else {
-                LogTextToStdOut(GetMessagePrefix(message_type) + message);
-            }
-            if (message_type == LOG_MESSAGE_TYPE_FATAL_ERROR) exit(EXIT_FAILURE);
-        }
-
-        void LogTextToStdOut(const std::string& message) {
-            if (fwide(stdout, 0) > 0) {
-                wprintf(L"%ls\n", ASCII_ToUTF16(message).c_str());
-            } else {
-                printf("%s\n", message.c_str());
-            }
-            fflush(stdout);
-        }
-        
-        LogLevel        m_log_level;
-        CustomLogFnP_T  m_custom_log;
-    };
-
-    inline Logger& ToLogger() {
-        return Global<Logger>::To();
+    void LogDebug(const std::string& message) {
+        if (IsLogLevelAtLeast(TOGL_LOG_LEVEL_DEBUG)) Log(TOGL_LOG_MESSAGE_TYPE_ID_DEBUG, message);
     }
 
-    //--------------------------------------------------------------------------
-    // BMP
-    //--------------------------------------------------------------------------
+    void LogInfo(const std::string& message) {
+        if (IsLogLevelAtLeast(TOGL_LOG_LEVEL_INFO)) Log(TOGL_LOG_MESSAGE_TYPE_ID_INFO, message);
+    }
 
-    // Saves image pixel data to file as BMP image.
-    // file_name        - Full name with extension of BMP file. Variable encoding format: UTF8.
-    // pixel_data       - Contains array of pixels. Each pixels contains for channel (in order: red, green, blue, alpha). 
-    //                    Each channel occupies one byte (value range: 0 - 255).
-    // width            - Length of single image row in pixels. And also, width of saved image. At least 1. 
-    // height           - Number of rows. And also, height of saved image. At least 1. 
-    // Returns true if image was saved to file.
-    bool SaveAsBMP(const std::string& file_name, const uint8_t* pixel_data, uint32_t width, uint32_t height, bool is_reverse_rows = true);
+    void LogWarning(const std::string& message) {
+        if (IsLogLevelAtLeast(TOGL_LOG_LEVEL_WARNING)) Log(TOGL_LOG_MESSAGE_TYPE_ID_WARNING, message);
+    }
 
-    // Saves content of OpenGL texture to file as BMP image.
-    // file_name        - Full name with extension of BMP file. Variable encoding format: UTF8.
-    // tex_obj          - OpneGL Texture Object (Name).
-    // Returns true if image was saved to file.
-    bool SaveTextureAsBMP(const std::string& file_name, GLuint tex_obj);
+    void LogError(const std::string& message) {
+        Log(TOGL_LOG_MESSAGE_TYPE_ID_ERROR, message);
+    }
 
-    //--------------------------------------------------------------------------
-    // Common
-    //--------------------------------------------------------------------------
+    // This function exits executable with error code EXIT_FAILURE.
+    void LogFatalError(const std::string& message) {
+        Log(TOGL_LOG_MESSAGE_TYPE_ID_FATAL_ERROR, message);
+    }
 
-    AreaIU16 GetDesktopAreaNoTaskBar();
-    SizeU16 GetDesktopAreaSizeNoTaskBar();
-    SizeU16 GetScreenSize();
-    PointI GetCursorPosInScreen();
+    void SetLogLevel(TOGL_LogLevel log_level) {
+        m_log_level = log_level;
+    }
 
-    //--------------------------------------------------------------------------
+    TOGL_LogLevel GetLogLevel() const {
+        return m_log_level;
+    }
 
-    std::string HexToStr(uint16_t value);
-    std::vector<std::string> Split(const std::string& text, char c);
+    bool IsLogLevelAtLeast(TOGL_LogLevel log_level) {
+        return log_level <= m_log_level;
+    }
 
-    //--------------------------------------------------------------------------
+    void SetCustomLogFunction(TOGL_CustomLogFnP_T custom_log) {
+        m_custom_log = custom_log;
+    }
 
-    //--------------------------------------------------------------------------
-    // InnerUtility
-    //--------------------------------------------------------------------------
+private:
+    TOGL_Logger() {
+        m_log_level     = TOGL_LOG_LEVEL_INFO;
+        m_custom_log    = nullptr;
+    }
 
-    // Content this class is for this library inner purpose only.
-    class InnerUtility {
-    public:
-        friend class Window;
+    static std::string GetMessagePrefix(TOGL_LogMessageTypeId log_message_type) {
+        switch (log_message_type) {
+        case TOGL_LOG_MESSAGE_TYPE_ID_FATAL_ERROR:  return "(TOGL) Fatal Error: ";
+        case TOGL_LOG_MESSAGE_TYPE_ID_ERROR:        return "(TOGL) Error: ";
+        case TOGL_LOG_MESSAGE_TYPE_ID_WARNING:      return "(TOGL) Warning: ";
+        case TOGL_LOG_MESSAGE_TYPE_ID_INFO:         return "(TOGL) Info: ";
+        case TOGL_LOG_MESSAGE_TYPE_ID_DEBUG:        return "(TOGL) Debug: ";
+        }
+        return "";
+    }
 
-    private:
-        //--------------------------------------------------------------------------
-        // WindowAreaCorrector
-        //--------------------------------------------------------------------------
-    
-        // Corrects window position and size to remove invisible window frame in Windows 10. 
-        class WindowAreaCorrector {
-        public:
-            WindowAreaCorrector() {
-                m_dwmapi_lib_handle = LoadLibraryA("Dwmapi.dll");
-                if (m_dwmapi_lib_handle) {
-                    m_dwm_get_window_attribute          = (decltype(m_dwm_get_window_attribute)) GetProcAddress(m_dwmapi_lib_handle, "DwmGetWindowAttribute");
-                } else {
-                    m_dwm_get_window_attribute          = nullptr;
-                }
-            }
+    void Log(TOGL_LogMessageTypeId message_type, const std::string& message) {
+        if (m_custom_log) {
+            m_custom_log(message_type, message.c_str());
+        } else {
+            LogTextToStdOut(GetMessagePrefix(message_type) + message);
+        }
+        if (message_type == TOGL_LOG_MESSAGE_TYPE_ID_FATAL_ERROR) exit(EXIT_FAILURE);
+    }
 
-            virtual ~WindowAreaCorrector() {
-                FreeLibrary(m_dwmapi_lib_handle);
-            }
-
-            AreaIU16 Get(HWND window_handle) const {
-                AreaIU16 area = {};
-
-                if (m_dwm_get_window_attribute) {
-                    RECT window_rect;
-                    GetWindowRect(window_handle, &window_rect);
-
-                    // Added TOGL_ prefix.
-                    enum { TOGL_DWMWA_EXTENDED_FRAME_BOUNDS = 9 };
-                    RECT actual_window_rect;
-
-                    // Note: To return correct values, must be called after ShowWindow(window_handle, SW_SHOW).
-                    m_dwm_get_window_attribute(window_handle, TOGL_DWMWA_EXTENDED_FRAME_BOUNDS, &actual_window_rect, sizeof(RECT));
-
-                    RECT frame = {};
-                    frame.left      = actual_window_rect.left   - window_rect.left;
-                    frame.top       = actual_window_rect.top    - window_rect.top;
-                    frame.right     = window_rect.right         - actual_window_rect.right;
-                    frame.bottom    = window_rect.bottom        - actual_window_rect.bottom;
-
-                    area = AreaIU16(- frame.left, -frame.top, uint16_t(frame.left + frame.right), uint16_t(frame.top + frame.bottom));
-                }
-
-                return area;
-            }
-
-            // area         - Window area without invisible frame.
-            AreaIU16 AddInvisibleFrameTo(const AreaIU16& area, HWND window_hangle) const {
-                const AreaIU16 correction = Get(window_hangle);
-                return AreaIU16(
-                    area.x      + correction.x,
-                    area.y      + correction.y,
-                    area.width  + correction.width,
-                    area.height + correction.height
-                );
-            }
-
-            // size         - Window size without invisible frame.
-            SizeU16 AddInvisibleFrameTo(const SizeU16& size, HWND window_hangle) const {
-                const AreaIU16 correction = Get(window_hangle);
-                return SizeU16(
-                    size.width  + correction.width,
-                    size.height + correction.height
-                );
-            }
-
-            // pos          - Window position without invisible frame.
-            PointI AddInvisibleFrameTo(const PointI& pos, HWND window_hangle) const {
-                const AreaIU16 correction = Get(window_hangle);
-                return {
-                    pos.x + correction.x,
-                    pos.y + correction.y,
-                };
-            }
-
-            // area         - Window area with invisible frame.
-            AreaIU16 RemoveInvisibleFrameFrom(const AreaIU16& area, HWND window_hangle) const {
-                const AreaIU16 correction = Get(window_hangle);
-                return AreaIU16(
-                    area.x      - correction.x,
-                    area.y      - correction.y,
-                    area.width  - correction.width,
-                    area.height - correction.height
-                );
-            }
-
-            // size         - Window size with invisible frame.
-            SizeU16 RemoveInvisibleFrameFrom(const SizeU16& size, HWND window_hangle) const {
-                const AreaIU16 correction = Get(window_hangle);
-                return SizeU16(
-                    size.width  - correction.width,
-                    size.height - correction.height
-                );
-            }
-
-            // pos          - Window position with invisible frame.
-            PointI RemoveInvisibleFrameFrom(const PointI& pos, HWND window_hangle) const {
-                const AreaIU16 correction = Get(window_hangle);
-                return {
-                    pos.x - correction.x,
-                    pos.y - correction.y,
-                };
-            }
-        private:
-            HMODULE  m_dwmapi_lib_handle;
-
-            struct MARGINS {
-                int cxLeftWidth;
-                int cxRightWidth;
-                int cyTopHeight;
-                int cyBottomHeight;
-            };
+    void LogTextToStdOut(const std::string& message) {
+        if (fwide(stdout, 0) > 0) {
+            wprintf(L"%ls\n", TOGL_ASCII_ToUTF16(message).c_str());
+        } else {
+            printf("%s\n", message.c_str());
+        }
+        fflush(stdout);
+    }
         
-            HRESULT (WINAPI *m_dwm_get_window_attribute)(HWND hwnd, DWORD dwAttribute, PVOID pvAttribute, DWORD cbAttribute);
+    TOGL_LogLevel        m_log_level;
+    TOGL_CustomLogFnP_T  m_custom_log;
+};
+
+inline TOGL_Logger& TOGL_ToLogger() {
+    return TOGL_Global<TOGL_Logger>::To();
+}
+
+//--------------------------------------------------------------------------
+// BMP
+//--------------------------------------------------------------------------
+
+// Saves image pixel data to file as BMP image.
+// file_name        - Full name with extension of BMP file. Variable encoding format: UTF8.
+// pixel_data       - Contains array of pixels. Each pixels contains for channel (in order: red, green, blue, alpha). 
+//                    Each channel occupies one byte (value range: 0 - 255).
+// width            - Length of single image row in pixels. And also, width of saved image. At least 1. 
+// height           - Number of rows. And also, height of saved image. At least 1. 
+// Returns true if image was saved to file.
+bool TOGL_SaveAsBMP(const std::string& file_name, const uint8_t* pixel_data, uint32_t width, uint32_t height, bool is_reverse_rows = true);
+
+// Saves content of OpenGL texture to file as BMP image.
+// file_name        - Full name with extension of BMP file. Variable encoding format: UTF8.
+// tex_obj          - OpneGL Texture Object (Name).
+// Returns true if image was saved to file.
+bool TOGL_SaveTextureAsBMP(const std::string& file_name, GLuint tex_obj);
+
+//--------------------------------------------------------------------------
+// Common
+//--------------------------------------------------------------------------
+
+TOGL_AreaIU16 TOGL_GetDesktopAreaNoTaskBar();
+TOGL_SizeU16 TOGL_GetDesktopAreaSizeNoTaskBar();
+TOGL_SizeU16 TOGL_GetScreenSize();
+TOGL_PointI TOGL_GetCursorPosInScreen();
+
+//--------------------------------------------------------------------------
+
+std::string TOGL_HexToStr(uint16_t value);
+std::vector<std::string> TOGL_Split(const std::string& text, char c);
+
+//--------------------------------------------------------------------------
+
+//--------------------------------------------------------------------------
+// InnerUtility
+//--------------------------------------------------------------------------
+
+// Content this class is for this library inner purpose only.
+class _TOGL_InnerUtility {
+public:
+    friend class TOGL_Window;
+
+private:
+    //--------------------------------------------------------------------------
+    // WindowAreaCorrector
+    //--------------------------------------------------------------------------
+    
+    // Corrects window position and size to remove invisible window frame in Windows 10. 
+    class WindowAreaCorrector {
+    public:
+        WindowAreaCorrector() {
+            m_dwmapi_lib_handle = LoadLibraryA("Dwmapi.dll");
+            if (m_dwmapi_lib_handle) {
+                m_dwm_get_window_attribute          = (decltype(m_dwm_get_window_attribute)) GetProcAddress(m_dwmapi_lib_handle, "DwmGetWindowAttribute");
+            } else {
+                m_dwm_get_window_attribute          = nullptr;
+            }
+        }
+
+        virtual ~WindowAreaCorrector() {
+            FreeLibrary(m_dwmapi_lib_handle);
+        }
+
+        TOGL_AreaIU16 Get(HWND window_handle) const {
+            TOGL_AreaIU16 area = {};
+
+            if (m_dwm_get_window_attribute) {
+                RECT window_rect;
+                GetWindowRect(window_handle, &window_rect);
+
+                // Added TOGL_ prefix.
+                enum { TOGL_DWMWA_EXTENDED_FRAME_BOUNDS = 9 };
+                RECT actual_window_rect;
+
+                // Note: To return correct values, must be called after ShowWindow(window_handle, SW_SHOW).
+                m_dwm_get_window_attribute(window_handle, TOGL_DWMWA_EXTENDED_FRAME_BOUNDS, &actual_window_rect, sizeof(RECT));
+
+                RECT frame = {};
+                frame.left      = actual_window_rect.left   - window_rect.left;
+                frame.top       = actual_window_rect.top    - window_rect.top;
+                frame.right     = window_rect.right         - actual_window_rect.right;
+                frame.bottom    = window_rect.bottom        - actual_window_rect.bottom;
+
+                area = TOGL_AreaIU16(- frame.left, -frame.top, uint16_t(frame.left + frame.right), uint16_t(frame.top + frame.bottom));
+            }
+
+            return area;
+        }
+
+        // area         - Window area without invisible frame.
+        TOGL_AreaIU16 AddInvisibleFrameTo(const TOGL_AreaIU16& area, HWND window_hangle) const {
+            const TOGL_AreaIU16 correction = Get(window_hangle);
+            return TOGL_AreaIU16(
+                area.x      + correction.x,
+                area.y      + correction.y,
+                area.width  + correction.width,
+                area.height + correction.height
+            );
+        }
+
+        // size         - Window size without invisible frame.
+        TOGL_SizeU16 AddInvisibleFrameTo(const TOGL_SizeU16& size, HWND window_hangle) const {
+            const TOGL_AreaIU16 correction = Get(window_hangle);
+            return TOGL_SizeU16(
+                size.width  + correction.width,
+                size.height + correction.height
+            );
+        }
+
+        // pos          - Window position without invisible frame.
+        TOGL_PointI AddInvisibleFrameTo(const TOGL_PointI& pos, HWND window_hangle) const {
+            const TOGL_AreaIU16 correction = Get(window_hangle);
+            return {
+                pos.x + correction.x,
+                pos.y + correction.y,
+            };
+        }
+
+        // area         - Window area with invisible frame.
+        TOGL_AreaIU16 RemoveInvisibleFrameFrom(const TOGL_AreaIU16& area, HWND window_hangle) const {
+            const TOGL_AreaIU16 correction = Get(window_hangle);
+            return TOGL_AreaIU16(
+                area.x      - correction.x,
+                area.y      - correction.y,
+                area.width  - correction.width,
+                area.height - correction.height
+            );
+        }
+
+        // size         - Window size with invisible frame.
+        TOGL_SizeU16 RemoveInvisibleFrameFrom(const TOGL_SizeU16& size, HWND window_hangle) const {
+            const TOGL_AreaIU16 correction = Get(window_hangle);
+            return TOGL_SizeU16(
+                size.width  - correction.width,
+                size.height - correction.height
+            );
+        }
+
+        // pos          - Window position with invisible frame.
+        TOGL_PointI RemoveInvisibleFrameFrom(const TOGL_PointI& pos, HWND window_hangle) const {
+            const TOGL_AreaIU16 correction = Get(window_hangle);
+            return {
+                pos.x - correction.x,
+                pos.y - correction.y,
+            };
+        }
+    private:
+        HMODULE  m_dwmapi_lib_handle;
+
+        struct MARGINS {
+            int cxLeftWidth;
+            int cxRightWidth;
+            int cyTopHeight;
+            int cyBottomHeight;
         };
+        
+        HRESULT (WINAPI *m_dwm_get_window_attribute)(HWND hwnd, DWORD dwAttribute, PVOID pvAttribute, DWORD cbAttribute);
     };
-
-} // namespace TrivialOpenGL
-
-namespace TOGL = TrivialOpenGL;
+};
 
 //==============================================================================
 // Definitions
 //==============================================================================
 
-namespace TrivialOpenGL {
 
-    //--------------------------------------------------------------------------
-    // Conversion
-    //--------------------------------------------------------------------------
+//--------------------------------------------------------------------------
+// Conversion
+//--------------------------------------------------------------------------
 
-    inline std::wstring ASCII_ToUTF16(const std::string& text_ascii) {
-        std::wstring text_utf16;
-        for (size_t index = 0; index < text_ascii.length(); ++index) text_utf16 += wchar_t(text_ascii[index]);
-        return text_utf16;
-    }
+enum { _TOGL_CONVERSION_STACK_BUFFER_LENGTH = 4096 };
 
-    inline std::wstring ToUTF16(const std::string& text_utf8) {
-        std::wstring text_utf16;
+inline std::wstring TOGL_ASCII_ToUTF16(const std::string& text_ascii) {
+    std::wstring text_utf16;
+    for (size_t index = 0; index < text_ascii.length(); ++index) text_utf16 += wchar_t(text_ascii[index]);
+    return text_utf16;
+}
 
-        wchar_t stack_buffer[CONV_STACK_DEF_BUFFER_SIZE] = {};
+inline std::wstring TOGL_ToUTF16(const std::string& text_utf8) {
+    std::wstring text_utf16;
 
-        if (!text_utf8.empty()) {
-            int size = MultiByteToWideChar(CP_UTF8, 0, text_utf8.c_str(), -1, NULL, 0);
-            if (size == 0) {
-                LogFatalError("Error TOGLW::Window::ToUTF16: Can not convert a text from utf-16 to utf-8.");
-            }
+    wchar_t stack_buffer[_TOGL_CONVERSION_STACK_BUFFER_LENGTH] = {};
 
-            wchar_t* buffer = (size > CONV_STACK_DEF_BUFFER_SIZE) ? (new wchar_t[size]) : stack_buffer;
-
-            size = MultiByteToWideChar(CP_UTF8, 0, text_utf8.c_str(), -1, buffer, size);
-            if (size == 0) {
-                LogFatalError("Error TOGLW::Window::ToUTF16: Can not convert a text from utf-16 to utf-8.");
-            }
-
-            if (size > 1) text_utf16 = std::wstring(buffer, size - 1);
-
-            if (buffer != stack_buffer) delete[] buffer;
+    if (!text_utf8.empty()) {
+        // number of characters with '\0'
+        int number = MultiByteToWideChar(CP_UTF8, 0, text_utf8.c_str(), -1, NULL, 0);
+        if (number == 0) {
+            TOGL_LogFatalError("Error TOGL_ToUTF16: Can not convert a text from utf-16 to utf-8.");
         }
 
-        return text_utf16;
-    }
+        wchar_t* buffer = (number > _TOGL_CONVERSION_STACK_BUFFER_LENGTH) ? (new wchar_t[number]) : stack_buffer;
 
-    inline std::string ToUTF8(const std::wstring& text_utf16) {
-        std::string text_utf8;
-
-        char stack_buffer[CONV_STACK_DEF_BUFFER_SIZE] = {};
-
-        if (!text_utf16.empty()) {
-            int size = WideCharToMultiByte(CP_UTF8, 0, text_utf16.c_str(), -1, NULL, 0, NULL, NULL);
-            if (size == 0) {
-                LogFatalError("Error TOGLW::Window::ToUTF8: Can not convert a text from utf-8 to utf-16.");
-            }
-
-            char* buffer = (size > CONV_STACK_DEF_BUFFER_SIZE) ? (new char[size]) : stack_buffer;
-
-            size = WideCharToMultiByte(CP_UTF8, 0, text_utf16.c_str(), -1, buffer, size, NULL, NULL);
-            if (size == 0) {
-                LogFatalError("Error TOGLW::Window::ToUTF8: Can not convert a text from utf-8 to utf-16.");
-            }
-
-            if (size > 1) text_utf8 = std::string(buffer, size - 1);
-
-            if (buffer != stack_buffer) delete[] buffer;
+        number = MultiByteToWideChar(CP_UTF8, 0, text_utf8.c_str(), -1, buffer, number);
+        if (number == 0) {
+            TOGL_LogFatalError("Error TOGL_ToUTF16: Can not convert a text from utf-16 to utf-8.");
         }
 
-        return text_utf8;
+        if (number > 1) text_utf16 = std::wstring(buffer, number - 1);
+
+        if (buffer != stack_buffer) delete[] buffer;
     }
 
-    //--------------------------------------------------------------------------
-    // Log
-    //--------------------------------------------------------------------------
+    return text_utf16;
+}
 
-    inline void SetLogLevel(LogLevel log_level) {
-        ToLogger().SetLogLevel(log_level);
-    }
+inline std::string TOGL_ToUTF8(const std::wstring& text_utf16) {
+    std::string text_utf8;
 
-    inline LogLevel GetLogLevel() {
-        return ToLogger().GetLogLevel();
-    }
+    char stack_buffer[_TOGL_CONVERSION_STACK_BUFFER_LENGTH] = {};
 
-    inline bool IsLogLevelAtLeast(LogLevel log_level) {
-        return ToLogger().IsLogLevelAtLeast(log_level);
-    }
-
-    inline void LogDebug(const std::string& message) {
-        ToLogger().LogDebug(message);
-    }
-
-    inline void LogInfo(const std::string& message) {
-        ToLogger().LogInfo(message);
-    }
-
-    inline void LogWarning(const std::string& message) {
-        ToLogger().LogWarning(message);
-    }
-
-    inline void LogError(const std::string& message) {
-        ToLogger().LogError(message);
-    }
-
-    inline void LogFatalError(const std::string& message) {
-        ToLogger().LogFatalError(message);
-    }
-
-    inline void SetCustomLogFunction(CustomLogFnP_T custom_log) {
-        ToLogger().SetCustomLogFunction(custom_log);
-    }
-
-    //--------------------------------------------------------------------------
-    // Common
-    //--------------------------------------------------------------------------
-
-    inline AreaIU16 GetDesktopAreaNoTaskBar() {
-        RECT rc;
-        SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, 0);
-        return MakeAreaIU16(rc);
-    }
-
-    inline SizeU16 GetDesktopAreaSizeNoTaskBar() {
-        return GetDesktopAreaNoTaskBar().GetSize();
-    }
-
-    inline SizeU16 GetScreenSize() {
-        return SizeU16(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
-    }
-
-    inline PointI GetCursorPosInScreen() {
-        POINT pos;
-        if (GetCursorPos(&pos)) {
-            return {pos.x, pos.y};
-        }
-        return {};
-    }
-
-    //--------------------------------------------------------------------------
-
-    inline std::vector<std::string> Split(const std::string& text, char c) {
-        std::string temp = text;
-        std::vector<std::string> list;
-
-        while (true) {
-            size_t pos = temp.find(c, 0);
-
-            if (pos == std::string::npos) {
-                list.push_back(temp);
-                break;
-            } else {
-                list.push_back(temp.substr(0, pos));
-                temp = temp.substr(pos + 1);
-            }
-        }
-        return list;
-    }
-
-    inline std::string HexToStr(uint16_t value) {
-        std::stringstream stream;
-        stream << std::hex << std::setfill('0') << std::setw(4) << std::right << std::uppercase << value;
-        return stream.str();
-    };
-
-    //--------------------------------------------------------------------------
-    // BMP
-    //--------------------------------------------------------------------------
-
-    inline bool SaveAsBMP(const std::string& file_name, const uint8_t* pixel_data, uint32_t width, uint32_t height, bool is_reverse_rows) {
-        bool is_success = false; 
-
-        if (width > 0 && height > 0) {
-            enum {
-                PIXEL_SIZE = 4, // in bytes
-            };
-
-            const uint32_t pixel_data_size      = width * height * PIXEL_SIZE;
-            const uint32_t header_size          = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPV5HEADER);
-            const uint32_t file_size            = header_size + pixel_data_size;
-
-            uint8_t* file_data = new uint8_t[file_size];
-            memset(file_data, 0, file_size);
-
-            BITMAPFILEHEADER* fh = (BITMAPFILEHEADER*) file_data;
-            fh->bfType          = 0x4D42; // bmp file signature = {'B', 'M'}
-            fh->bfSize          = file_size;
-            fh->bfOffBits       = header_size;
-
-            BITMAPV5HEADER* ih = (BITMAPV5HEADER*)(file_data + sizeof(BITMAPFILEHEADER));
-            ih->bV5Size         = sizeof(BITMAPV5HEADER);
-            ih->bV5Width        = width;
-            ih->bV5Height       = height;
-            ih->bV5Planes       = 1;
-            ih->bV5BitCount     = 32;
-            ih->bV5Compression  = BI_BITFIELDS;
-            ih->bV5SizeImage    = pixel_data_size;
-            ih->bV5RedMask      = 0xFF000000;
-            ih->bV5GreenMask    = 0x00FF0000;
-            ih->bV5BlueMask     = 0x0000FF00;
-            ih->bV5AlphaMask    = 0x000000FF;
-            ih->bV5CSType       = LCS_sRGB;
-            ih->bV5Intent       = LCS_GM_GRAPHICS;
-
-            uint8_t* file_pixel_data = (uint8_t*)(file_data + header_size);
-            uint32_t ix = 0;
-
-            const uint32_t row_size = width * PIXEL_SIZE; // in bytes
-
-            for (uint32_t column_ix = 0; column_ix < height; ++column_ix) {
-                const uint8_t* column =  pixel_data + row_size * (is_reverse_rows ? (height - 1 - column_ix) : column_ix);
-
-                for (uint32_t pixel_ix = 0; pixel_ix < width; ++pixel_ix) {
-                    const uint8_t* pixel = column + pixel_ix * PIXEL_SIZE;
-
-                    // reverse order of channels
-                    file_pixel_data[ix++] = pixel[3];
-                    file_pixel_data[ix++] = pixel[2];
-                    file_pixel_data[ix++] = pixel[1];
-                    file_pixel_data[ix++] = pixel[0];
-                }
-            }
-
-            FILE* file = NULL;
-            is_success = _wfopen_s(&file, ToUTF16(file_name).c_str(), L"wb") == 0 && file;
-
-            if (is_success) {
-                is_success = fwrite(file_data, 1, file_size, file) == file_size;
-                fclose(file);
-            }
-
-            delete[] file_data;
+    if (!text_utf16.empty()) {
+        // number of characters with '\0'
+        int number = WideCharToMultiByte(CP_UTF8, 0, text_utf16.c_str(), -1, NULL, 0, NULL, NULL);
+        if (number == 0) {
+            TOGL_LogFatalError("Error TOGL_ToUTF8: Can not convert a text from utf-8 to utf-16.");
         }
 
-        return is_success;
+        char* buffer = (number > _TOGL_CONVERSION_STACK_BUFFER_LENGTH) ? (new char[number]) : stack_buffer;
+
+        number = WideCharToMultiByte(CP_UTF8, 0, text_utf16.c_str(), -1, buffer, number, NULL, NULL);
+        if (number == 0) {
+            TOGL_LogFatalError("Error TOGL_ToUTF8: Can not convert a text from utf-8 to utf-16.");
+        }
+
+        if (number > 1) text_utf8 = std::string(buffer, number - 1);
+
+        if (buffer != stack_buffer) delete[] buffer;
     }
 
-    inline bool SaveTextureAsBMP(const std::string& file_name, GLuint tex_obj) {
-        bool is_success = false;
+    return text_utf8;
+}
 
-        glPushAttrib(GL_TEXTURE_BIT);
-        glBindTexture(GL_TEXTURE_2D, tex_obj);
+//--------------------------------------------------------------------------
+// Log
+//--------------------------------------------------------------------------
 
-        GLint width     = 0;
-        GLint height    = 0;
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+inline void TOGL_SetLogLevel(TOGL_LogLevel log_level) {
+    TOGL_ToLogger().SetLogLevel(log_level);
+}
 
-        if (width > 0 && height > 0) {
-            enum { PIXEL_SIZE = 4 }; // in bytes
+inline TOGL_LogLevel TOGL_GetLogLevel() {
+    return TOGL_ToLogger().GetLogLevel();
+}
 
-            const uint32_t  data_size   = width * height * PIXEL_SIZE;
-            uint8_t*        data        = new uint8_t[data_size];
+inline bool TOGL_IsLogLevelAtLeast(TOGL_LogLevel log_level) {
+    return TOGL_ToLogger().IsLogLevelAtLeast(log_level);
+}
+
+inline void TOGL_LogDebug(const std::string& message) {
+    TOGL_ToLogger().LogDebug(message);
+}
+
+inline void TOGL_LogInfo(const std::string& message) {
+    TOGL_ToLogger().LogInfo(message);
+}
+
+inline void TOGL_LogWarning(const std::string& message) {
+    TOGL_ToLogger().LogWarning(message);
+}
+
+inline void TOGL_LogError(const std::string& message) {
+    TOGL_ToLogger().LogError(message);
+}
+
+inline void TOGL_LogFatalError(const std::string& message) {
+    TOGL_ToLogger().LogFatalError(message);
+}
+
+inline void TOGL_SetCustomLogFunction(TOGL_CustomLogFnP_T custom_log) {
+    TOGL_ToLogger().SetCustomLogFunction(custom_log);
+}
+
+//--------------------------------------------------------------------------
+// Common
+//--------------------------------------------------------------------------
+
+inline TOGL_AreaIU16 TOGL_GetDesktopAreaNoTaskBar() {
+    RECT rc;
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, 0);
+    return TOGL_MakeAreaIU16(rc);
+}
+
+inline TOGL_SizeU16 TOGL_GetDesktopAreaSizeNoTaskBar() {
+    return TOGL_GetDesktopAreaNoTaskBar().GetSize();
+}
+
+inline TOGL_SizeU16 TOGL_GetScreenSize() {
+    return TOGL_SizeU16(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+}
+
+inline TOGL_PointI TOGL_GetCursorPosInScreen() {
+    POINT pos;
+    if (GetCursorPos(&pos)) {
+        return {pos.x, pos.y};
+    }
+    return {};
+}
+
+//--------------------------------------------------------------------------
+
+inline std::vector<std::string> TOGL_Split(const std::string& text, char c) {
+    std::string temp = text;
+    std::vector<std::string> list;
+
+    while (true) {
+        size_t pos = temp.find(c, 0);
+
+        if (pos == std::string::npos) {
+            list.push_back(temp);
+            break;
+        } else {
+            list.push_back(temp.substr(0, pos));
+            temp = temp.substr(pos + 1);
+        }
+    }
+    return list;
+}
+
+inline std::string TOGL_HexToStr(uint16_t value) {
+    std::stringstream stream;
+    stream << std::hex << std::setfill('0') << std::setw(4) << std::right << std::uppercase << value;
+    return stream.str();
+};
+
+//--------------------------------------------------------------------------
+// BMP
+//--------------------------------------------------------------------------
+
+inline bool TOGL_SaveAsBMP(const std::string& file_name, const uint8_t* pixel_data, uint32_t width, uint32_t height, bool is_reverse_rows) {
+    bool is_success = false; 
+
+    if (width > 0 && height > 0) {
+        enum {
+            PIXEL_SIZE = 4, // in bytes
+        };
+
+        const uint32_t pixel_data_size      = width * height * PIXEL_SIZE;
+        const uint32_t header_size          = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPV5HEADER);
+        const uint32_t file_size            = header_size + pixel_data_size;
+
+        uint8_t* file_data = new uint8_t[file_size];
+        memset(file_data, 0, file_size);
+
+        BITMAPFILEHEADER* fh = (BITMAPFILEHEADER*) file_data;
+        fh->bfType          = 0x4D42; // bmp file signature = {'B', 'M'}
+        fh->bfSize          = file_size;
+        fh->bfOffBits       = header_size;
+
+        BITMAPV5HEADER* ih = (BITMAPV5HEADER*)(file_data + sizeof(BITMAPFILEHEADER));
+        ih->bV5Size         = sizeof(BITMAPV5HEADER);
+        ih->bV5Width        = width;
+        ih->bV5Height       = height;
+        ih->bV5Planes       = 1;
+        ih->bV5BitCount     = 32;
+        ih->bV5Compression  = BI_BITFIELDS;
+        ih->bV5SizeImage    = pixel_data_size;
+        ih->bV5RedMask      = 0xFF000000;
+        ih->bV5GreenMask    = 0x00FF0000;
+        ih->bV5BlueMask     = 0x0000FF00;
+        ih->bV5AlphaMask    = 0x000000FF;
+        ih->bV5CSType       = LCS_sRGB;
+        ih->bV5Intent       = LCS_GM_GRAPHICS;
+
+        uint8_t* file_pixel_data = (uint8_t*)(file_data + header_size);
+        uint32_t ix = 0;
+
+        const uint32_t row_size = width * PIXEL_SIZE; // in bytes
+
+        for (uint32_t column_ix = 0; column_ix < height; ++column_ix) {
+            const uint8_t* column =  pixel_data + row_size * (is_reverse_rows ? (height - 1 - column_ix) : column_ix);
+
+            for (uint32_t pixel_ix = 0; pixel_ix < width; ++pixel_ix) {
+                const uint8_t* pixel = column + pixel_ix * PIXEL_SIZE;
+
+                // reverse order of channels
+                file_pixel_data[ix++] = pixel[3];
+                file_pixel_data[ix++] = pixel[2];
+                file_pixel_data[ix++] = pixel[1];
+                file_pixel_data[ix++] = pixel[0];
+            }
+        }
+
+        FILE* file = NULL;
+        is_success = _wfopen_s(&file, TOGL_ToUTF16(file_name).c_str(), L"wb") == 0 && file;
+
+        if (is_success) {
+            is_success = fwrite(file_data, 1, file_size, file) == file_size;
+            fclose(file);
+        }
+
+        delete[] file_data;
+    }
+
+    return is_success;
+}
+
+inline bool TOGL_SaveTextureAsBMP(const std::string& file_name, GLuint tex_obj) {
+    bool is_success = false;
+
+    glPushAttrib(GL_TEXTURE_BIT);
+    glBindTexture(GL_TEXTURE_2D, tex_obj);
+
+    GLint width     = 0;
+    GLint height    = 0;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+
+    if (width > 0 && height > 0) {
+        enum { PIXEL_SIZE = 4 }; // in bytes
+
+        const uint32_t  data_size   = width * height * PIXEL_SIZE;
+        uint8_t*        data        = new uint8_t[data_size];
                    
-            glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
-            is_success = SaveAsBMP(file_name, data, width, height, false);
+        is_success = TOGL_SaveAsBMP(file_name, data, width, height, false);
                     
-            delete[] data;
-        }
-
-        glPopAttrib();
-
-        return is_success;
+        delete[] data;
     }
 
+    glPopAttrib();
 
-} // namespace TrivialOpenGL 
+    return is_success;
+}
 
 #endif // TRIVIALOPENGL_UTILITY_H_
