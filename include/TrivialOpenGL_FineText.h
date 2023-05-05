@@ -8,11 +8,19 @@
 
 #include "TrivialOpenGL_Utility.h"
 
+//==============================================================================
+// Declarations
+//==============================================================================
+
 enum TOGL_FineTextElementTypeId {
     TOGL_FINE_TEXT_ELEMENT_TYPE_ID_TEXT,
     TOGL_FINE_TEXT_ELEMENT_TYPE_ID_COLOR,
     TOGL_FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER
 };
+
+//------------------------------------------------------------------------------
+// TOGL_TextHorizontalSpacer
+//------------------------------------------------------------------------------
 
 class TOGL_TextHorizontalSpacer {
 public:
@@ -30,6 +38,10 @@ public:
 private:
     uint32_t m_width; // in pixels
 };
+
+//------------------------------------------------------------------------------
+// TOGL_FineTextElement
+//------------------------------------------------------------------------------
 
 class TOGL_FineTextElement {
 public:
@@ -170,6 +182,10 @@ private:
 
     Container* m_container;
 };
+
+//------------------------------------------------------------------------------
+// TOGL_FineTextElement
+//------------------------------------------------------------------------------
 
 class TOGL_FineText {
 public:

@@ -173,7 +173,7 @@ std::string TOGL_ExtraToStr(const TOGL_Extra& extra);
 
 bool TOGL_IsKeyToggled(TOGL_KeyId key_id);
     
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 // Content this class is for this library inner purpose only.
 class _TOGL_InnerKey {
