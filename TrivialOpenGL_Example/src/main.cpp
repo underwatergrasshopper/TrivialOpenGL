@@ -867,7 +867,7 @@ int main(int argc, char *argv[]) {
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
         data.area               = {0, 0, 400, 800};
-        data.style              = TOGL_STYLE_BIT_CENTERED;
+        data.style              = TOGL_WINDOW_STYLE_BIT_CENTERED;
 
         return TOGL_Run(data);
     });
@@ -909,7 +909,7 @@ int main(int argc, char *argv[]) {
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
-        data.style              = TOGL_STYLE_BIT_NO_RESIZE;
+        data.style              = TOGL_WINDOW_STYLE_BIT_NO_RESIZE;
 
         return TOGL_Run(data);
     });
@@ -923,7 +923,7 @@ int main(int argc, char *argv[]) {
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
-        data.style              = TOGL_STYLE_BIT_NO_MAXIMIZE;
+        data.style              = TOGL_WINDOW_STYLE_BIT_NO_MAXIMIZE;
 
         return TOGL_Run(data);
     });
@@ -937,7 +937,7 @@ int main(int argc, char *argv[]) {
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
-        data.style              = TOGL_STYLE_BIT_NO_MAXIMIZE | TOGL_STYLE_BIT_NO_RESIZE;
+        data.style              = TOGL_WINDOW_STYLE_BIT_NO_MAXIMIZE | TOGL_WINDOW_STYLE_BIT_NO_RESIZE;
 
         return TOGL_Run(data);
     });
@@ -952,7 +952,7 @@ int main(int argc, char *argv[]) {
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
         data.area               = {0, 0, 400, 800};
-        data.style              = TOGL_STYLE_BIT_CENTERED;
+        data.style              = TOGL_WINDOW_STYLE_BIT_CENTERED;
 
         return TOGL_Run(data);
     });
@@ -968,8 +968,8 @@ int main(int argc, char *argv[]) {
         data.window_name        += name;
         data.area               = {0, 0, 400, 200};
         data.style              = 0;
-        data.style              |= TOGL_STYLE_BIT_CENTERED;
-        data.style              |= TOGL_STYLE_BIT_DRAW_AREA_SIZE;
+        data.style              |= TOGL_WINDOW_STYLE_BIT_CENTERED;
+        data.style              |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE;
 
         return TOGL_Run(data);
 
@@ -986,8 +986,8 @@ int main(int argc, char *argv[]) {
         data.window_name        += name;
         data.area               = {0, 0, 400, 200};
         data.style              = 0;
-        data.style              |= TOGL_STYLE_BIT_CENTERED;
-        data.style              |= TOGL_STYLE_BIT_DRAW_AREA_ONLY;
+        data.style              |= TOGL_WINDOW_STYLE_BIT_CENTERED;
+        data.style              |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_ONLY;
 
         return TOGL_Run(data);
     });
@@ -1001,7 +1001,7 @@ int main(int argc, char *argv[]) {
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
-        data.style              = TOGL_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
+        data.style              = TOGL_WINDOW_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
         data.log_level          = TOGL_LOG_LEVEL_DEBUG;
 
         return TOGL_Run(data);
@@ -1074,16 +1074,16 @@ int main(int argc, char *argv[]) {
         data.window_name        += name;
         data.area               = {0, 0, s_resolution.width, s_resolution.height};
         data.style              = 0;
-        data.style              |= TOGL_STYLE_BIT_CENTERED;
+        data.style              |= TOGL_WINDOW_STYLE_BIT_CENTERED;
         data.icon_resource_id   = ICON_ID;
 
         if (!IsOption("no_debug"))                      data.log_level = TOGL_LOG_LEVEL_DEBUG;
 
-        if (IsOption("draw_area_size"))                 data.style |= TOGL_STYLE_BIT_DRAW_AREA_SIZE;
-        if (IsOption("draw_area_only"))                 data.style |= TOGL_STYLE_BIT_DRAW_AREA_ONLY;
-        if (IsOption("redraw_on_change_or_request"))    data.style |= TOGL_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
-        if (IsOption("no_resize"))                      data.style |= TOGL_STYLE_BIT_NO_RESIZE;
-        if (IsOption("no_maximize"))                    data.style |= TOGL_STYLE_BIT_NO_MAXIMIZE;
+        if (IsOption("draw_area_size"))                 data.style |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE;
+        if (IsOption("draw_area_only"))                 data.style |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_ONLY;
+        if (IsOption("redraw_on_change_or_request"))    data.style |= TOGL_WINDOW_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
+        if (IsOption("no_resize"))                      data.style |= TOGL_WINDOW_STYLE_BIT_NO_RESIZE;
+        if (IsOption("no_maximize"))                    data.style |= TOGL_WINDOW_STYLE_BIT_NO_MAXIMIZE;
 
         if (IsOption("notify_any_message"))             data.special_debug.is_notify_any_message        = true;
         if (IsOption("notify_draw_call"))               data.special_debug.is_notify_draw_call          = true;
@@ -1201,16 +1201,16 @@ int main(int argc, char *argv[]) {
         data.window_name        += name;
         data.area               = {0, 0, s_resolution.width, s_resolution.height};
         data.style              = 0;
-        data.style              |= TOGL_STYLE_BIT_CENTERED;
+        data.style              |= TOGL_WINDOW_STYLE_BIT_CENTERED;
         data.icon_resource_id   = ICON_ID;
 
         if (!IsOption("no_debug"))                      data.log_level = TOGL_LOG_LEVEL_DEBUG;
 
-        if (IsOption("draw_area_size"))                 data.style |= TOGL_STYLE_BIT_DRAW_AREA_SIZE;
-        if (IsOption("draw_area_only"))                 data.style |= TOGL_STYLE_BIT_DRAW_AREA_ONLY;
-        if (IsOption("redraw_on_change_or_request"))    data.style |= TOGL_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
-        if (IsOption("no_resize"))                      data.style |= TOGL_STYLE_BIT_NO_RESIZE;
-        if (IsOption("no_maximize"))                    data.style |= TOGL_STYLE_BIT_NO_MAXIMIZE;
+        if (IsOption("draw_area_size"))                 data.style |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE;
+        if (IsOption("draw_area_only"))                 data.style |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_ONLY;
+        if (IsOption("redraw_on_change_or_request"))    data.style |= TOGL_WINDOW_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
+        if (IsOption("no_resize"))                      data.style |= TOGL_WINDOW_STYLE_BIT_NO_RESIZE;
+        if (IsOption("no_maximize"))                    data.style |= TOGL_WINDOW_STYLE_BIT_NO_MAXIMIZE;
 
         if (IsOption("notify_any_message"))             data.special_debug.is_notify_any_message        = true;
         if (IsOption("notify_draw_call"))               data.special_debug.is_notify_draw_call          = true;
@@ -1310,16 +1310,16 @@ int main(int argc, char *argv[]) {
         data.window_name            += name;
         data.area                   = {0, 0, s_resolution.width, s_resolution.height};
         data.style                  = 0;
-        data.style                  |= TOGL_STYLE_BIT_CENTERED;
+        data.style                  |= TOGL_WINDOW_STYLE_BIT_CENTERED;
         data.icon_resource_id       = ICON_ID;
 
         if (!IsOption("no_debug"))                      data.log_level = TOGL_LOG_LEVEL_DEBUG;
 
-        if (IsOption("draw_area_size"))                 data.style |= TOGL_STYLE_BIT_DRAW_AREA_SIZE;
-        if (IsOption("draw_area_only"))                 data.style |= TOGL_STYLE_BIT_DRAW_AREA_ONLY;
-        if (IsOption("redraw_on_change_or_request"))    data.style |= TOGL_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
-        if (IsOption("no_resize"))                      data.style |= TOGL_STYLE_BIT_NO_RESIZE;
-        if (IsOption("no_maximize"))                    data.style |= TOGL_STYLE_BIT_NO_MAXIMIZE;
+        if (IsOption("draw_area_size"))                 data.style |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE;
+        if (IsOption("draw_area_only"))                 data.style |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_ONLY;
+        if (IsOption("redraw_on_change_or_request"))    data.style |= TOGL_WINDOW_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
+        if (IsOption("no_resize"))                      data.style |= TOGL_WINDOW_STYLE_BIT_NO_RESIZE;
+        if (IsOption("no_maximize"))                    data.style |= TOGL_WINDOW_STYLE_BIT_NO_MAXIMIZE;
 
         if (IsOption("notify_any_message"))             data.special_debug.is_notify_any_message        = true;
         if (IsOption("notify_draw_call"))               data.special_debug.is_notify_draw_call          = true;
@@ -1506,7 +1506,7 @@ int main(int argc, char *argv[]) {
                     
                     s_actions.Add(1, [](){
                         puts("---");
-                        TOGL_Resize(s_resolution, TOGL_GetStyle() & TOGL_STYLE_BIT_DRAW_AREA_SIZE); 
+                        TOGL_Resize(s_resolution, TOGL_GetStyle() & TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE); 
                         PrintWindowStates();
                     });
                     
@@ -1778,16 +1778,16 @@ int main(int argc, char *argv[]) {
         data.window_name        += name;
         data.area               = {0, 0, s_resolution.width, s_resolution.height};
         data.style              = 0;
-        data.style              |= TOGL_STYLE_BIT_CENTERED;
+        data.style              |= TOGL_WINDOW_STYLE_BIT_CENTERED;
         data.icon_resource_id   = ICON_ID;
 
         if (!IsOption("no_debug"))                      data.log_level = TOGL_LOG_LEVEL_DEBUG;
 
-        if (IsOption("draw_area_size"))                 data.style |= TOGL_STYLE_BIT_DRAW_AREA_SIZE;
-        if (IsOption("draw_area_only"))                 data.style |= TOGL_STYLE_BIT_DRAW_AREA_ONLY;
-        if (IsOption("redraw_on_change_or_request"))    data.style |= TOGL_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
-        if (IsOption("no_resize"))                      data.style |= TOGL_STYLE_BIT_NO_RESIZE;
-        if (IsOption("no_maximize"))                    data.style |= TOGL_STYLE_BIT_NO_MAXIMIZE;
+        if (IsOption("draw_area_size"))                 data.style |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE;
+        if (IsOption("draw_area_only"))                 data.style |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_ONLY;
+        if (IsOption("redraw_on_change_or_request"))    data.style |= TOGL_WINDOW_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
+        if (IsOption("no_resize"))                      data.style |= TOGL_WINDOW_STYLE_BIT_NO_RESIZE;
+        if (IsOption("no_maximize"))                    data.style |= TOGL_WINDOW_STYLE_BIT_NO_MAXIMIZE;
 
         if (IsOption("notify_any_message"))             data.special_debug.is_notify_any_message        = true;
         if (IsOption("notify_draw_call"))               data.special_debug.is_notify_draw_call          = true;
@@ -1926,7 +1926,7 @@ int main(int argc, char *argv[]) {
         data.window_name        += name;
         data.area               = {0, 0, s_resolution.width, s_resolution.height};
         data.style              = 0;
-        data.style              |= TOGL_STYLE_BIT_CENTERED;
+        data.style              |= TOGL_WINDOW_STYLE_BIT_CENTERED;
         data.icon_resource_id   = ICON_ID;
         data.log_level          = TOGL_LOG_LEVEL_DEBUG;
 
@@ -1973,7 +1973,7 @@ int main(int argc, char *argv[]) {
         data.window_name        += name;
         data.area               = {0, 0, s_resolution.width, s_resolution.height};
         data.style              = 0;
-        data.style              |= TOGL_STYLE_BIT_CENTERED;
+        data.style              |= TOGL_WINDOW_STYLE_BIT_CENTERED;
         data.icon_resource_id   = ICON_ID;
         data.log_level          = TOGL_LOG_LEVEL_DEBUG;
         

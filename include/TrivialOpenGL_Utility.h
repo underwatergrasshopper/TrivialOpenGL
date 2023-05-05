@@ -416,7 +416,7 @@ enum TOGL_LogMessageTypeId {
 using TOGL_CustomLogFnP_T = void (*)(TOGL_LogMessageTypeId message_type, const char* message);
 
 using TOGL_LogLevel = uint32_t;
-enum : TOGL_LogLevel {
+enum : uint32_t {
     TOGL_LOG_LEVEL_ERROR         = 0,    // log errors
     TOGL_LOG_LEVEL_WARNING       = 1,    // log errors, warnings
     TOGL_LOG_LEVEL_INFO          = 2,    // log errors, warnings, infos

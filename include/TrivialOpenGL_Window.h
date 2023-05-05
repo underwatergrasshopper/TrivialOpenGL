@@ -14,14 +14,14 @@
 // Declarations
 //==========================================================================
 
-using TOGL_StyleBitfield = uint32_t;
+using TOGL_WindowStyleBitfield = uint32_t;
 enum : uint32_t {
-    TOGL_STYLE_BIT_NO_RESIZE                     = 0x0001,
-    TOGL_STYLE_BIT_NO_MAXIMIZE                   = 0x0002,
-    TOGL_STYLE_BIT_CENTERED                      = 0x0004,
-    TOGL_STYLE_BIT_DRAW_AREA_SIZE                = 0x0008,
-    TOGL_STYLE_BIT_DRAW_AREA_ONLY                = 0x0010,
-    TOGL_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST   = 0x0020,
+    TOGL_WINDOW_STYLE_BIT_NO_RESIZE                     = 0x0001,
+    TOGL_WINDOW_STYLE_BIT_NO_MAXIMIZE                   = 0x0002,
+    TOGL_WINDOW_STYLE_BIT_CENTERED                      = 0x0004,
+    TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE                = 0x0008,
+    TOGL_WINDOW_STYLE_BIT_DRAW_AREA_ONLY                = 0x0010,
+    TOGL_WINDOW_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST   = 0x0020,
 };
 
 enum TOGL_WindowStateId {
@@ -59,7 +59,7 @@ struct TOGL_Data {
     // DRAW_AREA_SIZE                 - Width and height from 'area' variable will set size of window draw area instead whole window area.
     // DRAW_AREA_ONLY                 - Window will contain only draw area (without borders and title bar).
     // REDRAW_ON_CHANGE_OR_REQUEST    - Window will only be redrawing on change or call of Window::RequestDraw method.
-    TOGL_StyleBitfield style               = 0;
+    TOGL_WindowStyleBitfield style               = 0;
 
     // Tries create OpenGL Rendering Context which support to at least this version, with compatibility to all previous versions.
     // If opengl_version.major and opengl_version.minor is DEF then creates for any available OpenGL version. Can be checked by GetOpenGL_Version().
@@ -262,7 +262,7 @@ public:
 
     // ---
 
-    TOGL_StyleBitfield GetStyle() const;
+    TOGL_WindowStyleBitfield GetStyle() const;
 
     TOGL_PointI GetCursorPosInDrawArea() const;
 
@@ -274,18 +274,18 @@ public:
     static TOGL_Window& To();
 
 private:
-    enum class AreaPartId {
-        POSITION,
-        POSITION_OFFSET,
-        SIZE,
-        ALL
+    enum AreaPartId {
+        TOGL_AREA_PART_ID_POSITION,
+        TOGL_AREA_PART_ID_POSITION_OFFSET,
+        TOGL_AREA_PART_ID_SIZE,
+        TOGL_AREA_PART_ID_ALL
     };
 
     // Window client area width extension to force functional windowed full screen window (reduced flashing and be able alt+tab in Windows 7).
     enum {
-        WIDTH_CORRECTION_TO_FAKE        = 1,
-        DEFAULT_TIMER_ID                = 1,
-        MAX_NUM_OF_UTF16_CODE_UNITS     = 2,
+        TOGL_WIDTH_CORRECTION_TO_FAKE        = 1,
+        TOGL_DEFAULT_TIMER_ID                = 1,
+        TOGL_MAX_NUM_OF_UTF16_CODE_UNITS     = 2,
     };
 
    // Corrects window position and size to remove invisible window frame in Windows 10. 
@@ -412,7 +412,6 @@ private:
     // Changes area by applying style from data parameter which was provided to Run function.
     void ChangeArea(const TOGL_AreaIU16& area);
 
-    void SingletonCheck();
     HICON TryLoadIcon();
     int ExecuteMainLoop();
 
@@ -472,7 +471,7 @@ private:
 
     std::map<bool*, std::stack<bool>>   m_on_off_stack_map;
 
-    wchar_t                             m_char_utf16[MAX_NUM_OF_UTF16_CODE_UNITS];
+    wchar_t                             m_char_utf16[TOGL_MAX_NUM_OF_UTF16_CODE_UNITS];
 };
 
 
@@ -636,7 +635,7 @@ inline bool TOGL_IsForeground() {
 
 // ---
 
-inline TOGL_StyleBitfield TOGL_GetStyle() {
+inline TOGL_WindowStyleBitfield TOGL_GetStyle() {
     return TOGL_ToWindow().GetStyle();
 }
 
@@ -741,9 +740,9 @@ inline int TOGL_Window::Run(const TOGL_Data& data) {
         TOGL_LogFatalError("Error TOGL_Window::Run: Cannot create window class.");
     }
     m_window_style = WS_OVERLAPPEDWINDOW;
-    if (m_data.style & TOGL_STYLE_BIT_NO_RESIZE)     m_window_style &= ~WS_THICKFRAME;
-    if (m_data.style & TOGL_STYLE_BIT_NO_MAXIMIZE)   m_window_style &= ~WS_MAXIMIZEBOX;
-    if (m_data.style & TOGL_STYLE_BIT_DRAW_AREA_ONLY) {
+    if (m_data.style & TOGL_WINDOW_STYLE_BIT_NO_RESIZE)     m_window_style &= ~WS_THICKFRAME;
+    if (m_data.style & TOGL_WINDOW_STYLE_BIT_NO_MAXIMIZE)   m_window_style &= ~WS_MAXIMIZEBOX;
+    if (m_data.style & TOGL_WINDOW_STYLE_BIT_DRAW_AREA_ONLY) {
         m_window_style          = GetWindowStyle_DrawAreaOnly();
         m_window_extended_style = GetWindowExtendedStyle_DrawAreaOnly();
     }
@@ -765,7 +764,7 @@ inline int TOGL_Window::Run(const TOGL_Data& data) {
     }
 
     if (m_data.timer_time_interval > 0) {
-        const UINT_PTR result = SetTimer(m_window_handle, DEFAULT_TIMER_ID, m_data.timer_time_interval, NULL);
+        const UINT_PTR result = SetTimer(m_window_handle, TOGL_DEFAULT_TIMER_ID, m_data.timer_time_interval, NULL);
 
         if (!result) TOGL_LogFatalError(std::string() + "Can not set timer. (windows error code:" + std::to_string(GetLastError()) + ")");
     }
@@ -814,28 +813,28 @@ inline bool TOGL_Window::IsEnabled(TOGL_WindowOptionId window_option) const {
 //--------------------------------------------------------------------------
 
 inline void TOGL_Window::MoveTo(int x, int y, bool is_draw_area) {
-    SetArea({x, y, 0, 0}, AreaPartId::POSITION, is_draw_area);
+    SetArea({x, y, 0, 0}, TOGL_AREA_PART_ID_POSITION, is_draw_area);
 }
 inline void TOGL_Window::MoveTo(const TOGL_PointI& pos, bool is_draw_area) {
     MoveTo(pos.x, pos.y, is_draw_area);
 }
 
 inline void TOGL_Window::MoveBy(int x, int y) {
-    SetArea({x, y, 0, 0}, AreaPartId::POSITION_OFFSET, false);
+    SetArea({x, y, 0, 0}, TOGL_AREA_PART_ID_POSITION_OFFSET, false);
 }
 inline void TOGL_Window::MoveBy(const TOGL_PointI& offset) {
     MoveBy(offset.x, offset.y);
 }
 
 inline void TOGL_Window::Resize(uint16_t width, uint16_t height, bool is_draw_area) {
-    SetArea({0, 0, width, height}, AreaPartId::SIZE, is_draw_area);
+    SetArea({0, 0, width, height}, TOGL_AREA_PART_ID_SIZE, is_draw_area);
 }
 inline void TOGL_Window::Resize(const TOGL_SizeU16& size, bool is_draw_area) {
     Resize(size.width, size.height, is_draw_area);
 }
 
 inline void TOGL_Window::SetArea(int x, int y, uint16_t width, uint16_t height, bool is_draw_area) {
-    SetArea({x, y, width, height}, AreaPartId::ALL, is_draw_area);
+    SetArea({x, y, width, height}, TOGL_AREA_PART_ID_ALL, is_draw_area);
 }
 inline void TOGL_Window::SetArea(const TOGL_AreaIU16& area, bool is_draw_area) {
     SetArea(area.x, area.y, area.width, area.height, is_draw_area);
@@ -844,11 +843,11 @@ inline void TOGL_Window::SetArea(const TOGL_AreaIU16& area, bool is_draw_area) {
 //--------------------------------------------------------------------------
 
 inline void TOGL_Window::Center(const TOGL_SizeU16& size) {
-    Center(size, m_data.style & TOGL_STYLE_BIT_DRAW_AREA_SIZE);
+    Center(size, m_data.style & TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE);
 }
 
 inline void TOGL_Window::Center(uint16_t width, uint16_t height) {
-    Center(width, height, m_data.style & TOGL_STYLE_BIT_DRAW_AREA_SIZE);
+    Center(width, height, m_data.style & TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE);
 }
 
 inline void TOGL_Window::Center(const TOGL_SizeU16& size, bool is_draw_area_size) {
@@ -875,7 +874,7 @@ inline void TOGL_Window::Center(uint16_t width, uint16_t height, bool is_draw_ar
 
 
 inline void TOGL_Window::ChangeArea(const TOGL_AreaIU16& area) {
-    SetArea(GenerateWindowArea(area), AreaPartId::ALL, m_data.style & TOGL_STYLE_BIT_DRAW_AREA_ONLY);
+    SetArea(GenerateWindowArea(area), TOGL_AREA_PART_ID_ALL, m_data.style & TOGL_WINDOW_STYLE_BIT_DRAW_AREA_ONLY);
 }
 
 //--------------------------------------------------------------------------
@@ -896,7 +895,7 @@ inline TOGL_AreaIU16 TOGL_Window::GetArea() const {
     TOGL_AreaIU16 area = GetWindowArea(m_window_handle);
     
     // Workaround.
-    if (IsWindowedFullScreen()) area.width -= WIDTH_CORRECTION_TO_FAKE;
+    if (IsWindowedFullScreen()) area.width -= TOGL_WIDTH_CORRECTION_TO_FAKE;
     
     return m_window_area_corrector.RemoveInvisibleFrameFrom(area, m_window_handle);
 }
@@ -919,7 +918,7 @@ inline TOGL_AreaIU16 TOGL_Window::GetDrawArea() const {
         TOGL_AreaIU16 area = TOGL_MakeAreaIU16(r);
     
         // Workaround.
-        if (IsWindowedFullScreen()) area.width -= WIDTH_CORRECTION_TO_FAKE;
+        if (IsWindowedFullScreen()) area.width -= TOGL_WIDTH_CORRECTION_TO_FAKE;
     
         return area;
     }
@@ -984,7 +983,7 @@ inline void TOGL_Window::Maximize() {
         ShowWindow(m_window_handle, SW_RESTORE);
     }
 
-    if (m_data.style & TOGL_STYLE_BIT_DRAW_AREA_ONLY) {
+    if (m_data.style & TOGL_WINDOW_STYLE_BIT_DRAW_AREA_ONLY) {
         const TOGL_SizeU16 work_area_size = TOGL_GetDesktopAreaSizeNoTaskBar();
 
         Push(m_is_enable_change_state_at_resize, false);
@@ -1026,7 +1025,7 @@ inline void TOGL_Window::GoWindowedFullScreen() {
     Push(m_is_enable_change_state_at_resize, false);
     m_is_apply_fake_width = true;
 
-    SetWindowPos(m_window_handle, HWND_TOP, screen_area.x, screen_area.y, screen_area.width + WIDTH_CORRECTION_TO_FAKE, screen_area.height, SWP_SHOWWINDOW);
+    SetWindowPos(m_window_handle, HWND_TOP, screen_area.x, screen_area.y, screen_area.width + TOGL_WIDTH_CORRECTION_TO_FAKE, screen_area.height, SWP_SHOWWINDOW);
 
     m_is_apply_fake_width = false;
     Pop(m_is_enable_change_state_at_resize);
@@ -1064,7 +1063,7 @@ inline bool TOGL_Window::IsForeground() const {
 
 //--------------------------------------------------------------------------
 
-inline TOGL_StyleBitfield TOGL_Window::GetStyle() const {
+inline TOGL_WindowStyleBitfield TOGL_Window::GetStyle() const {
     return m_data.style;
 }
 
@@ -1130,7 +1129,7 @@ inline HICON TOGL_Window::TryLoadIcon() {
 inline int TOGL_Window::ExecuteMainLoop() {
     MSG msg = {};
 
-    if (m_data.style & TOGL_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST) {
+    if (m_data.style & TOGL_WINDOW_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST) {
 
         while (GetMessageW(&msg, NULL, 0, 0)) {
             TranslateMessage(&msg);
@@ -1187,7 +1186,7 @@ inline TOGL_AreaIU16 TOGL_Window::GenerateWindowArea(const TOGL_AreaIU16& area) 
     if (window_area.width < 0)    window_area.width = 0;
     if (window_area.height < 1)   window_area.height = 1;
 
-    if ((m_data.style & TOGL_STYLE_BIT_DRAW_AREA_SIZE) && !(m_data.style & TOGL_STYLE_BIT_DRAW_AREA_ONLY)) {
+    if ((m_data.style & TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE) && !(m_data.style & TOGL_WINDOW_STYLE_BIT_DRAW_AREA_ONLY)) {
         const TOGL_AreaIU16 window_area_with_invisible_frame = GetWindowAreaFromDrawArea(window_area, m_window_style);
 
         window_area = m_window_area_corrector.RemoveInvisibleFrameFrom(window_area_with_invisible_frame, m_window_handle);
@@ -1195,7 +1194,7 @@ inline TOGL_AreaIU16 TOGL_Window::GenerateWindowArea(const TOGL_AreaIU16& area) 
 
     // --- Position --- //
 
-    if (m_data.style & TOGL_STYLE_BIT_CENTERED) {
+    if (m_data.style & TOGL_WINDOW_STYLE_BIT_CENTERED) {
         window_area.x = (desktop_area.width - window_area.width) / 2;
         window_area.y = (desktop_area.height - window_area.height) / 2;
     } else {
@@ -1246,15 +1245,15 @@ inline void TOGL_Window::Restore() {
 inline void TOGL_Window::SetArea(const TOGL_AreaIU16& area, AreaPartId area_part_id, bool is_draw_area) {
     auto GetFlags = [](AreaPartId area_part_id) -> UINT {
         switch (area_part_id) {
-        case AreaPartId::POSITION:          return SWP_NOSIZE;
-        case AreaPartId::POSITION_OFFSET:   return SWP_NOSIZE;
-        case AreaPartId::SIZE:              return SWP_NOMOVE;
-        case AreaPartId::ALL:               return 0;
+        case TOGL_AREA_PART_ID_POSITION:          return SWP_NOSIZE;
+        case TOGL_AREA_PART_ID_POSITION_OFFSET:   return SWP_NOSIZE;
+        case TOGL_AREA_PART_ID_SIZE:              return SWP_NOMOVE;
+        case TOGL_AREA_PART_ID_ALL:               return 0;
         }
         return 0;
     };
 
-    const bool is_skip = IsMinimized(m_window_handle) && area_part_id == AreaPartId::POSITION_OFFSET;
+    const bool is_skip = IsMinimized(m_window_handle) && area_part_id == TOGL_AREA_PART_ID_POSITION_OFFSET;
 
     if (!is_skip) {
         if (!m_is_visible) {
@@ -1265,7 +1264,7 @@ inline void TOGL_Window::SetArea(const TOGL_AreaIU16& area, AreaPartId area_part
   
         TOGL_AreaIU16 raw_area;
 
-        if (area_part_id == AreaPartId::POSITION_OFFSET) {
+        if (area_part_id == TOGL_AREA_PART_ID_POSITION_OFFSET) {
             raw_area = GetWindowArea(m_window_handle);
             raw_area.x += area.x;
             raw_area.y += area.y;
@@ -1697,7 +1696,7 @@ inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WP
 
             dbg_msg += std::string() + " " + GetRequest(w_param);
 
-            if (m_is_apply_fake_width) dbg_msg += " fake_width=" + std::to_string(width - WIDTH_CORRECTION_TO_FAKE);
+            if (m_is_apply_fake_width) dbg_msg += " fake_width=" + std::to_string(width - TOGL_WIDTH_CORRECTION_TO_FAKE);
 
             if (!m_is_enable_do_on_resize) dbg_msg += " without:do_on_resize";
 
@@ -1709,7 +1708,7 @@ inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WP
         if (m_data.do_on_resize) {
             if (m_is_enable_do_on_resize) {
                 if (m_is_apply_fake_width) {
-                    m_data.do_on_resize(LOWORD(l_param) - WIDTH_CORRECTION_TO_FAKE, HIWORD(l_param));
+                    m_data.do_on_resize(LOWORD(l_param) - TOGL_WIDTH_CORRECTION_TO_FAKE, HIWORD(l_param));
                 } else {
                     m_data.do_on_resize(LOWORD(l_param), HIWORD(l_param));
                 }
@@ -1866,7 +1865,7 @@ inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WP
         break;                                
  
     case WM_TIMER:
-        if (w_param == DEFAULT_TIMER_ID) {
+        if (w_param == TOGL_DEFAULT_TIMER_ID) {
             if (m_data.do_on_time) m_data.do_on_time(m_data.timer_time_interval);
         }
         return 0;
