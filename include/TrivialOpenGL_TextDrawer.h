@@ -9,168 +9,74 @@
 #include "TrivialOpenGL_Font.h"
 #include "TrivialOpenGL_FineText.h"
 
+//==========================================================================
+// Declarations
+//==========================================================================
+
 enum TOGL_TextDrawerOrientationId {
     TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_BOTTOM,
     TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_TOP,
 };
 
+//------------------------------------------------------------------------------
+// TOGL_TextDrawer
+//------------------------------------------------------------------------------
+
 class TOGL_TextDrawer {
 public:
-    TOGL_TextDrawer() {
-        Reset();
-    }
-
-    virtual ~TOGL_TextDrawer() {}
+    TOGL_TextDrawer();
+    virtual ~TOGL_TextDrawer();
 
     // ---
 
-    void Reset() {
-        SetOrientation(TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_BOTTOM);
-        SetPos(0, 0);
+    void Reset();
 
-        m_color = {255, 255, 255, 255};
+    void SetPos(int x, int y);
+    void SetPos(const TOGL_PointI& pos);
 
-        m_text_preparer.Reset();
-    }
+    void SetColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+    void SetColor(const TOGL_Color4U8& color);
 
-    void SetPos(int x, int y) {
-        SetPos({x, y});
-    }
-
-    void SetPos(const TOGL_PointI& pos) {
-        m_pos   = pos;
-        m_base  = pos;
-    }
-
-    void SetColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-        SetColor({r, g, b, a});
-    }
-
-    void SetColor(const TOGL_Color4U8& color) {
-        m_color = color;
-    }
-
-    void SetNumberOfSpacesInTab(uint32_t number) {
-        m_text_preparer.SetNumberOfSpacesInTab(number);
-    }
+    void SetNumberOfSpacesInTab(uint32_t number);
 
     // width        - in pixels
-    void SetLineWrapWidth(uint32_t width) {
-        m_text_preparer.SetLineWrapWidth(width);
-    }
+    void SetLineWrapWidth(uint32_t width);
 
     // ---
         
     // text             - Encoding format: UTF8.
-    void RenderText(TOGL_Font& font, const std::string& text) {
-        RenderText(font, TOGL_FineText(text));
-    }
-    void RenderText(TOGL_Font& font, const TOGL_FineText& text) {
-        RenderSolvedText(font, m_text_preparer.PrepareText(font, text));
-    }
+    void RenderText(TOGL_Font& font, const std::string& text);
+    void RenderText(TOGL_Font& font, const TOGL_FineText& text);
 
     // text             - Encoding format: UTF8.
-    TOGL_SizeU GetTextSize(TOGL_Font& font, const std::string& text) const {
-        return GetTextSize(font,  TOGL_FineText(text));
-    }
-
-    TOGL_SizeU GetTextSize(TOGL_Font& font, const  TOGL_FineText& text) const {
-        return GetSolvedTextSize(font, m_text_preparer.PrepareText(font, text));
-    }
+    TOGL_SizeU GetTextSize(TOGL_Font& font, const std::string& text) const;
+    TOGL_SizeU GetTextSize(TOGL_Font& font, const  TOGL_FineText& text) const;
 
     // ---
 
-    void SetOrientation(TOGL_TextDrawerOrientationId orientation) {
-        m_orientation = orientation;
-
-        switch (m_orientation) {
-        case TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_BOTTOM:
-            m_orientation_factor_y = -1;
-            break;
-        case TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_TOP:
-            m_orientation_factor_y = 1;
-            break;
-        }
-    }
-
-    TOGL_TextDrawerOrientationId GetOrientation() const {
-        return m_orientation;
-    }
+    void SetOrientation(TOGL_TextDrawerOrientationId orientation);
+    TOGL_TextDrawerOrientationId GetOrientation() const;
 
 private:
 
     class TextPreparer {
     public:
-        TextPreparer() {            
-            Reset();
+        TextPreparer();
+        virtual ~TextPreparer();
 
-            m_width_of_full_tab = 0;        
-            m_line_width        = 0;   
-        }
-        virtual ~TextPreparer() {}
-
-        void Reset() {
-            m_wrap_line_width = 0;
-            SetNumberOfSpacesInTab(4);
-        }
+        void Reset();
 
         // width        - in pixels
-        void SetLineWrapWidth(uint32_t width) {
-            m_wrap_line_width = width;
-        }
+        void SetLineWrapWidth(uint32_t width);
+        void SetNumberOfSpacesInTab(uint32_t number);
 
-        void SetNumberOfSpacesInTab(uint32_t number) {
-            m_num_of_spaces_in_tab = number;
-            m_tab_as_spaces = std::wstring(number, L' ');
-        }
-
-        static TOGL_SizeU GetWordSize(const TOGL_Font& font, const std::wstring& word) {
-            TOGL_SizeU size;
-            size.height = font.GetGlyphHeight();
-            for (const wchar_t c : word) size.width += font.GetGlyphSize(c).width;
-            return size;
-        }
-
-        static uint32_t GetWordWidth(const TOGL_Font& font, const std::wstring& word) {
-            uint32_t width = 0;
-            for (const wchar_t c : word) width += font.GetGlyphSize(c).width;
-            return width;
-        }
+        static TOGL_SizeU GetWordSize(const TOGL_Font& font, const std::wstring& word);
+        static uint32_t GetWordWidth(const TOGL_Font& font, const std::wstring& word);
 
         // width - in pixels
-        static size_t GetGlyphCountInWidth(const TOGL_Font& font, const std::wstring& word, uint32_t max_width) {
-            size_t      count = 0;
-            uint32_t    width = 0;
-            for (const wchar_t c : word) {
-                width += font.GetGlyphSize(c).width;
-                if (max_width < width) break;
-                count += 1;
-            }
-            return count;
-        }
+        static size_t GetGlyphCountInWidth(const TOGL_Font& font, const std::wstring& word, uint32_t max_width);
 
-            TOGL_FineText PrepareText(const TOGL_Font& font, const  TOGL_FineText& text) const {
-                TOGL_FineText prepared_text;
-
-            uint32_t line_width = 0; // in pixels
-
-            for (const TOGL_FineTextElement& element : text.ToElements()) {
-                switch (element.GetTypeId()) {
-                case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_TEXT:
-                    prepared_text += PrepareTextElementText(font, element.GetText(), line_width);
-                    break;
-                case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
-                    prepared_text += PrepareTextElementHorizontalSpacer(font, element.GetTextHorizontalSpacer(), line_width);
-                    break;
-                case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_COLOR:
-                    prepared_text.Append(element);
-                    break;
-
-                } // switch
-            }
- 
-            return prepared_text;
-        }
+        TOGL_FineText PrepareText(const TOGL_Font& font, const  TOGL_FineText& text) const;
 
     private:
         uint32_t            m_num_of_spaces_in_tab;
@@ -186,215 +92,20 @@ private:
         //     '\n'         # new line
         //     ' '          # space
         //     '[^\t\n ]'   # any array of characters which doesn't contain tab, new line or space
-        static size_t GetWordPos(const std::wstring& text, size_t current_pos) {
-            auto IsWhiteSpace = [](wchar_t c) -> bool {
-                return c == L' ' || c == L'\t' || c == L'\n';
-            };
+        static size_t GetWordPos(const std::wstring& text, size_t current_pos);
 
-            for (size_t next_word_pos = current_pos; next_word_pos < text.size(); ++next_word_pos) {
-                const wchar_t c = text[next_word_pos];
+        static std::vector<std::wstring> SplitToWords(const std::wstring& text);
 
-                if (IsWhiteSpace(text[next_word_pos])) return next_word_pos + 1;
-                if (next_word_pos + 1 < text.size() && IsWhiteSpace(text[next_word_pos + 1])) return next_word_pos + 1;
-            }
-            return std::wstring::npos;
-        };
-
-        static std::vector<std::wstring> SplitToWords(const std::wstring& text) {
-            std::vector<std::wstring> words;
-
-            size_t pos = 0;
-            while (pos < text.size()) {
-                size_t next_word_pos = GetWordPos(text, pos);
-
-                const std::wstring word = text.substr(pos, next_word_pos - pos);
-
-                words.push_back(word);
-                pos = next_word_pos;
-            }
-
-            return words;
-        };
-
-        TOGL_FineText PrepareTextElementHorizontalSpacer(const TOGL_Font & font, const TOGL_TextHorizontalSpacer& text_horizontal_spacer, uint32_t & line_width) const {
-            TOGL_FineText prepared_fine_text;
-
-            const uint32_t spacer_width = text_horizontal_spacer.GetWidth();
-
-            if (spacer_width + line_width > m_wrap_line_width) {
-                prepared_fine_text.Append(TOGL_FineTextElement(L"\n"));
-                line_width = 0;
-            }
-            prepared_fine_text.Append(text_horizontal_spacer);
-            line_width += spacer_width;
-
-            return prepared_fine_text;
-        }
-
-        TOGL_FineText PrepareTextElementText(const TOGL_Font& font, const std::wstring& text, uint32_t& line_width) const {
-            TOGL_FineText prepared_fine_text;
-            std::wstring prepared_text;
-
-            const uint32_t width_of_full_tab = GetWordWidth(font, m_tab_as_spaces); // in pixels
-
-            const std::vector<std::wstring> words = SplitToWords(text);
-
-            for (const auto& word : words) {
-                const uint32_t word_width = GetWordWidth(font, word);
-
-                if (word == L"\n") {
-                    prepared_text   += word;
-                    line_width      = 0;
-
-                } else if (word == L"\t") {
-                    uint32_t width_of_tab = width_of_full_tab - (line_width % width_of_full_tab);
-                    if (width_of_tab == 0) width_of_tab = width_of_full_tab;
-                        
-                    if (m_wrap_line_width != 0 && (line_width + width_of_full_tab) > m_wrap_line_width) {
-                        prepared_text   += L"\n";
-                        line_width      = 0;
-
-                        width_of_tab = width_of_full_tab;
-                    } 
-
-                    prepared_fine_text.Append(prepared_text, TOGL_TextHorizontalSpacer(width_of_tab));
-                    prepared_text = L"";
-
-                    line_width += width_of_tab;
-                } else {
-                    if (m_wrap_line_width != 0 && (line_width + word_width) > m_wrap_line_width) {
-                        // Word is crossing wrap line width. Needs to be moved or split.
-
-                        // Spaces are ignored if they are behind wrap line width.
-                        if (word != L" ") {
-
-                            if (word_width > m_wrap_line_width) {
-                                // Word is longer than line. Must be split between two or multiple lines.
-                                std::wstring    long_word       = word;
-                                uint32_t        long_word_width = word_width;
-
-                                while (long_word_width > m_wrap_line_width) {
-                                    const uint32_t line_width_left = m_wrap_line_width - line_width;
-
-                                    const size_t glyph_count = GetGlyphCountInWidth(font, long_word, line_width_left);
-
-                                    prepared_text   += long_word.substr(0, glyph_count);
-                                    prepared_text   += L"\n";
-                                    line_width      = 0;
-
-                                    long_word       = long_word.substr(glyph_count);
-                                    long_word_width = GetWordWidth(font, long_word);
-                                }
-
-                                prepared_text   += long_word;
-                                line_width      += long_word_width;
-
-                            } else {
-                                // Word is shorter than line. Whole word is moved to next line
-                                prepared_text   += L"\n";
-                                line_width      = 0;
-
-                                prepared_text   += word;
-                                line_width      += word_width;
-                            }
-                        }
-  
-                    } else {
-                        prepared_text   += word;
-                        line_width      += word_width;
-                    }
-
-                }
-            }
-            prepared_fine_text.Append(prepared_text);
-            return prepared_fine_text;
-        }
-
+        TOGL_FineText PrepareTextElementHorizontalSpacer(const TOGL_Font & font, const TOGL_TextHorizontalSpacer& text_horizontal_spacer, uint32_t & line_width) const;
+        TOGL_FineText PrepareTextElementText(const TOGL_Font& font, const std::wstring& text, uint32_t& line_width) const;
     };
 
-    static void ReplaceAll(std::string& text, const std::string& from, const std::string& to) {
-        if (!from.empty()) {
-            size_t pos = 0;
-            while((pos = text.find(from, pos)) != std::string::npos) {
-                text.replace(pos, from.length(), to);
-                pos += to.length();
-            }
-        }
-    }
+    static void ReplaceAll(std::string& text, const std::string& from, const std::string& to);
 
-    void RenderSolvedText(TOGL_Font& font, const TOGL_FineText& text) {
-        glPushAttrib(GL_CURRENT_BIT);
-        glColor4ubv(m_color.ToData());
-
-        for (const TOGL_FineTextElement& element : text.ToElements()) {
-            switch (element.GetTypeId()) {
-
-            case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_TEXT:
-                font.RenderBegin();
-                for (const uint32_t code : element.GetText()) {
-                    if (code == '\n') {
-                        m_pos.x = m_base.x;
-                        m_pos.y += font.GetGlyphHeight() * m_orientation_factor_y;
-                    } else {
-                        glPushMatrix();
-                        glTranslatef(float(m_pos.x), float(m_pos.y), 0);
-
-                        font.RenderGlyph(code);
-                        m_pos.x += font.GetGlyphSize(code).width;
-
-                        glPopMatrix();
-                    }
-                }
-                font.RenderEnd();
-                break;
-
-            case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_COLOR:
-                glColor4ubv(element.GetColor().ToData());
-                break;
-
-            case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
-                m_pos.x += element.GetTextHorizontalSpacer().GetWidth();
-                break;
-            } // switch
-        }
-
-        glPopAttrib();
-    }
+    void RenderSolvedText(TOGL_Font& font, const TOGL_FineText& text);
 
     // text             - Encoding format: UTF8.
-    TOGL_SizeU GetSolvedTextSize(TOGL_Font& font, const TOGL_FineText& text) const {
-        TOGL_SizeU size = {0, font.GetGlyphHeight()};
-        uint32_t width = 0;
-
-
-        for (const TOGL_FineTextElement& element : text.ToElements()) {
-            switch (element.GetTypeId()) {
-
-            case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_TEXT:
-                for (const uint32_t code : element.GetText()) {
-                    if (code == '\n') {
-                        size.height += font.GetGlyphHeight();
-
-                        if (size.width < width) size.width = width;
-                        width = 0;
-                    } else {
-                        width += font.GetGlyphSize(code).width;
-                    }
-                }
-                break;
-            case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_COLOR:
-                break;
-
-            case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
-                width += element.GetTextHorizontalSpacer().GetWidth();
-                break;
-            }
-        }
-
-        if (size.width < width) size.width = width;
-
-        return size;
-    }
+    TOGL_SizeU GetSolvedTextSize(TOGL_Font& font, const TOGL_FineText& text) const;
 
     TOGL_TextDrawerOrientationId   m_orientation;
     uint32_t                m_orientation_factor_y;
@@ -406,5 +117,371 @@ private:
         
     TextPreparer            m_text_preparer;
 };
+
+//==========================================================================
+// Definitions
+//==========================================================================
+
+//------------------------------------------------------------------------------
+// TOGL_TextDrawer
+//------------------------------------------------------------------------------
+
+inline TOGL_TextDrawer::TOGL_TextDrawer() {
+    Reset();
+}
+
+inline TOGL_TextDrawer::~TOGL_TextDrawer() {
+
+}
+
+inline void TOGL_TextDrawer::Reset() {
+    SetOrientation(TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_BOTTOM);
+    SetPos(0, 0);
+
+    m_color = {255, 255, 255, 255};
+
+    m_text_preparer.Reset();
+}
+
+inline void TOGL_TextDrawer::SetPos(int x, int y) {
+    SetPos({x, y});
+}
+
+inline void TOGL_TextDrawer::SetPos(const TOGL_PointI& pos) {
+    m_pos   = pos;
+    m_base  = pos;
+}
+
+inline void TOGL_TextDrawer::SetColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+    SetColor({r, g, b, a});
+}
+
+inline void TOGL_TextDrawer::SetColor(const TOGL_Color4U8& color) {
+    m_color = color;
+}
+
+inline void TOGL_TextDrawer::SetNumberOfSpacesInTab(uint32_t number) {
+    m_text_preparer.SetNumberOfSpacesInTab(number);
+}
+
+inline void TOGL_TextDrawer::SetLineWrapWidth(uint32_t width) {
+    m_text_preparer.SetLineWrapWidth(width);
+}
+
+inline void TOGL_TextDrawer::RenderText(TOGL_Font& font, const std::string& text) {
+    RenderText(font, TOGL_FineText(text));
+}
+inline void TOGL_TextDrawer::RenderText(TOGL_Font& font, const TOGL_FineText& text) {
+    RenderSolvedText(font, m_text_preparer.PrepareText(font, text));
+}
+
+inline TOGL_SizeU TOGL_TextDrawer::GetTextSize(TOGL_Font& font, const std::string& text) const {
+    return GetTextSize(font,  TOGL_FineText(text));
+}
+
+inline TOGL_SizeU TOGL_TextDrawer::GetTextSize(TOGL_Font& font, const  TOGL_FineText& text) const {
+    return GetSolvedTextSize(font, m_text_preparer.PrepareText(font, text));
+}
+
+inline void TOGL_TextDrawer::SetOrientation(TOGL_TextDrawerOrientationId orientation) {
+    m_orientation = orientation;
+
+    switch (m_orientation) {
+    case TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_BOTTOM:
+        m_orientation_factor_y = -1;
+        break;
+    case TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_TOP:
+        m_orientation_factor_y = 1;
+        break;
+    }
+}
+
+inline TOGL_TextDrawerOrientationId TOGL_TextDrawer::GetOrientation() const {
+    return m_orientation;
+}
+
+//------------------------------------------------------------------------------
+
+inline TOGL_TextDrawer::TextPreparer::TextPreparer() {            
+    Reset();
+
+    m_width_of_full_tab = 0;        
+    m_line_width        = 0;   
+}
+
+inline TOGL_TextDrawer::TextPreparer::~TextPreparer() {
+
+}
+
+inline void TOGL_TextDrawer::TextPreparer::Reset() {
+    m_wrap_line_width = 0;
+    SetNumberOfSpacesInTab(4);
+}
+
+inline void TOGL_TextDrawer::TextPreparer::SetLineWrapWidth(uint32_t width) {
+    m_wrap_line_width = width;
+}
+
+inline void TOGL_TextDrawer::TextPreparer::SetNumberOfSpacesInTab(uint32_t number) {
+    m_num_of_spaces_in_tab = number;
+    m_tab_as_spaces = std::wstring(number, L' ');
+}
+
+inline TOGL_SizeU TOGL_TextDrawer::TextPreparer::GetWordSize(const TOGL_Font& font, const std::wstring& word) {
+    TOGL_SizeU size;
+    size.height = font.GetGlyphHeight();
+    for (const wchar_t c : word) size.width += font.GetGlyphSize(c).width;
+    return size;
+}
+
+inline uint32_t TOGL_TextDrawer::TextPreparer::GetWordWidth(const TOGL_Font& font, const std::wstring& word) {
+    uint32_t width = 0;
+    for (const wchar_t c : word) width += font.GetGlyphSize(c).width;
+    return width;
+}
+
+inline size_t TOGL_TextDrawer::TextPreparer::GetGlyphCountInWidth(const TOGL_Font& font, const std::wstring& word, uint32_t max_width) {
+    size_t      count = 0;
+    uint32_t    width = 0;
+    for (const wchar_t c : word) {
+        width += font.GetGlyphSize(c).width;
+        if (max_width < width) break;
+        count += 1;
+    }
+    return count;
+}
+
+inline TOGL_FineText TOGL_TextDrawer::TextPreparer::PrepareText(const TOGL_Font& font, const  TOGL_FineText& text) const {
+    TOGL_FineText prepared_text;
+
+    uint32_t line_width = 0; // in pixels
+
+    for (const TOGL_FineTextElement& element : text.ToElements()) {
+        switch (element.GetTypeId()) {
+        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_TEXT:
+            prepared_text += PrepareTextElementText(font, element.GetText(), line_width);
+            break;
+        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
+            prepared_text += PrepareTextElementHorizontalSpacer(font, element.GetTextHorizontalSpacer(), line_width);
+            break;
+        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_COLOR:
+            prepared_text.Append(element);
+            break;
+
+        } // switch
+    }
+ 
+    return prepared_text;
+}
+
+
+inline size_t TOGL_TextDrawer::TextPreparer::GetWordPos(const std::wstring& text, size_t current_pos) {
+    auto IsWhiteSpace = [](wchar_t c) -> bool {
+        return c == L' ' || c == L'\t' || c == L'\n';
+    };
+
+    for (size_t next_word_pos = current_pos; next_word_pos < text.size(); ++next_word_pos) {
+        const wchar_t c = text[next_word_pos];
+
+        if (IsWhiteSpace(text[next_word_pos])) return next_word_pos + 1;
+        if (next_word_pos + 1 < text.size() && IsWhiteSpace(text[next_word_pos + 1])) return next_word_pos + 1;
+    }
+    return std::wstring::npos;
+};
+
+inline std::vector<std::wstring> TOGL_TextDrawer::TextPreparer::SplitToWords(const std::wstring& text) {
+    std::vector<std::wstring> words;
+
+    size_t pos = 0;
+    while (pos < text.size()) {
+        size_t next_word_pos = GetWordPos(text, pos);
+
+        const std::wstring word = text.substr(pos, next_word_pos - pos);
+
+        words.push_back(word);
+        pos = next_word_pos;
+    }
+
+    return words;
+};
+
+inline TOGL_FineText TOGL_TextDrawer::TextPreparer::PrepareTextElementHorizontalSpacer(const TOGL_Font & font, const TOGL_TextHorizontalSpacer& text_horizontal_spacer, uint32_t & line_width) const {
+    TOGL_FineText prepared_fine_text;
+
+    const uint32_t spacer_width = text_horizontal_spacer.GetWidth();
+
+    if (spacer_width + line_width > m_wrap_line_width) {
+        prepared_fine_text.Append(TOGL_FineTextElement(L"\n"));
+        line_width = 0;
+    }
+    prepared_fine_text.Append(text_horizontal_spacer);
+    line_width += spacer_width;
+
+    return prepared_fine_text;
+}
+
+inline TOGL_FineText TOGL_TextDrawer::TextPreparer::PrepareTextElementText(const TOGL_Font& font, const std::wstring& text, uint32_t& line_width) const {
+    TOGL_FineText prepared_fine_text;
+    std::wstring prepared_text;
+
+    const uint32_t width_of_full_tab = GetWordWidth(font, m_tab_as_spaces); // in pixels
+
+    const std::vector<std::wstring> words = SplitToWords(text);
+
+    for (const auto& word : words) {
+        const uint32_t word_width = GetWordWidth(font, word);
+
+        if (word == L"\n") {
+            prepared_text   += word;
+            line_width      = 0;
+
+        } else if (word == L"\t") {
+            uint32_t width_of_tab = width_of_full_tab - (line_width % width_of_full_tab);
+            if (width_of_tab == 0) width_of_tab = width_of_full_tab;
+                        
+            if (m_wrap_line_width != 0 && (line_width + width_of_full_tab) > m_wrap_line_width) {
+                prepared_text   += L"\n";
+                line_width      = 0;
+
+                width_of_tab = width_of_full_tab;
+            } 
+
+            prepared_fine_text.Append(prepared_text, TOGL_TextHorizontalSpacer(width_of_tab));
+            prepared_text = L"";
+
+            line_width += width_of_tab;
+        } else {
+            if (m_wrap_line_width != 0 && (line_width + word_width) > m_wrap_line_width) {
+                // Word is crossing wrap line width. Needs to be moved or split.
+
+                // Spaces are ignored if they are behind wrap line width.
+                if (word != L" ") {
+
+                    if (word_width > m_wrap_line_width) {
+                        // Word is longer than line. Must be split between two or multiple lines.
+                        std::wstring    long_word       = word;
+                        uint32_t        long_word_width = word_width;
+
+                        while (long_word_width > m_wrap_line_width) {
+                            const uint32_t line_width_left = m_wrap_line_width - line_width;
+
+                            const size_t glyph_count = GetGlyphCountInWidth(font, long_word, line_width_left);
+
+                            prepared_text   += long_word.substr(0, glyph_count);
+                            prepared_text   += L"\n";
+                            line_width      = 0;
+
+                            long_word       = long_word.substr(glyph_count);
+                            long_word_width = GetWordWidth(font, long_word);
+                        }
+
+                        prepared_text   += long_word;
+                        line_width      += long_word_width;
+
+                    } else {
+                        // Word is shorter than line. Whole word is moved to next line
+                        prepared_text   += L"\n";
+                        line_width      = 0;
+
+                        prepared_text   += word;
+                        line_width      += word_width;
+                    }
+                }
+  
+            } else {
+                prepared_text   += word;
+                line_width      += word_width;
+            }
+
+        }
+    }
+    prepared_fine_text.Append(prepared_text);
+    return prepared_fine_text;
+}
+
+//------------------------------------------------------------------------------
+
+inline void TOGL_TextDrawer::ReplaceAll(std::string& text, const std::string& from, const std::string& to) {
+    if (!from.empty()) {
+        size_t pos = 0;
+        while((pos = text.find(from, pos)) != std::string::npos) {
+            text.replace(pos, from.length(), to);
+            pos += to.length();
+        }
+    }
+}
+
+inline void TOGL_TextDrawer::RenderSolvedText(TOGL_Font& font, const TOGL_FineText& text) {
+    glPushAttrib(GL_CURRENT_BIT);
+    glColor4ubv(m_color.ToData());
+
+    for (const TOGL_FineTextElement& element : text.ToElements()) {
+        switch (element.GetTypeId()) {
+
+        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_TEXT:
+            font.RenderBegin();
+            for (const uint32_t code : element.GetText()) {
+                if (code == '\n') {
+                    m_pos.x = m_base.x;
+                    m_pos.y += font.GetGlyphHeight() * m_orientation_factor_y;
+                } else {
+                    glPushMatrix();
+                    glTranslatef(float(m_pos.x), float(m_pos.y), 0);
+
+                    font.RenderGlyph(code);
+                    m_pos.x += font.GetGlyphSize(code).width;
+
+                    glPopMatrix();
+                }
+            }
+            font.RenderEnd();
+            break;
+
+        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_COLOR:
+            glColor4ubv(element.GetColor().ToData());
+            break;
+
+        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
+            m_pos.x += element.GetTextHorizontalSpacer().GetWidth();
+            break;
+        } // switch
+    }
+
+    glPopAttrib();
+}
+
+inline TOGL_SizeU TOGL_TextDrawer::GetSolvedTextSize(TOGL_Font& font, const TOGL_FineText& text) const {
+    TOGL_SizeU size = {0, font.GetGlyphHeight()};
+    uint32_t width = 0;
+
+
+    for (const TOGL_FineTextElement& element : text.ToElements()) {
+        switch (element.GetTypeId()) {
+
+        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_TEXT:
+            for (const uint32_t code : element.GetText()) {
+                if (code == '\n') {
+                    size.height += font.GetGlyphHeight();
+
+                    if (size.width < width) size.width = width;
+                    width = 0;
+                } else {
+                    width += font.GetGlyphSize(code).width;
+                }
+            }
+            break;
+        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_COLOR:
+            break;
+
+        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
+            width += element.GetTextHorizontalSpacer().GetWidth();
+            break;
+        }
+    }
+
+    if (size.width < width) size.width = width;
+
+    return size;
+}
 
 #endif // TRIVIALOPENGL_TEXTDRAWER_H_
