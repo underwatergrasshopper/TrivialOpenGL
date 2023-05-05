@@ -75,8 +75,8 @@ public:
     const std::vector<TOGL_UnicodeRange>& ToRanges() const;
 
 private:
-    TOGL_FontCharSetId                 m_char_set;
-    std::vector<TOGL_UnicodeRange>   m_ranges;
+    TOGL_FontCharSetId              m_char_set;
+    std::vector<TOGL_UnicodeRange>  m_ranges;
 
 };
 
@@ -87,9 +87,9 @@ private:
 struct TOGL_FontInfo {
     std::string             name;                   // encoding format: UTF8
     uint32_t                size;
-    TOGL_FontSizeUnitId            size_unit;
-    TOGL_FontStyleId               style;
-    TOGL_UnicodeRangeGroup       unicode_range_group;
+    TOGL_FontSizeUnitId     size_unit;
+    TOGL_FontStyleId        style;
+    TOGL_UnicodeRangeGroup  unicode_range_group;
 
     TOGL_FontInfo();
     TOGL_FontInfo(const std::string& name, uint32_t size, TOGL_FontSizeUnitId size_unit, TOGL_FontStyleId style, const TOGL_UnicodeRangeGroup& unicode_range_group);
@@ -124,12 +124,12 @@ struct TOGL_FontData {
     uint32_t glyph_descent;              // in pixels
     uint32_t glyph_internal_leading;     // in pixels
 
-    std::map<uint32_t, TOGL_GlyphData>   glyphs;     // indexed by character code from unicode space
+    std::map<uint32_t, TOGL_GlyphData> glyphs;     // indexed by character code from unicode space
 
     // Array of OpenGL Texture Object Identifiers (Texture Names).
     // Pixel Format: RGBA (8 bits per channel).
     // Orientation: First pixel refers to left-bottom corner of image.
-    std::vector<GLuint>             tex_objs;
+    std::vector<GLuint> tex_objs;
 
     TOGL_FontData();
 };
@@ -222,7 +222,7 @@ private:
     template <typename Type>
     void Load(Type& function, const std::string& function_name);
 
-    TOGL_FontData                    m_data;
+    TOGL_FontData               m_data;
     std::string                 m_err_msg;
 
     HDC                         m_device_context_handle;
@@ -273,7 +273,7 @@ private:
 
     const TOGL_GlyphData* FindGlyphData(uint32_t code) const;
 
-    TOGL_FontData                m_data;
+    TOGL_FontData           m_data;
     bool                    m_is_loaded;
     std::string             m_err_msg;
 };

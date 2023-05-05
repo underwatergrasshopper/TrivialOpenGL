@@ -107,15 +107,15 @@ private:
     // text             - Encoding format: UTF8.
     TOGL_SizeU GetSolvedTextSize(TOGL_Font& font, const TOGL_FineText& text) const;
 
-    TOGL_TextDrawerOrientationId   m_orientation;
-    uint32_t                m_orientation_factor_y;
+    TOGL_TextDrawerOrientationId    m_orientation;
+    uint32_t                        m_orientation_factor_y;
 
-    TOGL_PointI                  m_pos;
-    TOGL_PointI                  m_base;
+    TOGL_PointI                     m_pos;
+    TOGL_PointI                     m_base;
 
-    TOGL_Color4U8                m_color;
+    TOGL_Color4U8                   m_color;
         
-    TextPreparer            m_text_preparer;
+    TextPreparer                    m_text_preparer;
 };
 
 //==========================================================================

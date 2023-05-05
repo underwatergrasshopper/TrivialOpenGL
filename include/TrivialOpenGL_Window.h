@@ -463,32 +463,32 @@ private:
     static LRESULT CALLBACK WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param);
     static std::string WM_ToStr(UINT message);
 
-    TOGL_Data            m_data;
+    TOGL_Data               m_data;
 
-    HINSTANCE       m_instance_handle;
-    HWND            m_window_handle;
-    HDC             m_device_context_handle;
-    HGLRC           m_rendering_context_handle;
+    HINSTANCE               m_instance_handle;
+    HWND                    m_window_handle;
+    HDC                     m_device_context_handle;
+    HGLRC                   m_rendering_context_handle;
 
-    DWORD           m_window_style;
-    DWORD           m_window_extended_style;
+    DWORD                   m_window_style;
+    DWORD                   m_window_extended_style;
 
-    bool            m_is_active;
-    bool            m_is_visible;
-    bool            m_is_frame;
+    bool                    m_is_active;
+    bool                    m_is_visible;
+    bool                    m_is_frame;
 
-    TOGL_WindowStateId     m_state;
-    TOGL_WindowStateId     m_prev_state;
+    TOGL_WindowStateId      m_state;
+    TOGL_WindowStateId      m_prev_state;
 
-    bool            m_is_win7;
+    bool                    m_is_win7;
 
-    bool            m_is_apply_fake_width;
-    bool            m_is_enable_do_on_resize;
-    bool            m_is_enable_change_state_at_resize;
+    bool                    m_is_apply_fake_width;
+    bool                    m_is_enable_do_on_resize;
+    bool                    m_is_enable_change_state_at_resize;
 
-    uint64_t        m_dbg_message_id;
+    uint64_t                m_dbg_message_id;
 
-    WindowAreaCorrector   m_window_area_corrector;
+    WindowAreaCorrector     m_window_area_corrector;
 
     std::map<bool*, std::stack<bool>>   m_on_off_stack_map;
 
@@ -1180,7 +1180,7 @@ inline TOGL_Window::TOGL_Window() {
     m_is_enable_do_on_resize            = true;
     m_is_enable_change_state_at_resize  = true;
 
-    m_dbg_message_id            = 0;
+    m_dbg_message_id                    = 0;
 
     memset(m_char_utf16, 0, sizeof(m_char_utf16));
 
