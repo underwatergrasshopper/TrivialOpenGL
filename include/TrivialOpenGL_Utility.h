@@ -21,19 +21,18 @@
 
 #define TOGL_CASE_STR(name) case name: return #name
 
-
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // TOGL_GL_Version
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 struct TOGL_GL_Version {
     int major;
     int minor;
 };
 
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // TOGL_Point
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 template <typename Type>
 struct TOGL_Point {
@@ -42,9 +41,11 @@ struct TOGL_Point {
 
     TOGL_Point() : x(Type()), y(Type()) {}
 
-    explicit TOGL_Point(const Type& s) : x(s), y(s) {}
+    template<typename S_Type>
+    explicit TOGL_Point(const S_Type& s) : x(Type(s)), y(Type(s)) {}
 
-    TOGL_Point(const Type& x, const Type& y) : x(x), y(y) {}
+    template<typename X_Type, typename Y_Type>
+    TOGL_Point(const X_Type& x, const Y_Type& y) : x(Type(x)), y(Type(y)) {}
 
     template <typename SizeType>
     explicit TOGL_Point(const TOGL_Point<SizeType>& p) : x(Type(p.x)), y(Type(p.y)) {}
@@ -139,9 +140,9 @@ inline TOGL_Point<Type>& operator/=(TOGL_Point<Type>& l, const Type& r) {
     return l;
 }
 
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // TOGL_Size
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 template <typename Type>
 struct TOGL_Size {
@@ -150,8 +151,8 @@ struct TOGL_Size {
 
     TOGL_Size() : width(Type()), height(Type()) {}
 
-    template <typename Type2>
-    explicit TOGL_Size(const Type2& s) : width(s), height(s) {}
+    template <typename S_Type>
+    explicit TOGL_Size(const S_Type& s) : width(Type(s)), height(Type(s)) {}
 
     template <typename WidthType, typename HeightType>
     TOGL_Size(const WidthType& width, const HeightType& height) : width(Type(width)), height(Type(height)) {}
@@ -249,9 +250,9 @@ inline TOGL_Size<Type>& operator/=(TOGL_Size<Type>& l, const Type& r) {
     return l;
 }
 
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // TOGL_Area
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 template <typename PointType, typename SizeType = PointType>
 struct TOGL_Area {
@@ -319,36 +320,13 @@ inline RECT MakeRECT(const TOGL_Area<PointType, SizeType>& area) {
     return {LONG(area.x), LONG(area.y), LONG(area.x + area.width), LONG(area.y + area.height)};
 }
 
-inline TOGL_AreaI TOGL_MakeArea(const RECT& r) {
-    return {
-        r.left,
-        r.top,
-        r.right - r.left,
-        r.bottom - r.top
-    };
-}
+TOGL_AreaI TOGL_MakeArea(const RECT& r);
+TOGL_AreaIU TOGL_MakeAreaIU(const RECT& r);
+TOGL_AreaIU16 TOGL_MakeAreaIU16(const RECT& r);
 
-inline TOGL_AreaIU TOGL_MakeAreaIU(const RECT& r) {
-    return TOGL_AreaIU(
-        r.left,
-        r.top,
-        r.right - r.left,
-        r.bottom - r.top
-    );
-}
-
-inline TOGL_AreaIU16 TOGL_MakeAreaIU16(const RECT& r) {
-    return TOGL_AreaIU16(
-        r.left,
-        r.top,
-        uint16_t(r.right - r.left),
-        uint16_t(r.bottom - r.top)
-    );
-}
-
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // TOGL_Color
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 template <typename Type>
 struct TOGL_Color4 {
@@ -373,9 +351,9 @@ struct TOGL_Color4 {
 
 using TOGL_Color4U8 = TOGL_Color4<uint8_t>;
 
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // TOGL_Global
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 // Makes global object of specified type in header-only library.
 template <typename Type>
@@ -389,9 +367,9 @@ private:
 template <typename Type>
 Type TOGL_Global<Type>::sm_object;
 
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Conversion
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 // Converts ascii string to utf-16 string.
 std::wstring TOGL_ASCII_ToUTF16(const std::string& text_ascii);
@@ -402,9 +380,9 @@ std::wstring TOGL_ToUTF16(const std::string& text_utf8);
 // Converts utf-16 string to utf-8 string.
 std::string TOGL_ToUTF8(const std::wstring& text_utf16);
 
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Log
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 enum TOGL_LogMessageTypeId {
     TOGL_LOG_MESSAGE_TYPE_ID_FATAL_ERROR,
@@ -443,98 +421,59 @@ void TOGL_LogFatalError(const std::string& message);
 // and log massage will be redirected to callback function instead being processed by called TOGL_Log{...} function.
 void TOGL_SetCustomLogFunction(TOGL_CustomLogFnP_T custom_log);
 
+// ---
+
+class TOGL_Logger;
+inline TOGL_Logger& TOGL_ToLogger();
+
 // Singleton.
 class TOGL_Logger {
 public:
     friend TOGL_Global<TOGL_Logger>;
 
-    virtual ~TOGL_Logger() {}
+    virtual ~TOGL_Logger();
+
+    // ---
 
     // message      - Message in ascii encoding.
 
-    void LogDebug(const std::string& message) {
-        if (IsLogLevelAtLeast(TOGL_LOG_LEVEL_DEBUG)) Log(TOGL_LOG_MESSAGE_TYPE_ID_DEBUG, message);
-    }
-
-    void LogInfo(const std::string& message) {
-        if (IsLogLevelAtLeast(TOGL_LOG_LEVEL_INFO)) Log(TOGL_LOG_MESSAGE_TYPE_ID_INFO, message);
-    }
-
-    void LogWarning(const std::string& message) {
-        if (IsLogLevelAtLeast(TOGL_LOG_LEVEL_WARNING)) Log(TOGL_LOG_MESSAGE_TYPE_ID_WARNING, message);
-    }
-
-    void LogError(const std::string& message) {
-        Log(TOGL_LOG_MESSAGE_TYPE_ID_ERROR, message);
-    }
+    void LogDebug(const std::string& message);
+    void LogInfo(const std::string& message);
+    void LogWarning(const std::string& message);
+    void LogError(const std::string& message);
 
     // This function exits executable with error code EXIT_FAILURE.
-    void LogFatalError(const std::string& message) {
-        Log(TOGL_LOG_MESSAGE_TYPE_ID_FATAL_ERROR, message);
-    }
+    void LogFatalError(const std::string& message);
 
-    void SetLogLevel(TOGL_LogLevel log_level) {
-        m_log_level = log_level;
-    }
+    // ---
 
-    TOGL_LogLevel GetLogLevel() const {
-        return m_log_level;
-    }
+    // Sets current log level.
+    void SetLogLevel(TOGL_LogLevel log_level);
+    TOGL_LogLevel GetLogLevel() const;
 
-    bool IsLogLevelAtLeast(TOGL_LogLevel log_level) {
-        return log_level <= m_log_level;
-    }
+    // Returns true if log_level is less or equal to current log level.
+    bool IsLogLevelAtLeast(TOGL_LogLevel log_level);
 
-    void SetCustomLogFunction(TOGL_CustomLogFnP_T custom_log) {
-        m_custom_log = custom_log;
-    }
+    // ---
+
+    // Sets callback function, which will be called each time when any Log{...} method is called, 
+    // and log massage will be redirected to callback function instead being processed by called Log{...} method.
+    void SetCustomLogFunction(TOGL_CustomLogFnP_T custom_log);
 
 private:
-    TOGL_Logger() {
-        m_log_level     = TOGL_LOG_LEVEL_INFO;
-        m_custom_log    = nullptr;
-    }
+    TOGL_Logger();
 
-    static std::string GetMessagePrefix(TOGL_LogMessageTypeId log_message_type) {
-        switch (log_message_type) {
-        case TOGL_LOG_MESSAGE_TYPE_ID_FATAL_ERROR:  return "(TOGL) Fatal Error: ";
-        case TOGL_LOG_MESSAGE_TYPE_ID_ERROR:        return "(TOGL) Error: ";
-        case TOGL_LOG_MESSAGE_TYPE_ID_WARNING:      return "(TOGL) Warning: ";
-        case TOGL_LOG_MESSAGE_TYPE_ID_INFO:         return "(TOGL) Info: ";
-        case TOGL_LOG_MESSAGE_TYPE_ID_DEBUG:        return "(TOGL) Debug: ";
-        }
-        return "";
-    }
-
-    void Log(TOGL_LogMessageTypeId message_type, const std::string& message) {
-        if (m_custom_log) {
-            m_custom_log(message_type, message.c_str());
-        } else {
-            LogTextToStdOut(GetMessagePrefix(message_type) + message);
-        }
-        if (message_type == TOGL_LOG_MESSAGE_TYPE_ID_FATAL_ERROR) exit(EXIT_FAILURE);
-    }
-
-    void LogTextToStdOut(const std::string& message) {
-        if (fwide(stdout, 0) > 0) {
-            wprintf(L"%ls\n", TOGL_ASCII_ToUTF16(message).c_str());
-        } else {
-            printf("%s\n", message.c_str());
-        }
-        fflush(stdout);
-    }
+    static std::string GetMessagePrefix(TOGL_LogMessageTypeId log_message_type);
+    void Log(TOGL_LogMessageTypeId message_type, const std::string& message);
+    void LogTextToStdOut(const std::string& message);
         
     TOGL_LogLevel        m_log_level;
     TOGL_CustomLogFnP_T  m_custom_log;
 };
 
-inline TOGL_Logger& TOGL_ToLogger() {
-    return TOGL_Global<TOGL_Logger>::To();
-}
-
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // BMP
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 // Saves image pixel data to file as BMP image.
 // file_name        - Full name with extension of BMP file. Variable encoding format: UTF8.
@@ -551,29 +490,58 @@ bool TOGL_SaveAsBMP(const std::string& file_name, const uint8_t* pixel_data, uin
 // Returns true if image was saved to file.
 bool TOGL_SaveTextureAsBMP(const std::string& file_name, GLuint tex_obj);
 
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Common
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 TOGL_AreaIU16 TOGL_GetDesktopAreaNoTaskBar();
 TOGL_SizeU16 TOGL_GetDesktopAreaSizeNoTaskBar();
 TOGL_SizeU16 TOGL_GetScreenSize();
 TOGL_PointI TOGL_GetCursorPosInScreen();
 
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 std::string TOGL_HexToStr(uint16_t value);
 std::vector<std::string> TOGL_Split(const std::string& text, char c);
-
-//--------------------------------------------------------------------------
 
 //==============================================================================
 // Definitions
 //==============================================================================
 
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
+// TOGL_Area
+//------------------------------------------------------------------------------
+
+inline TOGL_AreaI TOGL_MakeArea(const RECT& r) {
+    return {
+        r.left,
+        r.top,
+        r.right - r.left,
+        r.bottom - r.top
+    };
+}
+
+inline TOGL_AreaIU TOGL_MakeAreaIU(const RECT& r) {
+    return TOGL_AreaIU(
+        r.left,
+        r.top,
+        r.right - r.left,
+        r.bottom - r.top
+    );
+}
+
+inline TOGL_AreaIU16 TOGL_MakeAreaIU16(const RECT& r) {
+    return TOGL_AreaIU16(
+        r.left,
+        r.top,
+        uint16_t(r.right - r.left),
+        uint16_t(r.bottom - r.top)
+    );
+}
+
+//------------------------------------------------------------------------------
 // Conversion
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 enum { _TOGL_CONVERSION_STACK_BUFFER_LENGTH = 4096 };
 
@@ -637,9 +605,9 @@ inline std::string TOGL_ToUTF8(const std::wstring& text_utf16) {
     return text_utf8;
 }
 
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // Log
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 inline void TOGL_SetLogLevel(TOGL_LogLevel log_level) {
     TOGL_ToLogger().SetLogLevel(log_level);
@@ -677,61 +645,91 @@ inline void TOGL_SetCustomLogFunction(TOGL_CustomLogFnP_T custom_log) {
     TOGL_ToLogger().SetCustomLogFunction(custom_log);
 }
 
-//--------------------------------------------------------------------------
-// Common
-//--------------------------------------------------------------------------
-
-inline TOGL_AreaIU16 TOGL_GetDesktopAreaNoTaskBar() {
-    RECT rc;
-    SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, 0);
-    return TOGL_MakeAreaIU16(rc);
+inline TOGL_Logger& TOGL_ToLogger() {
+    return TOGL_Global<TOGL_Logger>::To();
 }
 
-inline TOGL_SizeU16 TOGL_GetDesktopAreaSizeNoTaskBar() {
-    return TOGL_GetDesktopAreaNoTaskBar().GetSize();
+// ---
+
+inline TOGL_Logger::~TOGL_Logger() {
+
 }
 
-inline TOGL_SizeU16 TOGL_GetScreenSize() {
-    return TOGL_SizeU16(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+inline void TOGL_Logger::LogDebug(const std::string& message) {
+    if (IsLogLevelAtLeast(TOGL_LOG_LEVEL_DEBUG)) Log(TOGL_LOG_MESSAGE_TYPE_ID_DEBUG, message);
 }
 
-inline TOGL_PointI TOGL_GetCursorPosInScreen() {
-    POINT pos;
-    if (GetCursorPos(&pos)) {
-        return {pos.x, pos.y};
+inline void TOGL_Logger::LogInfo(const std::string& message) {
+    if (IsLogLevelAtLeast(TOGL_LOG_LEVEL_INFO)) Log(TOGL_LOG_MESSAGE_TYPE_ID_INFO, message);
+}
+
+inline void TOGL_Logger::LogWarning(const std::string& message) {
+    if (IsLogLevelAtLeast(TOGL_LOG_LEVEL_WARNING)) Log(TOGL_LOG_MESSAGE_TYPE_ID_WARNING, message);
+}
+
+inline void TOGL_Logger::LogError(const std::string& message) {
+    Log(TOGL_LOG_MESSAGE_TYPE_ID_ERROR, message);
+}
+
+inline void TOGL_Logger::LogFatalError(const std::string& message) {
+    Log(TOGL_LOG_MESSAGE_TYPE_ID_FATAL_ERROR, message);
+}
+
+inline void TOGL_Logger::SetLogLevel(TOGL_LogLevel log_level) {
+    m_log_level = log_level;
+}
+
+inline TOGL_LogLevel TOGL_Logger::GetLogLevel() const {
+    return m_log_level;
+}
+
+inline bool TOGL_Logger::IsLogLevelAtLeast(TOGL_LogLevel log_level) {
+    return log_level <= m_log_level;
+}
+
+inline void TOGL_Logger::SetCustomLogFunction(TOGL_CustomLogFnP_T custom_log) {
+    m_custom_log = custom_log;
+}
+
+// ---
+
+inline TOGL_Logger::TOGL_Logger() {
+    m_log_level     = TOGL_LOG_LEVEL_INFO;
+    m_custom_log    = nullptr;
+}
+
+inline std::string TOGL_Logger::GetMessagePrefix(TOGL_LogMessageTypeId log_message_type) {
+    switch (log_message_type) {
+    case TOGL_LOG_MESSAGE_TYPE_ID_FATAL_ERROR:  return "(TOGL) Fatal Error: ";
+    case TOGL_LOG_MESSAGE_TYPE_ID_ERROR:        return "(TOGL) Error: ";
+    case TOGL_LOG_MESSAGE_TYPE_ID_WARNING:      return "(TOGL) Warning: ";
+    case TOGL_LOG_MESSAGE_TYPE_ID_INFO:         return "(TOGL) Info: ";
+    case TOGL_LOG_MESSAGE_TYPE_ID_DEBUG:        return "(TOGL) Debug: ";
     }
-    return {};
+    return "";
 }
 
-//--------------------------------------------------------------------------
-
-inline std::vector<std::string> TOGL_Split(const std::string& text, char c) {
-    std::string temp = text;
-    std::vector<std::string> list;
-
-    while (true) {
-        size_t pos = temp.find(c, 0);
-
-        if (pos == std::string::npos) {
-            list.push_back(temp);
-            break;
-        } else {
-            list.push_back(temp.substr(0, pos));
-            temp = temp.substr(pos + 1);
-        }
+inline void TOGL_Logger::Log(TOGL_LogMessageTypeId message_type, const std::string& message) {
+    if (m_custom_log) {
+        m_custom_log(message_type, message.c_str());
+    } else {
+        LogTextToStdOut(GetMessagePrefix(message_type) + message);
     }
-    return list;
+    if (message_type == TOGL_LOG_MESSAGE_TYPE_ID_FATAL_ERROR) exit(EXIT_FAILURE);
 }
 
-inline std::string TOGL_HexToStr(uint16_t value) {
-    std::stringstream stream;
-    stream << std::hex << std::setfill('0') << std::setw(4) << std::right << std::uppercase << value;
-    return stream.str();
-};
+inline void TOGL_Logger::LogTextToStdOut(const std::string& message) {
+    if (fwide(stdout, 0) > 0) {
+        wprintf(L"%ls\n", TOGL_ASCII_ToUTF16(message).c_str());
+    } else {
+        printf("%s\n", message.c_str());
+    }
+    fflush(stdout);
+}
 
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 // BMP
-//--------------------------------------------------------------------------
+//------------------------------------------------------------------------------
 
 inline bool TOGL_SaveAsBMP(const std::string& file_name, const uint8_t* pixel_data, uint32_t width, uint32_t height, bool is_reverse_rows) {
     bool is_success = false; 
@@ -829,5 +827,57 @@ inline bool TOGL_SaveTextureAsBMP(const std::string& file_name, GLuint tex_obj) 
 
     return is_success;
 }
+
+//------------------------------------------------------------------------------
+// Common
+//------------------------------------------------------------------------------
+
+inline TOGL_AreaIU16 TOGL_GetDesktopAreaNoTaskBar() {
+    RECT rc;
+    SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, 0);
+    return TOGL_MakeAreaIU16(rc);
+}
+
+inline TOGL_SizeU16 TOGL_GetDesktopAreaSizeNoTaskBar() {
+    return TOGL_GetDesktopAreaNoTaskBar().GetSize();
+}
+
+inline TOGL_SizeU16 TOGL_GetScreenSize() {
+    return TOGL_SizeU16(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+}
+
+inline TOGL_PointI TOGL_GetCursorPosInScreen() {
+    POINT pos;
+    if (GetCursorPos(&pos)) {
+        return {pos.x, pos.y};
+    }
+    return {};
+}
+
+//------------------------------------------------------------------------------
+
+inline std::vector<std::string> TOGL_Split(const std::string& text, char c) {
+    std::string temp = text;
+    std::vector<std::string> list;
+
+    while (true) {
+        size_t pos = temp.find(c, 0);
+
+        if (pos == std::string::npos) {
+            list.push_back(temp);
+            break;
+        } else {
+            list.push_back(temp.substr(0, pos));
+            temp = temp.substr(pos + 1);
+        }
+    }
+    return list;
+}
+
+inline std::string TOGL_HexToStr(uint16_t value) {
+    std::stringstream stream;
+    stream << std::hex << std::setfill('0') << std::setw(4) << std::right << std::uppercase << value;
+    return stream.str();
+};
 
 #endif // TRIVIALOPENGL_UTILITY_H_
