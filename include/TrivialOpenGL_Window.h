@@ -10,9 +10,9 @@
 #include "TrivialOpenGL_Utility.h"
 #include "TrivialOpenGL_Key.h"
 
-//==========================================================================
+//==============================================================================
 // Declarations
-//==========================================================================
+//==============================================================================
 
 using TOGL_WindowStyleBitfield = uint32_t;
 enum : uint32_t {
@@ -43,15 +43,16 @@ enum TOGL_WindowOptionId {
     TOGL_WINDOW_OPTION_ID_AUTO_SLEEP_MODE,
 };
 
+// Data used to run window.
 struct TOGL_Data {
     // Encoding: ASCII or UTF8.
-    std::string     window_name         = "Window";
+    std::string                 window_name             = "Window";
 
     // Window area.
     // If area is equal to {0, 0, 0, 0} then created window will be centered in screen working area (desktop area excluding task bar) 
     // with width equal to half of screen working area width and height equal to half of screen working area height. 
     // Actual window width or height might be higher, depends on operating system minimal window size.
-    TOGL_AreaIU16        area                = {0, 0, 0, 0};
+    TOGL_AreaIU16               area                    = {0, 0, 0, 0};
 
     // NO_RESIZE                      - Window wont have resize frame.
     // NO_MAXIMIZE                    - Window wont have maximize button.
@@ -59,11 +60,11 @@ struct TOGL_Data {
     // DRAW_AREA_SIZE                 - Width and height from 'area' variable will set size of window draw area instead whole window area.
     // DRAW_AREA_ONLY                 - Window will contain only draw area (without borders and title bar).
     // REDRAW_ON_CHANGE_OR_REQUEST    - Window will only be redrawing on change or call of Window::RequestDraw method.
-    TOGL_WindowStyleBitfield style               = 0;
+    TOGL_WindowStyleBitfield    style                   = 0;
 
     // Tries create OpenGL Rendering Context which support to at least this version, with compatibility to all previous versions.
     // If opengl_version.major and opengl_version.minor is DEF then creates for any available OpenGL version. Can be checked by GetOpenGL_Version().
-    TOGL_GL_Version         opengl_verion       = {0, 0};
+    TOGL_GL_Version             opengl_verion           = {0, 0};
 
     // File name of icon image file (.ico). 
     // Loaded icon will be presented on window title bar and on task bar.
@@ -71,7 +72,7 @@ struct TOGL_Data {
     // If not empty string, then will load icon image (.ico). 
     // Will be visible on window title bar and task bar.
     // Encoding: ASCII or UTF8.
-    std::string     icon_file_name      = "";
+    std::string                 icon_file_name          = "";
 
     // (Optional) Resource id of icon file. 
     // Id must be different than 0 and icon_file_name must be an empty string.
@@ -79,23 +80,23 @@ struct TOGL_Data {
 
     // Resource identifier.
     // If not 0, then will use icon image from resources identified by this variable as application icon, title bar icon and task bar icon.
-    uint16_t        icon_resource_id    = 0;       
+    uint16_t                    icon_resource_id        = 0;       
 
 
     // If not zero then this is a time interval for which do_on_time(elapsed_time) callback function will be called. 
-    uint32_t        timer_time_interval = 0; // in milliseconds
+    uint32_t                    timer_time_interval     = 0; // in milliseconds
 
     // true - disables auto entering to screen save mode and to any power save mode.
-    bool            is_auto_sleep_blocked   = false;
+    bool                        is_auto_sleep_blocked   = false;
 
     // LOG_LEVEL_ERROR         - error messages only
     // LOG_LEVEL_WARNING        - warning and error messages
     // LOG_LEVEL_INFO          - info, warning and error messages
     // LOG_LEVEL_DEBUG         - debug, info, warning and error messages
-    TOGL_LogLevel        log_level           = TOGL_LOG_LEVEL_INFO;
+    TOGL_LogLevel               log_level               = TOGL_LOG_LEVEL_INFO;
 
     // To enable special debugging messages.
-    TOGL_SpecialDebug    special_debug       = {}; // Warning!!! Can slowdown application significantly.   
+    TOGL_SpecialDebug           special_debug           = {}; // Warning!!! Can slowdown application significantly.   
 
     // Called right after window is created.
     void (*do_on_create)()                                              = nullptr;
@@ -138,7 +139,7 @@ struct TOGL_Data {
     // MAXIMIZED,
     // MINIMIZED,
     // WINDOWED_FULL_SCREENED.
-    void (*do_on_state_change)(TOGL_WindowStateId window_state)                = nullptr;
+    void (*do_on_state_change)(TOGL_WindowStateId window_state)         = nullptr;
 
     void (*do_on_show)()                                                = nullptr;
     void (*do_on_hide)()                                                = nullptr;
@@ -149,24 +150,130 @@ struct TOGL_Data {
     void (*do_on_time)(uint32_t time_interval)                          = nullptr;
 };
 
-// Get access to window singleton.
-class TOGL_Window;
-TOGL_Window& TOGL_ToWindow();
+//------------------------------------------------------------------------------
 
 // Creates and runs window.
 int TOGL_Run(const TOGL_Data& data);
 
-class TOGL_WindowInnerAccessor {
+// If called from inside of do_on_{...} function, then close window after exiting from current do_on_{...} function.
+void TOGL_RequestClose();
+
+// If called from inside of do_on_{...} function, then redraws window after exiting from current do_on_{...} function.
+void TOGL_RequestRedraw();
+
+// ---
+        
+// WINDOW_OPTION_AUTO_SLEEP_MODE     - true - if window at foreground then can automatically enter screen saver mode or any sleep mode,
+//                                     false - if window at foreground then can not automatically enter screen saver mode or any sleep mode.
+void TOGL_SetOption(TOGL_WindowOptionId window_option, bool is_enabled);
+bool TOGL_IsEnabled(TOGL_WindowOptionId window_option);
+
+// ---
+
+// Moves window to position in screen coordinates.
+void TOGL_MoveTo(int x, int y, bool is_draw_area = false);
+void TOGL_MoveTo(const TOGL_PointI& pos, bool is_draw_area = false);
+
+// Moves from current position by offset (x, y).
+void TOGL_MoveBy(int x, int y);
+void TOGL_MoveBy(const TOGL_PointI& offset);
+
+// Resizes window and keeps current window position.
+void TOGL_Resize(uint16_t width, uint16_t height, bool is_draw_area = false);
+void TOGL_Resize(const TOGL_SizeU16& size, bool is_draw_area = false);
+
+// Moves and resizes window area.
+void TOGL_SetArea(int x, int y, uint16_t width, uint16_t height, bool is_draw_area = false);
+void TOGL_SetArea(const TOGL_AreaIU16& area, bool is_draw_area = false);
+
+// ---
+// 
+// Puts window in center of working area. 
+// Where working area is desktop area excluding task bar area.
+// If STYLE_BIT_DRAW_AREA_SIZE then width and height correspond to draw area.
+void TOGL_Center(uint16_t width, uint16_t height);
+void TOGL_Center(const TOGL_SizeU16& size);
+
+void TOGL_Center(uint16_t width, uint16_t height, bool is_draw_area_size);
+void TOGL_Center(const TOGL_SizeU16& size, bool is_draw_area_size);
+
+// ---
+        
+// Returns window left-top corner position in screen coordinates.
+TOGL_PointI TOGL_GetPos();
+        
+// Returns window size.
+TOGL_SizeU16 TOGL_GetSize();
+        
+// Returns window area in screen coordinates.
+TOGL_AreaIU16 TOGL_GetArea();
+        
+// Returns draw area top-left corner position in screen coordinates.
+TOGL_PointI TOGL_GetDrawAreaPos();
+        
+// Returns draw area size.
+TOGL_SizeU16 TOGL_GetDrawAreaSize();
+        
+// Returns draw area in screen coordinates.
+TOGL_AreaIU16 TOGL_GetDrawArea();
+
+// ---
+
+void TOGL_Hide();
+void TOGL_Show();
+bool TOGL_IsVisible();
+
+// ---
+
+inline void TOGL_Minimize();
+inline void TOGL_Maximize();
+inline void TOGL_GoWindowedFullScreen();
+
+inline TOGL_WindowStateId TOGL_GetState();
+
+inline bool TOGL_IsNormal();
+inline bool TOGL_IsMinimized();
+inline bool TOGL_IsMaximized();
+inline bool TOGL_IsFullScreen();
+
+// ---
+
+// Moves window to foreground.
+inline void TOGL_GoForeground();
+inline bool TOGL_IsForeground();
+
+// ---
+// 
+// Returns window style.
+inline TOGL_WindowStyleBitfield TOGL_GetStyle();
+
+inline TOGL_PointI TOGL_GetCursorPosInDrawArea();
+
+inline TOGL_GL_Version TOGL_GetOpenGL_Version();
+
+// ---
+
+// Gives access to window singleton.
+class TOGL_Window;
+TOGL_Window& TOGL_ToWindow();
+
+//------------------------------------------------------------------------------
+// TOGL_Window
+//------------------------------------------------------------------------------
+
+// For inner purpose only.
+class _TOGL_WindowInnerAccessor {
 public:
     friend class TOGL_FontDataGenerator;
 protected:
-    virtual ~TOGL_WindowInnerAccessor() {}
+    virtual ~_TOGL_WindowInnerAccessor() {}
 private:
     virtual HWND ToHWND() = 0;
 };
 
-// It's a singleton.
-class TOGL_Window : public TOGL_WindowInnerAccessor {
+
+// Singleton.
+class TOGL_Window : public _TOGL_WindowInnerAccessor {
 public:
     friend TOGL_Global<TOGL_Window>;
 
@@ -219,7 +326,7 @@ public:
 
     // ---
         
-    //// Returns window left-top corner position in screen coordinates.
+    // Returns window left-top corner position in screen coordinates.
     TOGL_PointI GetPos() const;
         
     // Returns window size.
@@ -262,16 +369,12 @@ public:
 
     // ---
 
+    // Returns window style.
     TOGL_WindowStyleBitfield GetStyle() const;
 
     TOGL_PointI GetCursorPosInDrawArea() const;
 
     TOGL_GL_Version GetOpenGL_Version() const;
-
-    // ---
-
-    // Get access to singleton instance.
-    static TOGL_Window& To();
 
 private:
     enum AreaPartId {
@@ -288,115 +391,34 @@ private:
         TOGL_MAX_NUM_OF_UTF16_CODE_UNITS     = 2,
     };
 
-   // Corrects window position and size to remove invisible window frame in Windows 10. 
+    // Corrects window position and size to remove invisible window frame in Windows 10. 
     class WindowAreaCorrector {
     public:
-        WindowAreaCorrector() {
-            m_dwmapi_lib_handle = LoadLibraryA("Dwmapi.dll");
-            if (m_dwmapi_lib_handle) {
-                m_dwm_get_window_attribute          = (decltype(m_dwm_get_window_attribute)) GetProcAddress(m_dwmapi_lib_handle, "DwmGetWindowAttribute");
-            } else {
-                m_dwm_get_window_attribute          = nullptr;
-            }
-        }
+        WindowAreaCorrector();
 
-        virtual ~WindowAreaCorrector() {
-            FreeLibrary(m_dwmapi_lib_handle);
-        }
+        virtual ~WindowAreaCorrector();
 
-        TOGL_AreaIU16 Get(HWND window_handle) const {
-            TOGL_AreaIU16 area = {};
-
-            if (m_dwm_get_window_attribute) {
-                RECT window_rect;
-                GetWindowRect(window_handle, &window_rect);
-
-                // Added TOGL_ prefix.
-                enum { TOGL_DWMWA_EXTENDED_FRAME_BOUNDS = 9 };
-                RECT actual_window_rect;
-
-                // Note: To return correct values, must be called after ShowWindow(window_handle, SW_SHOW).
-                m_dwm_get_window_attribute(window_handle, TOGL_DWMWA_EXTENDED_FRAME_BOUNDS, &actual_window_rect, sizeof(RECT));
-
-                RECT frame = {};
-                frame.left      = actual_window_rect.left   - window_rect.left;
-                frame.top       = actual_window_rect.top    - window_rect.top;
-                frame.right     = window_rect.right         - actual_window_rect.right;
-                frame.bottom    = window_rect.bottom        - actual_window_rect.bottom;
-
-                area = TOGL_AreaIU16(- frame.left, -frame.top, uint16_t(frame.left + frame.right), uint16_t(frame.top + frame.bottom));
-            }
-
-            return area;
-        }
+        TOGL_AreaIU16 Get(HWND window_handle) const;
 
         // area         - Window area without invisible frame.
-        TOGL_AreaIU16 AddInvisibleFrameTo(const TOGL_AreaIU16& area, HWND window_hangle) const {
-            const TOGL_AreaIU16 correction = Get(window_hangle);
-            return TOGL_AreaIU16(
-                area.x      + correction.x,
-                area.y      + correction.y,
-                area.width  + correction.width,
-                area.height + correction.height
-            );
-        }
+        TOGL_AreaIU16 AddInvisibleFrameTo(const TOGL_AreaIU16& area, HWND window_hangle) const;
 
         // size         - Window size without invisible frame.
-        TOGL_SizeU16 AddInvisibleFrameTo(const TOGL_SizeU16& size, HWND window_hangle) const {
-            const TOGL_AreaIU16 correction = Get(window_hangle);
-            return TOGL_SizeU16(
-                size.width  + correction.width,
-                size.height + correction.height
-            );
-        }
+        TOGL_SizeU16 AddInvisibleFrameTo(const TOGL_SizeU16& size, HWND window_hangle) const;
 
         // pos          - Window position without invisible frame.
-        TOGL_PointI AddInvisibleFrameTo(const TOGL_PointI& pos, HWND window_hangle) const {
-            const TOGL_AreaIU16 correction = Get(window_hangle);
-            return {
-                pos.x + correction.x,
-                pos.y + correction.y,
-            };
-        }
+        TOGL_PointI AddInvisibleFrameTo(const TOGL_PointI& pos, HWND window_hangle) const;
 
         // area         - Window area with invisible frame.
-        TOGL_AreaIU16 RemoveInvisibleFrameFrom(const TOGL_AreaIU16& area, HWND window_hangle) const {
-            const TOGL_AreaIU16 correction = Get(window_hangle);
-            return TOGL_AreaIU16(
-                area.x      - correction.x,
-                area.y      - correction.y,
-                area.width  - correction.width,
-                area.height - correction.height
-            );
-        }
+        TOGL_AreaIU16 RemoveInvisibleFrameFrom(const TOGL_AreaIU16& area, HWND window_hangle) const;
 
         // size         - Window size with invisible frame.
-        TOGL_SizeU16 RemoveInvisibleFrameFrom(const TOGL_SizeU16& size, HWND window_hangle) const {
-            const TOGL_AreaIU16 correction = Get(window_hangle);
-            return TOGL_SizeU16(
-                size.width  - correction.width,
-                size.height - correction.height
-            );
-        }
+        TOGL_SizeU16 RemoveInvisibleFrameFrom(const TOGL_SizeU16& size, HWND window_hangle) const;
 
         // pos          - Window position with invisible frame.
-        TOGL_PointI RemoveInvisibleFrameFrom(const TOGL_PointI& pos, HWND window_hangle) const {
-            const TOGL_AreaIU16 correction = Get(window_hangle);
-            return {
-                pos.x - correction.x,
-                pos.y - correction.y,
-            };
-        }
+        TOGL_PointI RemoveInvisibleFrameFrom(const TOGL_PointI& pos, HWND window_hangle) const;
     private:
         HMODULE  m_dwmapi_lib_handle;
-
-        struct MARGINS {
-            int cxLeftWidth;
-            int cxRightWidth;
-            int cyTopHeight;
-            int cyBottomHeight;
-        };
-        
         HRESULT (WINAPI *m_dwm_get_window_attribute)(HWND hwnd, DWORD dwAttribute, PVOID pvAttribute, DWORD cbAttribute);
     };
 
@@ -406,6 +428,7 @@ private:
     HWND ToHWND() override final;
 
     void SetState(TOGL_WindowStateId state);
+
     void Push(bool& value, bool new_value_after_push);
     void Pop(bool& value);
 
@@ -423,8 +446,6 @@ private:
 
     void Create(HWND window_handle);
     void Destroy();
-    void Paint();
-    void Close();
 
     static DWORD GetWindowStyle_DrawAreaOnly();
     static DWORD GetWindowExtendedStyle_DrawAreaOnly();
@@ -474,26 +495,24 @@ private:
     wchar_t                             m_char_utf16[TOGL_MAX_NUM_OF_UTF16_CODE_UNITS];
 };
 
+//==============================================================================
+// Definitions
+//==============================================================================
 
-// Creates and runs window.
 inline int TOGL_Run(const TOGL_Data& data) {
     return TOGL_ToWindow().Run(data);
 }
 
-// If called from inside of do_on_{...} function, then close window after exiting from current do_on_{...} function.
 inline void TOGL_RequestClose() {
     TOGL_ToWindow().RequestClose();
 }
 
-// If called from inside of do_on_{...} function, then redraws window after exiting from current do_on_{...} function.
 inline void TOGL_RequestRedraw() {
     TOGL_ToWindow().RequestRedraw();
 }
 
 // ---
-        
-// WINDOW_OPTION_AUTO_SLEEP_MODE     - true - if window at foreground then can automatically enter screen saver mode or any sleep mode,
-//                                     false - if window at foreground then can not automatically enter screen saver mode or any sleep mode.
+
 inline void TOGL_SetOption(TOGL_WindowOptionId window_option, bool is_enabled) {
     TOGL_ToWindow().SetOption(window_option, is_enabled);
 }
@@ -503,15 +522,13 @@ inline bool TOGL_IsEnabled(TOGL_WindowOptionId window_option) {
 
 // ---
 
-// Moves window to position in screen coordinates.
-inline void TOGL_MoveTo(int x, int y, bool is_draw_area = false) {
+inline void TOGL_MoveTo(int x, int y, bool is_draw_area) {
     TOGL_ToWindow().MoveTo(x, y, is_draw_area);
 }
-inline void TOGL_MoveTo(const TOGL_PointI& pos, bool is_draw_area = false) {
+inline void TOGL_MoveTo(const TOGL_PointI& pos, bool is_draw_area) {
     TOGL_ToWindow().MoveTo(pos, is_draw_area);
 }
 
-// Moves from current position by offset (x, y).
 inline void TOGL_MoveBy(int x, int y) {
     TOGL_ToWindow().MoveBy(x, y);
 }
@@ -519,25 +536,20 @@ inline void TOGL_MoveBy(const TOGL_PointI& offset) {
     TOGL_ToWindow().MoveBy(offset);
 }
 
-// Resizes window and keeps current window position.
-inline void TOGL_Resize(uint16_t width, uint16_t height, bool is_draw_area = false) {
+inline void TOGL_Resize(uint16_t width, uint16_t height, bool is_draw_area) {
     TOGL_ToWindow().Resize(width, height, is_draw_area);
 }
-inline void TOGL_Resize(const TOGL_SizeU16& size, bool is_draw_area = false) {
+inline void TOGL_Resize(const TOGL_SizeU16& size, bool is_draw_area) {
     TOGL_ToWindow().Resize(size, is_draw_area);
 }
 
-// Moves and resizes window area.
-inline void TOGL_SetArea(int x, int y, uint16_t width, uint16_t height, bool is_draw_area = false) {
+inline void TOGL_SetArea(int x, int y, uint16_t width, uint16_t height, bool is_draw_area) {
     TOGL_ToWindow().SetArea(x, y, width, height, is_draw_area);
 }
-inline void TOGL_SetArea(const TOGL_AreaIU16& area, bool is_draw_area = false) {
+inline void TOGL_SetArea(const TOGL_AreaIU16& area, bool is_draw_area) {
     TOGL_ToWindow().SetArea(area, is_draw_area);
 }
 
-// Puts window in center of desktop area excluding task bar area.
-
-// If STYLE_BIT_DRAW_AREA_SIZE then width and height correspond to draw area.
 inline void TOGL_Center(uint16_t width, uint16_t height) {
     TOGL_ToWindow().Center(width, height);
 }
@@ -553,33 +565,27 @@ inline void TOGL_Center(const TOGL_SizeU16& size, bool is_draw_area_size) {
 }
 
 // ---
-        
-//// Returns window left-top corner position in screen coordinates.
+
 inline TOGL_PointI TOGL_GetPos() {
     return TOGL_ToWindow().GetPos();
 }
         
-// Returns window size.
 inline TOGL_SizeU16 TOGL_GetSize() {
     return TOGL_ToWindow().GetSize();
 }
         
-// Returns window area in screen coordinates.
 inline TOGL_AreaIU16 TOGL_GetArea() {
     return TOGL_ToWindow().GetArea();
 }
-        
-// Returns draw area top-left corner position in screen coordinates.
+
 inline TOGL_PointI TOGL_GetDrawAreaPos() {
     return TOGL_ToWindow().GetDrawAreaPos();
 }
-        
-// Returns draw area size.
+
 inline TOGL_SizeU16 TOGL_GetDrawAreaSize() {
     return TOGL_ToWindow().GetDrawAreaSize();
 }
-        
-// Returns draw area in screen coordinates.
+
 inline TOGL_AreaIU16 TOGL_GetDrawArea() {
     return TOGL_ToWindow().GetDrawArea();
 }
@@ -589,9 +595,11 @@ inline TOGL_AreaIU16 TOGL_GetDrawArea() {
 inline void TOGL_Hide() {
     TOGL_ToWindow().Hide();
 }
+
 inline void TOGL_Show() {
     TOGL_ToWindow().Show();
 }
+
 inline bool TOGL_IsVisible() {
     return TOGL_ToWindow().IsVisible();
 }
@@ -601,9 +609,11 @@ inline bool TOGL_IsVisible() {
 inline void TOGL_Minimize() {
     TOGL_ToWindow().Minimize();
 }
+
 inline void TOGL_Maximize() {
     TOGL_ToWindow().Maximize();
 }
+
 inline void TOGL_GoWindowedFullScreen() {
     TOGL_ToWindow().GoWindowedFullScreen();
 }
@@ -615,17 +625,21 @@ inline TOGL_WindowStateId TOGL_GetState()  {
 inline bool TOGL_IsNormal() {
     return TOGL_ToWindow().IsNormal();
 }
+
 inline bool TOGL_IsMinimized() {
     return TOGL_ToWindow().IsWindowMinimized();
 }
+
 inline bool TOGL_IsMaximized() {
     return TOGL_ToWindow().IsWindowMaximized();
 }
+
 inline bool TOGL_IsFullScreen() {
     return TOGL_ToWindow().IsWindowedFullScreen();
 }
 
-// Moves window to foreground.
+// ---
+
 inline void TOGL_GoForeground() {
     TOGL_ToWindow().GoForeground();
 }
@@ -647,71 +661,117 @@ inline TOGL_GL_Version TOGL_GetOpenGL_Version() {
     return TOGL_ToWindow().GetOpenGL_Version();
 }
 
-
-
-
-
-
-//==========================================================================
-// Definitions
-//==========================================================================
-
+// ---
 
 inline TOGL_Window& TOGL_ToWindow() {
-    return TOGL_Window::To();
+    return TOGL_Global<TOGL_Window>::To();
 }
 
 //--------------------------------------------------------------------------
-// Constructor, Destructor
+// TOGL_Window::WindowAreaCorrector
 //--------------------------------------------------------------------------
 
-inline TOGL_Window::TOGL_Window() {
-    m_data                      = {};
-
-    m_instance_handle           = NULL;
-    m_window_handle             = NULL;
-    m_device_context_handle     = NULL;
-    m_rendering_context_handle  = NULL;
-
-    m_window_style              = 0;
-    m_window_extended_style     = 0;
-
-    m_is_active                 = false;
-    m_is_visible                = false;
-    m_is_frame                  = true;
-
-    m_state                     = TOGL_WINDOW_STATE_ID_NORMAL;
-    m_prev_state                = m_state;
-
-    m_is_win7                   = IsWindows7OrGreater() && !IsWindows8OrGreater();
-
-    m_is_apply_fake_width               = false;
-    m_is_enable_do_on_resize            = true;
-    m_is_enable_change_state_at_resize  = true;
-
-    m_dbg_message_id            = 0;
-
-    memset(m_char_utf16, 0, sizeof(m_char_utf16));
-
-        
+inline TOGL_Window::WindowAreaCorrector::WindowAreaCorrector() {
+    m_dwmapi_lib_handle = LoadLibraryA("Dwmapi.dll");
+    if (m_dwmapi_lib_handle) {
+        m_dwm_get_window_attribute          = (decltype(m_dwm_get_window_attribute)) GetProcAddress(m_dwmapi_lib_handle, "DwmGetWindowAttribute");
+    } else {
+        m_dwm_get_window_attribute          = nullptr;
+    }
 }
+
+inline TOGL_Window::WindowAreaCorrector::~WindowAreaCorrector() {
+    FreeLibrary(m_dwmapi_lib_handle);
+}
+
+inline TOGL_AreaIU16 TOGL_Window::WindowAreaCorrector::Get(HWND window_handle) const {
+    TOGL_AreaIU16 area = {};
+
+    if (m_dwm_get_window_attribute) {
+        RECT window_rect;
+        GetWindowRect(window_handle, &window_rect);
+
+        // Added TOGL_ prefix.
+        enum { TOGL_DWMWA_EXTENDED_FRAME_BOUNDS = 9 };
+        RECT actual_window_rect;
+
+        // Note: To return correct values, must be called after ShowWindow(window_handle, SW_SHOW).
+        m_dwm_get_window_attribute(window_handle, TOGL_DWMWA_EXTENDED_FRAME_BOUNDS, &actual_window_rect, sizeof(RECT));
+
+        RECT frame = {};
+        frame.left      = actual_window_rect.left   - window_rect.left;
+        frame.top       = actual_window_rect.top    - window_rect.top;
+        frame.right     = window_rect.right         - actual_window_rect.right;
+        frame.bottom    = window_rect.bottom        - actual_window_rect.bottom;
+
+        area = TOGL_AreaIU16(- frame.left, -frame.top, uint16_t(frame.left + frame.right), uint16_t(frame.top + frame.bottom));
+    }
+
+    return area;
+}
+
+inline TOGL_AreaIU16 TOGL_Window::WindowAreaCorrector::AddInvisibleFrameTo(const TOGL_AreaIU16& area, HWND window_hangle) const {
+    const TOGL_AreaIU16 correction = Get(window_hangle);
+    return TOGL_AreaIU16(
+        area.x      + correction.x,
+        area.y      + correction.y,
+        area.width  + correction.width,
+        area.height + correction.height
+    );
+}
+
+inline TOGL_SizeU16 TOGL_Window::WindowAreaCorrector::AddInvisibleFrameTo(const TOGL_SizeU16& size, HWND window_hangle) const {
+    const TOGL_AreaIU16 correction = Get(window_hangle);
+    return TOGL_SizeU16(
+        size.width  + correction.width,
+        size.height + correction.height
+    );
+}
+
+inline TOGL_PointI TOGL_Window::WindowAreaCorrector::AddInvisibleFrameTo(const TOGL_PointI& pos, HWND window_hangle) const {
+    const TOGL_AreaIU16 correction = Get(window_hangle);
+    return {
+        pos.x + correction.x,
+        pos.y + correction.y,
+    };
+}
+
+inline TOGL_AreaIU16 TOGL_Window::WindowAreaCorrector::RemoveInvisibleFrameFrom(const TOGL_AreaIU16& area, HWND window_hangle) const {
+    const TOGL_AreaIU16 correction = Get(window_hangle);
+    return TOGL_AreaIU16(
+        area.x      - correction.x,
+        area.y      - correction.y,
+        area.width  - correction.width,
+        area.height - correction.height
+    );
+}
+
+inline TOGL_SizeU16 TOGL_Window::WindowAreaCorrector::RemoveInvisibleFrameFrom(const TOGL_SizeU16& size, HWND window_hangle) const {
+    const TOGL_AreaIU16 correction = Get(window_hangle);
+    return TOGL_SizeU16(
+        size.width  - correction.width,
+        size.height - correction.height
+    );
+}
+
+inline TOGL_PointI TOGL_Window::WindowAreaCorrector::RemoveInvisibleFrameFrom(const TOGL_PointI& pos, HWND window_hangle) const {
+    const TOGL_AreaIU16 correction = Get(window_hangle);
+    return {
+        pos.x - correction.x,
+        pos.y - correction.y,
+    };
+}
+
+//--------------------------------------------------------------------------
+// TOGL_Window
+//--------------------------------------------------------------------------
 
 inline TOGL_Window::~TOGL_Window() {
 
 }
 
-
-
-inline void TOGL_Window::RequestClose() {
-    DestroyWindow(m_window_handle);
-}
-
-inline void TOGL_Window::RequestRedraw() {
-    InvalidateRect(m_window_handle, NULL, FALSE);
-}
-
 //--------------------------------------------------------------------------
-// Run
+// Run, Close, Redraw
 //--------------------------------------------------------------------------
 
 inline int TOGL_Window::Run(const TOGL_Data& data) {
@@ -790,6 +850,14 @@ inline int TOGL_Window::Run(const TOGL_Data& data) {
     return result;
 }
 
+inline void TOGL_Window::RequestClose() {
+    DestroyWindow(m_window_handle);
+}
+
+inline void TOGL_Window::RequestRedraw() {
+    InvalidateRect(m_window_handle, NULL, FALSE);
+}
+
 //--------------------------------------------------------------------------
 // Option
 //--------------------------------------------------------------------------
@@ -815,6 +883,7 @@ inline bool TOGL_Window::IsEnabled(TOGL_WindowOptionId window_option) const {
 inline void TOGL_Window::MoveTo(int x, int y, bool is_draw_area) {
     SetArea({x, y, 0, 0}, TOGL_AREA_PART_ID_POSITION, is_draw_area);
 }
+
 inline void TOGL_Window::MoveTo(const TOGL_PointI& pos, bool is_draw_area) {
     MoveTo(pos.x, pos.y, is_draw_area);
 }
@@ -822,25 +891,29 @@ inline void TOGL_Window::MoveTo(const TOGL_PointI& pos, bool is_draw_area) {
 inline void TOGL_Window::MoveBy(int x, int y) {
     SetArea({x, y, 0, 0}, TOGL_AREA_PART_ID_POSITION_OFFSET, false);
 }
+
 inline void TOGL_Window::MoveBy(const TOGL_PointI& offset) {
     MoveBy(offset.x, offset.y);
 }
 
+
 inline void TOGL_Window::Resize(uint16_t width, uint16_t height, bool is_draw_area) {
     SetArea({0, 0, width, height}, TOGL_AREA_PART_ID_SIZE, is_draw_area);
 }
+
 inline void TOGL_Window::Resize(const TOGL_SizeU16& size, bool is_draw_area) {
     Resize(size.width, size.height, is_draw_area);
 }
 
+
 inline void TOGL_Window::SetArea(int x, int y, uint16_t width, uint16_t height, bool is_draw_area) {
     SetArea({x, y, width, height}, TOGL_AREA_PART_ID_ALL, is_draw_area);
 }
+
 inline void TOGL_Window::SetArea(const TOGL_AreaIU16& area, bool is_draw_area) {
     SetArea(area.x, area.y, area.width, area.height, is_draw_area);
 }
 
-//--------------------------------------------------------------------------
 
 inline void TOGL_Window::Center(const TOGL_SizeU16& size) {
     Center(size, m_data.style & TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE);
@@ -870,11 +943,6 @@ inline void TOGL_Window::Center(const TOGL_SizeU16& size, bool is_draw_area_size
 
 inline void TOGL_Window::Center(uint16_t width, uint16_t height, bool is_draw_area_size) {
     Center(TOGL_SizeU16(width, height), is_draw_area_size);
-}
-
-
-inline void TOGL_Window::ChangeArea(const TOGL_AreaIU16& area) {
-    SetArea(GenerateWindowArea(area), TOGL_AREA_PART_ID_ALL, m_data.style & TOGL_WINDOW_STYLE_BIT_DRAW_AREA_ONLY);
 }
 
 //--------------------------------------------------------------------------
@@ -926,7 +994,7 @@ inline TOGL_AreaIU16 TOGL_Window::GetDrawArea() const {
 }
 
 //--------------------------------------------------------------------------
-// State
+// Show, Hide
 //--------------------------------------------------------------------------
 
 inline void TOGL_Window::Hide() {
@@ -940,6 +1008,11 @@ inline void TOGL_Window::Show() {
 inline bool TOGL_Window::IsVisible() const {
     return m_is_visible;
 }
+
+
+//--------------------------------------------------------------------------
+// State
+//--------------------------------------------------------------------------
 
 inline void TOGL_Window::Minimize() {
     if (m_state == TOGL_WINDOW_STATE_ID_WINDOWED_FULL_SCREENED) {
@@ -1080,20 +1153,53 @@ inline TOGL_GL_Version TOGL_Window::GetOpenGL_Version() const {
 }
 
 //--------------------------------------------------------------------------
+// TOGL_Window (private)
+//--------------------------------------------------------------------------
 
-inline TOGL_Window& TOGL_Window::To() {
-    return TOGL_Global<TOGL_Window>::To();
+inline TOGL_Window::TOGL_Window() {
+    m_data                      = {};
+
+    m_instance_handle           = NULL;
+    m_window_handle             = NULL;
+    m_device_context_handle     = NULL;
+    m_rendering_context_handle  = NULL;
+
+    m_window_style              = 0;
+    m_window_extended_style     = 0;
+
+    m_is_active                 = false;
+    m_is_visible                = false;
+    m_is_frame                  = true;
+
+    m_state                     = TOGL_WINDOW_STATE_ID_NORMAL;
+    m_prev_state                = m_state;
+
+    m_is_win7                   = IsWindows7OrGreater() && !IsWindows8OrGreater();
+
+    m_is_apply_fake_width               = false;
+    m_is_enable_do_on_resize            = true;
+    m_is_enable_change_state_at_resize  = true;
+
+    m_dbg_message_id            = 0;
+
+    memset(m_char_utf16, 0, sizeof(m_char_utf16));
+
+        
 }
 
-//--------------------------------------------------------------------------
-// Private
-//--------------------------------------------------------------------------
+// ---
+
+inline HWND TOGL_Window::ToHWND() {
+    return m_window_handle;
+}
 
 inline void TOGL_Window::SetState(TOGL_WindowStateId state) {
     m_prev_state = m_state;
     m_state = state;
     if (m_state != m_prev_state && m_data.do_on_state_change) m_data.do_on_state_change(m_state);
 }
+
+// ---
 
 inline void TOGL_Window::Push(bool& value, bool new_value_after_push) {
     m_on_off_stack_map[&value].push(value);
@@ -1107,8 +1213,12 @@ inline void TOGL_Window::Pop(bool& value) {
         stack.pop();
     }
 }
-    
-//--------------------------------------------------------------------------
+
+// ---
+
+inline void TOGL_Window::ChangeArea(const TOGL_AreaIU16& area) {
+    SetArea(GenerateWindowArea(area), TOGL_AREA_PART_ID_ALL, m_data.style & TOGL_WINDOW_STYLE_BIT_DRAW_AREA_ONLY);
+}
 
 inline HICON TOGL_Window::TryLoadIcon() {
     if (!m_data.icon_file_name.empty()) {
@@ -1159,7 +1269,7 @@ inline int TOGL_Window::ExecuteMainLoop() {
 
     return EXIT_FAILURE;
 }
-    
+
 inline void TOGL_Window::Draw() {
     if (m_data.special_debug.is_notify_draw_call) {
         TOGL_LogDebug("Window::Draw"); 
@@ -1169,6 +1279,8 @@ inline void TOGL_Window::Draw() {
 
     SwapBuffers(m_device_context_handle);
 }
+
+//--------------------------------------------------------------------------
 
 inline TOGL_AreaIU16 TOGL_Window::GenerateWindowArea(const TOGL_AreaIU16& area) {
     TOGL_AreaIU16 window_area;
@@ -1292,44 +1404,6 @@ inline void TOGL_Window::SetArea(const TOGL_AreaIU16& area, AreaPartId area_part
     }  
 }
 
-//--------------------------------------------------------------------------
-
-inline DWORD TOGL_Window::GetWindowStyle_DrawAreaOnly() { 
-    return 
-        WS_POPUP
-        // Commented options are for tests only.
-        //| WS_THICKFRAME 
-        //| WS_CAPTION 
-        //| WS_SYSMENU 
-        //| WS_MAXIMIZEBOX 
-        //| WS_MINIMIZEBOX
-        //| WS_BORDER 
-        | WS_CLIPSIBLINGS 
-        | WS_CLIPCHILDREN
-        ; 
-}
-inline DWORD TOGL_Window::GetWindowExtendedStyle_DrawAreaOnly() { 
-    return WS_EX_APPWINDOW; 
-}
-    
-inline TOGL_AreaIU16 TOGL_Window::GetWindowArea(HWND window_handle) {
-    RECT r;
-    if (GetWindowRect(window_handle, &r)) {
-        return TOGL_MakeAreaIU16(r);
-    }
-    return TOGL_AreaIU16(0, 0, 0, 0);
-}
-
-inline TOGL_AreaIU16 TOGL_Window::GetWindowAreaFromDrawArea(const TOGL_AreaIU16& draw_area, DWORD window_style) {
-    RECT rect = MakeRECT(draw_area);
-    AdjustWindowRect(&rect, window_style, FALSE);
-    return TOGL_MakeAreaIU16(rect);
-}
-
-inline HWND TOGL_Window::ToHWND() {
-    return m_window_handle;
-}
-    
 //--------------------------------------------------------------------------
 
 inline void TOGL_Window::Create(HWND window_handle) {
@@ -1458,6 +1532,42 @@ inline void TOGL_Window::Destroy() {
 
 //--------------------------------------------------------------------------
 
+inline DWORD TOGL_Window::GetWindowStyle_DrawAreaOnly() { 
+    return 
+        WS_POPUP
+        // Commented options are for tests only.
+        //| WS_THICKFRAME 
+        //| WS_CAPTION 
+        //| WS_SYSMENU 
+        //| WS_MAXIMIZEBOX 
+        //| WS_MINIMIZEBOX
+        //| WS_BORDER 
+        | WS_CLIPSIBLINGS 
+        | WS_CLIPCHILDREN
+        ; 
+}
+inline DWORD TOGL_Window::GetWindowExtendedStyle_DrawAreaOnly() { 
+    return WS_EX_APPWINDOW; 
+}
+
+//--------------------------------------------------------------------------
+    
+inline TOGL_AreaIU16 TOGL_Window::GetWindowArea(HWND window_handle) {
+    RECT r;
+    if (GetWindowRect(window_handle, &r)) {
+        return TOGL_MakeAreaIU16(r);
+    }
+    return TOGL_AreaIU16(0, 0, 0, 0);
+}
+
+inline TOGL_AreaIU16 TOGL_Window::GetWindowAreaFromDrawArea(const TOGL_AreaIU16& draw_area, DWORD window_style) {
+    RECT rect = MakeRECT(draw_area);
+    AdjustWindowRect(&rect, window_style, FALSE);
+    return TOGL_MakeAreaIU16(rect);
+}
+
+//--------------------------------------------------------------------------
+
 inline void TOGL_Window::HandleDoOnKeyboardKey(WPARAM w_param, LPARAM l_param) {
     if (m_data.do_on_key) {
         const _TOGL_InnerKey::VirtualKeyData& virtual_key_data = *((const _TOGL_InnerKey::VirtualKeyData*)(&l_param));
@@ -1517,6 +1627,8 @@ inline void TOGL_Window::HandleUTF16_ToUTF8(const wchar_t (&char_utf16)[NUNMBER_
     }
 }
 
+//--------------------------------------------------------------------------
+// InnerWindowProc
 //--------------------------------------------------------------------------
 
 inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param) {
@@ -2155,8 +2267,10 @@ inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WP
 }
 
 inline LRESULT CALLBACK TOGL_Window::WindowProc(HWND window_handle, UINT message, WPARAM w_param, LPARAM l_param) {
-    return To().InnerWindowProc(window_handle, message, w_param, l_param);
+    return TOGL_ToWindow().InnerWindowProc(window_handle, message, w_param, l_param);
 }
+
+//------------------------------------------------------------------------------
 
 inline std::string TOGL_Window::WM_ToStr(UINT message) {
     switch (message) {

@@ -423,6 +423,7 @@ void TOGL_SetCustomLogFunction(TOGL_CustomLogFnP_T custom_log);
 
 // ---
 
+// Gives access to logger singleton.
 class TOGL_Logger;
 inline TOGL_Logger& TOGL_ToLogger();
 

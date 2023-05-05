@@ -184,7 +184,7 @@ public:
         m_data.info     = font_info;
         m_err_msg       = "";
 
-        TOGL_WindowInnerAccessor& window_inner_accessor = TOGL_ToWindow();
+        _TOGL_WindowInnerAccessor& window_inner_accessor = TOGL_ToWindow();
         HWND window_handle = window_inner_accessor.ToHWND();
 
         m_device_context_handle = GetDC(window_handle);
