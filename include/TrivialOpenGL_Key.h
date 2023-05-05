@@ -181,7 +181,7 @@ public:
 private:
     struct VirtualKeyData {
         // For more info check lParam for WM_KEYDOWN and WM_KEYUP on msdn.
-        uint32_t    count            : 16,
+        uint32_t    count           : 16,
                     scan_code       : 8,
                     is_ext          : 1,
                     reserved1       : 4,
