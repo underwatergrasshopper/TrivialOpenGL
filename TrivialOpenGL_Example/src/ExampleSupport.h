@@ -237,7 +237,12 @@ public:
         while (true) {
             puts("");
             puts("--- Example Manager ---");
-            for (const auto& example : m_examples) printf("%s, ", example.name.c_str());
+
+            for (size_t ix = 0; ix < m_examples.size(); ++ix) {
+                const auto& example = m_examples[ix];
+                if (ix != 0 && ix % 3 == 0) puts("");
+                printf("%25s, ", example.name.c_str());
+            }
             printf("%s", "\n\n");
 
             printf("(e=exit, d=%s)\n", m_default_example_name.c_str());
@@ -267,7 +272,13 @@ public:
                 continue;
             }
 
-            for (const auto& option : example->all_options) printf("%s, ", option.c_str());
+            size_t counter = 0;
+            for (const auto& option : example->all_options) {
+                if (counter != 0 && counter % 3 == 0) puts("");
+                printf("%25s, ", option.c_str());
+
+                counter += 1;
+            }
             printf("%s", "\n\n");
 
             std::string raw_default_options;
