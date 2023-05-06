@@ -170,7 +170,7 @@ private:
 //------------------------------------------------------------------------------
 
 inline TOGL_TextAdjuster& TOGL_ToGlobalTextAdjuster() {
-    return TOGL_Global<TOGL_TextAdjuster>::To();
+    return TOGL_Global<TOGL_TextAdjuster>::ToObject();
 }
 
 inline void TOGL_ResetTextAdjuster() {
@@ -387,7 +387,7 @@ inline TOGL_FineText TOGL_TextAdjuster::PrepareTextElementText(const TOGL_Font& 
 //------------------------------------------------------------------------------
 
 inline TOGL_TextDrawer& TOGL_ToGlobalTextDrawer() {
-    return TOGL_Global<TOGL_TextDrawer>::To();
+    return TOGL_Global<TOGL_TextDrawer>::ToObject();
 }
 
 inline void TOGL_ResetTextDrawer() {

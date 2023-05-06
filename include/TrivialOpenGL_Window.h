@@ -664,7 +664,7 @@ inline TOGL_GL_Version TOGL_GetOpenGL_Version() {
 // ---
 
 inline TOGL_Window& TOGL_ToWindow() {
-    return TOGL_Global<TOGL_Window>::To();
+    return TOGL_Global<TOGL_Window>::ToObject();
 }
 
 //--------------------------------------------------------------------------

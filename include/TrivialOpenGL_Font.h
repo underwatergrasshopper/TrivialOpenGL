@@ -853,7 +853,7 @@ inline void TOGL_FontDataGenerator::Load(Type& function, const std::string& func
 //-----------------------------------------------------------------------------
 
 inline TOGL_Font& TOGL_ToGlobalFont() {
-    return TOGL_Global<TOGL_Font>::To();
+    return TOGL_Global<TOGL_Font>::ToObject();
 }
 
 inline void TOGL_LoadFont(const TOGL_FontInfo& font_info) {

@@ -359,7 +359,7 @@ using TOGL_Color4U8 = TOGL_Color4<uint8_t>;
 template <typename Type>
 class TOGL_Global {
 public:
-    static Type& To() { return sm_object; }
+    static Type& ToObject() { return sm_object; }
 private:
     static Type sm_object;
 };
@@ -647,7 +647,7 @@ inline void TOGL_SetCustomLogFunction(TOGL_CustomLogFnP_T custom_log) {
 }
 
 inline TOGL_Logger& TOGL_ToLogger() {
-    return TOGL_Global<TOGL_Logger>::To();
+    return TOGL_Global<TOGL_Logger>::ToObject();
 }
 
 // ---
