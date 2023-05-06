@@ -303,30 +303,6 @@ private:
     std::string             m_err_msg;
 };
 
-inline TOGL_Font& TOGL_ToGlobalFont() {
-    return TOGL_Global<TOGL_Font>::To();
-}
-
-inline void TOGL_LoadFont(const TOGL_FontInfo& font_info) {
-    TOGL_ToGlobalFont().Load(font_info);
-}
-
-inline void TOGL_LoadFont(const std::string& name, uint32_t size, TOGL_FontSizeUnitId size_unit, TOGL_FontStyleId style, const TOGL_UnicodeRangeGroup& unicode_range_group) {
-    TOGL_ToGlobalFont().Load(name, size, size_unit, style, unicode_range_group);
-}
-
-inline void TOGL_UnloadFont() {
-    TOGL_ToGlobalFont().Unload();
-}
-
-inline bool TOGL_IsFontOk() {
-    TOGL_ToGlobalFont().IsOk();
-}
-
-inline std::string TOGL_GetFontErrMsg() {
-    TOGL_ToGlobalFont().GetErrMsg();
-}
-
 //==========================================================================
 // Definitions
 //==========================================================================
@@ -870,6 +846,34 @@ inline void TOGL_FontDataGenerator::Load(Type& function, const std::string& func
     if (!function) {
         AddErrMsg(std::string() + "Can not load function: \"" + function_name + "\".");
     }
+}
+
+//-----------------------------------------------------------------------------
+// Global Font
+//-----------------------------------------------------------------------------
+
+inline TOGL_Font& TOGL_ToGlobalFont() {
+    return TOGL_Global<TOGL_Font>::To();
+}
+
+inline void TOGL_LoadFont(const TOGL_FontInfo& font_info) {
+    TOGL_ToGlobalFont().Load(font_info);
+}
+
+inline void TOGL_LoadFont(const std::string& name, uint32_t size, TOGL_FontSizeUnitId size_unit, TOGL_FontStyleId style, const TOGL_UnicodeRangeGroup& unicode_range_group) {
+    TOGL_ToGlobalFont().Load(name, size, size_unit, style, unicode_range_group);
+}
+
+inline void TOGL_UnloadFont() {
+    TOGL_ToGlobalFont().Unload();
+}
+
+inline bool TOGL_IsFontOk() {
+    return TOGL_ToGlobalFont().IsOk();
+}
+
+inline std::string TOGL_GetFontErrMsg() {
+    TOGL_ToGlobalFont().GetErrMsg();
 }
 
 //-----------------------------------------------------------------------------

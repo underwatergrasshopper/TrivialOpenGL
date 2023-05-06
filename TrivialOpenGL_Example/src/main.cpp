@@ -8,7 +8,8 @@
 //------------------------------------------------------------------------------
 
 enum {
-    FONT_SIZE = 16, // in pixels
+    FONT_SIZE       = 16,   // in pixels
+    TEXT_PADDING    = 10,   // in pixels
 };
 
 
@@ -28,36 +29,46 @@ namespace {
     FPS                  s_fps;
 
     TOGL_FineText        s_text;
-    TOGL_TextDrawer      s_text_drawer;
-    TOGL_TextAdjuster    s_text_adjuster;
-
 };
 
 //------------------------------------------------------------------------------
 
 void LoadFont(const std::string& text = "") {
-    TOGL_ToGlobalFont().Load("Courier New", FONT_SIZE, TOGL_FONT_SIZE_UNIT_ID_PIXELS, s_font_style, s_font_char_set);
+    TOGL_ResetTextDrawer();
+    TOGL_ResetTextAdjuster();
 
-    s_text_drawer.SetColor(255, 255, 255, 255);
+    TOGL_LoadFont("Courier New", FONT_SIZE, TOGL_FONT_SIZE_UNIT_ID_PIXELS, s_font_style, s_font_char_set);
+
+    if (TOGL_IsFontOk()) {
+        puts("Font Loaded.");
+    } else {
+        printf("Font Error: %s.\n", TOGL_GetFontErrMsg().c_str());
+    }
+    fflush(stdout);
 
     if (!text.empty()) {
-        s_text = s_text_adjuster.AdjustText(TOGL_ToGlobalFont(), text);
+        s_text = TOGL_TextAdjuster().AdjustText(TOGL_ToGlobalFont(), text);
     }
 }
 
 void SetInfoText(const std::string& text) {
-    s_text = s_text_adjuster.AdjustText(TOGL_ToGlobalFont(), text);
+    s_text = TOGL_AdjustText(text);
 }
 
 void DrawInfoText(const std::string& text = "") {
-    s_text_drawer.SetPos(10, TOGL_GetDrawAreaSize().height - TOGL_ToGlobalFont().GetGlyphHeight());
-    
+    const int           height  = TOGL_GetDrawAreaSize().height - TOGL_ToGlobalFont().GetGlyphHeight();
+    const TOGL_PointI   pos     = {TEXT_PADDING, height};
+    const TOGL_Color4U8 color   = {255, 255, 255, 255};
+
     if (!text.empty()) {
-        s_text_drawer.RenderText(TOGL_ToGlobalFont(), text);
+        TOGL_AdjustAndRenderText(pos, color, text);
     } else {
-        s_text_drawer.RenderText(TOGL_ToGlobalFont(), s_text);
+        TOGL_RenderText(pos, color, s_text);
     }
-    
+}
+
+void SetInfoTextMaxWidth(uint32_t viewport_width) {
+    TOGL_SetLineWrapWidth(viewport_width - TEXT_PADDING * 2);
 }
 
 //------------------------------------------------------------------------------
@@ -594,7 +605,15 @@ int main(int argc, char *argv[]) {
         }
 
         data.do_on_time = [](uint32_t time_interval) {
-            SetInfoText(
+
+        };
+
+        data.draw = []() {
+            s_fps.Measure();
+
+            s_test_image.Animate();
+
+            DrawInfoText(
                 std::string() +
                 "FPS: " + std::to_string(s_fps.Get()) + "\n"
                 "X - Exit\n"
@@ -618,20 +637,13 @@ int main(int argc, char *argv[]) {
                 "I - Display Info\n"
                 "D - on/off TOGL Debug\n"
             );
-        };
-
-        data.draw = []() {
-            s_fps.Measure();
-
-            s_test_image.Animate();
-
-            DrawInfoText();
 
             s_actions.Run();
         };
 
         data.do_on_resize = [](uint16_t width, uint16_t height) {
             s_test_image.Resize(width, height);
+            SetInfoTextMaxWidth(width);
 
             std::string message = "Resize: ";
             message += std::to_string(width) + " " + std::to_string(height);

@@ -13,64 +13,20 @@
 // Declarations
 //==========================================================================
 
-enum TOGL_TextDrawerOrientationId {
-    TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_BOTTOM,
-    TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_TOP,
-};
-
 //------------------------------------------------------------------------------
-// TOGL_TextDrawer
+// Global TextAdjuster
 //------------------------------------------------------------------------------
 
+class TOGL_TextAdjuster;
+TOGL_TextAdjuster& TOGL_ToGlobalTextAdjuster();
 
+void TOGL_ResetTextAdjuster();
 
-class TOGL_TextDrawer {
-public:
-    TOGL_TextDrawer();
-    virtual ~TOGL_TextDrawer();
+// width        - In pixels.
+void TOGL_SetLineWrapWidth(uint32_t width);
+void TOGL_SetNumberOfSpacesInTab(uint32_t number);
 
-    // ---
-
-    void Reset();
-
-    void SetPos(int x, int y);
-    void SetPos(const TOGL_PointI& pos);
-
-    void SetColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-    void SetColor(const TOGL_Color4U8& color);
-
-    // ---
-
-    void RenderText(TOGL_Font& font, const std::string& text);
-    void RenderText(TOGL_Font& font, const TOGL_FineText& text);
-
-    // text             - Encoding format: UTF8.
-    TOGL_SizeU GetTextSize(TOGL_Font& font, const std::string& text) const;
-    TOGL_SizeU GetTextSize(TOGL_Font& font, const  TOGL_FineText& text) const;
-
-    // ---
-
-    void SetOrientation(TOGL_TextDrawerOrientationId orientation);
-    TOGL_TextDrawerOrientationId GetOrientation() const;
-
-private:
-    static void ReplaceAll(std::string& text, const std::string& from, const std::string& to);
-
-    void RenderSolvedText(TOGL_Font& font, const TOGL_FineText& text);
-
-    // text             - Encoding format: UTF8.
-    TOGL_SizeU GetSolvedTextSize(TOGL_Font& font, const TOGL_FineText& text) const;
-
-    TOGL_TextDrawerOrientationId    m_orientation;
-    uint32_t                        m_orientation_factor_y;
-
-    TOGL_PointI                     m_pos;
-    TOGL_PointI                     m_base;
-
-    TOGL_Color4U8                   m_color;
-
-    TOGL_FineText                   m_text;
-};
+TOGL_FineText TOGL_AdjustText(const TOGL_FineText& text);
 
 //------------------------------------------------------------------------------
 // TOGL_TextAdjuster
@@ -115,161 +71,121 @@ private:
     TOGL_FineText PrepareTextElementText(const TOGL_Font& font, const std::wstring& text, uint32_t& line_width) const;
 };
 
-//==========================================================================
-// Definitions
-//==========================================================================
+//------------------------------------------------------------------------------
+// TOGL_TextDrawerOrientationId
+//------------------------------------------------------------------------------
+
+enum TOGL_TextDrawerOrientationId {
+    TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_BOTTOM,
+    TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_TOP,
+};
+
+//------------------------------------------------------------------------------
+// Global TextDrawer
+//------------------------------------------------------------------------------
+
+class TOGL_TextDrawer;
+TOGL_TextDrawer& TOGL_ToGlobalTextDrawer();
+
+void TOGL_ResetTextDrawer();
+
+// text - Encoding format: UTF8.
+
+void TOGL_RenderText(const TOGL_PointI& pos, const TOGL_Color4U8& color, const std::string& text);
+void TOGL_RenderText(const TOGL_PointI& pos, const TOGL_Color4U8& color, const TOGL_FineText& fine_text);
+
+void TOGL_AdjustAndRenderText(const TOGL_PointI& pos, const TOGL_Color4U8& color, const std::string& text);
+void TOGL_AdjustAndRenderText(const TOGL_PointI& pos, const TOGL_Color4U8& color, const TOGL_FineText& fine_text);
+
+TOGL_SizeU TOGL_GetTextSize(const std::string& text);
+TOGL_SizeU TOGL_GetTextSize(const TOGL_FineText& fine_text);
+
+TOGL_SizeU TOGL_AdjustAndGetTextSize(const std::string& text);
+TOGL_SizeU TOGL_AdjustAndGetTextSize(const TOGL_FineText& fine_text);
+
+void TOGL_SetOrientation(TOGL_TextDrawerOrientationId orientation);
+
+TOGL_TextDrawerOrientationId TOGL_GetOrientation();
 
 //------------------------------------------------------------------------------
 // TOGL_TextDrawer
 //------------------------------------------------------------------------------
 
-inline TOGL_TextDrawer::TOGL_TextDrawer() {
-    Reset();
-}
+class TOGL_TextDrawer {
+public:
+    TOGL_TextDrawer();
+    virtual ~TOGL_TextDrawer();
 
-inline TOGL_TextDrawer::~TOGL_TextDrawer() {
+    // ---
 
-}
+    void Reset();
 
-inline void TOGL_TextDrawer::Reset() {
-    SetOrientation(TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_BOTTOM);
-    SetPos(0, 0);
+    void SetPos(int x, int y);
+    void SetPos(const TOGL_PointI& pos);
 
-    m_color = {255, 255, 255, 255};
-}
+    void SetColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+    void SetColor(const TOGL_Color4U8& color);
 
-inline void TOGL_TextDrawer::SetPos(int x, int y) {
-    SetPos({x, y});
-}
+    // ---
 
-inline void TOGL_TextDrawer::SetPos(const TOGL_PointI& pos) {
-    m_pos   = pos;
-    m_base  = pos;
-}
+    void RenderText(TOGL_Font& font, const std::string& text);
+    void RenderText(TOGL_Font& font, const TOGL_FineText& fine_text);
 
-inline void TOGL_TextDrawer::SetColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-    SetColor({r, g, b, a});
-}
+    // text             - Encoding format: UTF8.
+    TOGL_SizeU GetTextSize(TOGL_Font& font, const std::string& text) const;
+    TOGL_SizeU GetTextSize(TOGL_Font& font, const  TOGL_FineText& fine_text) const;
 
-inline void TOGL_TextDrawer::SetColor(const TOGL_Color4U8& color) {
-    m_color = color;
-}
+    // ---
 
-inline void TOGL_TextDrawer::RenderText(TOGL_Font& font, const std::string& text) {
-    RenderText(font, TOGL_FineText(text));
-}
-inline void TOGL_TextDrawer::RenderText(TOGL_Font& font, const TOGL_FineText& text) {
-    RenderSolvedText(font, text);
-}
+    void SetOrientation(TOGL_TextDrawerOrientationId orientation);
+    TOGL_TextDrawerOrientationId GetOrientation() const;
 
-inline TOGL_SizeU TOGL_TextDrawer::GetTextSize(TOGL_Font& font, const std::string& text) const {
-    return GetTextSize(font,  TOGL_FineText(text));
-}
+private:
+    static void ReplaceAll(std::string& text, const std::string& from, const std::string& to);
 
-inline TOGL_SizeU TOGL_TextDrawer::GetTextSize(TOGL_Font& font, const  TOGL_FineText& text) const {
-    return GetSolvedTextSize(font, text);
-}
+    void RenderSolvedText(TOGL_Font& font, const TOGL_FineText& text);
 
-inline void TOGL_TextDrawer::SetOrientation(TOGL_TextDrawerOrientationId orientation) {
-    m_orientation = orientation;
+    // text             - Encoding format: UTF8.
+    TOGL_SizeU GetSolvedTextSize(TOGL_Font& font, const TOGL_FineText& text) const;
 
-    switch (m_orientation) {
-    case TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_BOTTOM:
-        m_orientation_factor_y = -1;
-        break;
-    case TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_TOP:
-        m_orientation_factor_y = 1;
-        break;
-    }
-}
+    TOGL_TextDrawerOrientationId    m_orientation;
+    uint32_t                        m_orientation_factor_y;
 
-inline TOGL_TextDrawerOrientationId TOGL_TextDrawer::GetOrientation() const {
-    return m_orientation;
-}
+    TOGL_PointI                     m_pos;
+    TOGL_PointI                     m_base;
+
+    TOGL_Color4U8                   m_color;
+
+    TOGL_FineText                   m_text;
+};
+
+//==========================================================================
+// Definitions
+//==========================================================================
 
 //------------------------------------------------------------------------------
+// Global TextAdjuster
+//------------------------------------------------------------------------------
 
-inline void TOGL_TextDrawer::ReplaceAll(std::string& text, const std::string& from, const std::string& to) {
-    if (!from.empty()) {
-        size_t pos = 0;
-        while((pos = text.find(from, pos)) != std::string::npos) {
-            text.replace(pos, from.length(), to);
-            pos += to.length();
-        }
-    }
+inline TOGL_TextAdjuster& TOGL_ToGlobalTextAdjuster() {
+    return TOGL_Global<TOGL_TextAdjuster>::To();
 }
 
-inline void TOGL_TextDrawer::RenderSolvedText(TOGL_Font& font, const TOGL_FineText& text) {
-    glPushAttrib(GL_CURRENT_BIT);
-    glColor4ubv(m_color.ToData());
-
-    for (const TOGL_FineTextElementContainer& element : text.ToElementContainers()) {
-        switch (element.GetTypeId()) {
-
-        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_TEXT:
-            font.RenderBegin();
-            for (const uint32_t code : element.GetText()) {
-                if (code == '\n') {
-                    m_pos.x = m_base.x;
-                    m_pos.y += font.GetGlyphHeight() * m_orientation_factor_y;
-                } else {
-                    glPushMatrix();
-                    glTranslatef(float(m_pos.x), float(m_pos.y), 0);
-
-                    font.RenderGlyph(code);
-                    m_pos.x += font.GetGlyphSize(code).width;
-
-                    glPopMatrix();
-                }
-            }
-            font.RenderEnd();
-            break;
-
-        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_COLOR:
-            glColor4ubv(element.GetColor().ToData());
-            break;
-
-        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
-            m_pos.x += element.GetTextHorizontalSpacer().GetWidth();
-            break;
-        } // switch
-    }
-
-    glPopAttrib();
+inline void TOGL_ResetTextAdjuster() {
+    TOGL_ToGlobalTextAdjuster().Reset();
 }
 
-inline TOGL_SizeU TOGL_TextDrawer::GetSolvedTextSize(TOGL_Font& font, const TOGL_FineText& text) const {
-    TOGL_SizeU size = {0, font.GetGlyphHeight()};
-    uint32_t width = 0;
+// width        - In pixels.
+inline void TOGL_SetLineWrapWidth(uint32_t width) {
+    TOGL_ToGlobalTextAdjuster().SetLineWrapWidth(width);
+}
 
+inline void TOGL_SetNumberOfSpacesInTab(uint32_t number) {
+    TOGL_ToGlobalTextAdjuster().SetNumberOfSpacesInTab(number);
+}
 
-    for (const TOGL_FineTextElementContainer& element : text.ToElementContainers()) {
-        switch (element.GetTypeId()) {
-
-        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_TEXT:
-            for (const uint32_t code : element.GetText()) {
-                if (code == '\n') {
-                    size.height += font.GetGlyphHeight();
-
-                    if (size.width < width) size.width = width;
-                    width = 0;
-                } else {
-                    width += font.GetGlyphSize(code).width;
-                }
-            }
-            break;
-        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_COLOR:
-            break;
-
-        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
-            width += element.GetTextHorizontalSpacer().GetWidth();
-            break;
-        }
-    }
-
-    if (size.width < width) size.width = width;
-
-    return size;
+inline TOGL_FineText TOGL_AdjustText(const TOGL_FineText& text) {
+    return TOGL_ToGlobalTextAdjuster().AdjustText(TOGL_ToGlobalFont(), text);
 }
 
 //------------------------------------------------------------------------------
@@ -462,6 +378,220 @@ inline TOGL_FineText TOGL_TextAdjuster::PrepareTextElementText(const TOGL_Font& 
     }
     prepared_fine_text.Append(prepared_text);
     return prepared_fine_text;
+}
+
+//------------------------------------------------------------------------------
+// Global TextDrawer
+//------------------------------------------------------------------------------
+
+inline TOGL_TextDrawer& TOGL_ToGlobalTextDrawer() {
+    return TOGL_Global<TOGL_TextDrawer>::To();
+}
+
+inline void TOGL_ResetTextDrawer() {
+    return TOGL_ToGlobalTextDrawer().Reset();
+}
+
+inline void TOGL_RenderText(const TOGL_PointI& pos, const TOGL_Color4U8& color, const std::string& text) {
+    TOGL_RenderText(pos, color, TOGL_FineText(text));
+}
+
+inline void TOGL_RenderText(const TOGL_PointI& pos, const TOGL_Color4U8& color, const TOGL_FineText& fine_text) {
+    TOGL_TextDrawer& drawer = TOGL_ToGlobalTextDrawer();
+    drawer.SetPos(pos);
+    drawer.SetColor(color);
+    drawer.RenderText(TOGL_ToGlobalFont(), fine_text);
+}
+
+inline void TOGL_AdjustAndRenderText(const TOGL_PointI& pos, const TOGL_Color4U8& color, const std::string& text) {
+    TOGL_AdjustAndRenderText(pos, color, TOGL_FineText(text));
+}
+
+inline void TOGL_AdjustAndRenderText(const TOGL_PointI& pos, const TOGL_Color4U8& color, const TOGL_FineText& fine_text) {
+    TOGL_Font&          font            = TOGL_ToGlobalFont();
+    TOGL_TextAdjuster&  text_adjuster   = TOGL_ToGlobalTextAdjuster();
+    TOGL_TextDrawer&    drawer          = TOGL_ToGlobalTextDrawer();
+
+    drawer.SetPos(pos);
+    drawer.SetColor(color);
+    drawer.RenderText(font, text_adjuster.AdjustText(font, fine_text));
+}
+
+inline TOGL_SizeU TOGL_GetTextSize(const std::string& text) {
+    return TOGL_GetTextSize(TOGL_FineText(text));
+}
+
+inline TOGL_SizeU TOGL_GetTextSize(const TOGL_FineText& fine_text) {
+    TOGL_Font&          font            = TOGL_ToGlobalFont();
+    TOGL_TextDrawer&    drawer          = TOGL_ToGlobalTextDrawer();
+
+    drawer.GetTextSize(font, fine_text);
+}
+
+inline TOGL_SizeU TOGL_AdjustAndGetTextSize(const std::string& text) {
+    return TOGL_AdjustAndGetTextSize(TOGL_FineText(text));
+}
+
+inline TOGL_SizeU TOGL_AdjustAndGetTextSize(const TOGL_FineText& fine_text) {
+    TOGL_Font&          font            = TOGL_ToGlobalFont();
+    TOGL_TextAdjuster&  text_adjuster   = TOGL_ToGlobalTextAdjuster();
+    TOGL_TextDrawer&    drawer          = TOGL_ToGlobalTextDrawer();
+
+    drawer.GetTextSize(font, text_adjuster.AdjustText(font, fine_text));
+}
+
+inline void TOGL_SetOrientation(TOGL_TextDrawerOrientationId orientation) {
+    TOGL_ToGlobalTextDrawer().SetOrientation(orientation);
+}
+
+inline TOGL_TextDrawerOrientationId TOGL_GetOrientation() {
+    return TOGL_ToGlobalTextDrawer().GetOrientation();
+}
+
+//------------------------------------------------------------------------------
+// TOGL_TextDrawer
+//------------------------------------------------------------------------------
+
+inline TOGL_TextDrawer::TOGL_TextDrawer() {
+    Reset();
+}
+
+inline TOGL_TextDrawer::~TOGL_TextDrawer() {
+
+}
+
+inline void TOGL_TextDrawer::Reset() {
+    SetOrientation(TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_BOTTOM);
+    SetPos(0, 0);
+
+    m_color = {255, 255, 255, 255};
+}
+
+inline void TOGL_TextDrawer::SetPos(int x, int y) {
+    SetPos({x, y});
+}
+
+inline void TOGL_TextDrawer::SetPos(const TOGL_PointI& pos) {
+    m_pos   = pos;
+    m_base  = pos;
+}
+
+inline void TOGL_TextDrawer::SetColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+    SetColor({r, g, b, a});
+}
+
+inline void TOGL_TextDrawer::SetColor(const TOGL_Color4U8& color) {
+    m_color = color;
+}
+
+inline void TOGL_TextDrawer::RenderText(TOGL_Font& font, const std::string& text) {
+    RenderText(font, TOGL_FineText(text));
+}
+
+inline void TOGL_TextDrawer::RenderText(TOGL_Font& font, const TOGL_FineText& fine_text) {
+    glPushAttrib(GL_CURRENT_BIT);
+    glColor4ubv(m_color.ToData());
+
+    for (const TOGL_FineTextElementContainer& element : fine_text.ToElementContainers()) {
+        switch (element.GetTypeId()) {
+
+        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_TEXT:
+            font.RenderBegin();
+            for (const uint32_t code : element.GetText()) {
+                if (code == '\n') {
+                    m_pos.x = m_base.x;
+                    m_pos.y += font.GetGlyphHeight() * m_orientation_factor_y;
+                } else {
+                    glPushMatrix();
+                    glTranslatef(float(m_pos.x), float(m_pos.y), 0);
+
+                    font.RenderGlyph(code);
+                    m_pos.x += font.GetGlyphSize(code).width;
+
+                    glPopMatrix();
+                }
+            }
+            font.RenderEnd();
+            break;
+
+        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_COLOR:
+            glColor4ubv(element.GetColor().ToData());
+            break;
+
+        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
+            m_pos.x += element.GetTextHorizontalSpacer().GetWidth();
+            break;
+        } // switch
+    }
+
+    glPopAttrib();
+}
+
+inline TOGL_SizeU TOGL_TextDrawer::GetTextSize(TOGL_Font& font, const std::string& text) const {
+    return GetTextSize(font, TOGL_FineText(text));
+}
+
+inline TOGL_SizeU TOGL_TextDrawer::GetTextSize(TOGL_Font& font, const  TOGL_FineText& fine_text) const {
+    TOGL_SizeU size = {0, font.GetGlyphHeight()};
+    uint32_t width = 0;
+
+
+    for (const TOGL_FineTextElementContainer& element : fine_text.ToElementContainers()) {
+        switch (element.GetTypeId()) {
+
+        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_TEXT:
+            for (const uint32_t code : element.GetText()) {
+                if (code == '\n') {
+                    size.height += font.GetGlyphHeight();
+
+                    if (size.width < width) size.width = width;
+                    width = 0;
+                } else {
+                    width += font.GetGlyphSize(code).width;
+                }
+            }
+            break;
+        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_COLOR:
+            break;
+
+        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
+            width += element.GetTextHorizontalSpacer().GetWidth();
+            break;
+        }
+    }
+
+    if (size.width < width) size.width = width;
+
+    return size;
+}
+
+inline void TOGL_TextDrawer::SetOrientation(TOGL_TextDrawerOrientationId orientation) {
+    m_orientation = orientation;
+
+    switch (m_orientation) {
+    case TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_BOTTOM:
+        m_orientation_factor_y = -1;
+        break;
+    case TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_TOP:
+        m_orientation_factor_y = 1;
+        break;
+    }
+}
+
+inline TOGL_TextDrawerOrientationId TOGL_TextDrawer::GetOrientation() const {
+    return m_orientation;
+}
+
+//------------------------------------------------------------------------------
+
+inline void TOGL_TextDrawer::ReplaceAll(std::string& text, const std::string& from, const std::string& to) {
+    if (!from.empty()) {
+        size_t pos = 0;
+        while((pos = text.find(from, pos)) != std::string::npos) {
+            text.replace(pos, from.length(), to);
+            pos += to.length();
+        }
+    }
 }
 
 #endif // TRIVIALOPENGL_TEXTDRAWER_H_
