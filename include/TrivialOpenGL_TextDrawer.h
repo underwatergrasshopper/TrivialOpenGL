@@ -22,6 +22,8 @@ enum TOGL_TextDrawerOrientationId {
 // TOGL_TextDrawer
 //------------------------------------------------------------------------------
 
+
+
 class TOGL_TextDrawer {
 public:
     TOGL_TextDrawer();

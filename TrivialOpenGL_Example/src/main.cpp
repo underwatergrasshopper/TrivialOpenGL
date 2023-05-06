@@ -27,7 +27,6 @@ namespace {
     TestFont             s_test_font;
     FPS                  s_fps;
 
-    TOGL_Font            s_font;
     TOGL_FineText        s_text;
     TOGL_TextDrawer      s_text_drawer;
     TOGL_TextAdjuster    s_text_adjuster;
@@ -37,26 +36,26 @@ namespace {
 //------------------------------------------------------------------------------
 
 void LoadFont(const std::string& text = "") {
-    s_font.Load("Courier New", FONT_SIZE, TOGL_FONT_SIZE_UNIT_ID_PIXELS, s_font_style, s_font_char_set);
+    TOGL_ToGlobalFont().Load("Courier New", FONT_SIZE, TOGL_FONT_SIZE_UNIT_ID_PIXELS, s_font_style, s_font_char_set);
 
     s_text_drawer.SetColor(255, 255, 255, 255);
 
     if (!text.empty()) {
-        s_text = s_text_adjuster.AdjustText(s_font, text);
+        s_text = s_text_adjuster.AdjustText(TOGL_ToGlobalFont(), text);
     }
 }
 
 void SetInfoText(const std::string& text) {
-    s_text = s_text_adjuster.AdjustText(s_font, text);
+    s_text = s_text_adjuster.AdjustText(TOGL_ToGlobalFont(), text);
 }
 
 void DrawInfoText(const std::string& text = "") {
-    s_text_drawer.SetPos(10, TOGL_GetDrawAreaSize().height - s_font.GetGlyphHeight());
+    s_text_drawer.SetPos(10, TOGL_GetDrawAreaSize().height - TOGL_ToGlobalFont().GetGlyphHeight());
     
     if (!text.empty()) {
-        s_text_drawer.RenderText(s_font, text);
+        s_text_drawer.RenderText(TOGL_ToGlobalFont(), text);
     } else {
-        s_text_drawer.RenderText(s_font, s_text);
+        s_text_drawer.RenderText(TOGL_ToGlobalFont(), s_text);
     }
     
 }
@@ -472,10 +471,11 @@ int main(int argc, char *argv[]) {
 
             LoadFont();
 
-            s_font.SaveAsBMP();
+            TOGL_ToGlobalFont().SaveAsBMP();
         };
 
         data.draw = []() {
+            TOGL_Font& font = TOGL_ToGlobalFont();
             
             s_test_image.Animate();
             
@@ -485,7 +485,7 @@ int main(int argc, char *argv[]) {
             glPushMatrix();
             glTranslatef(50, 100, 0);
             glScaled(3, 3, 1);
-            s_font.RenderGlyphs(u8"Somme text. Xj\u3400\u5016\u9D9B\u0001\U00024B62");
+            font.RenderGlyphs(u8"Somme text. Xj\u3400\u5016\u9D9B\u0001\U00024B62");
             glPopMatrix();
 
             TOGL_TextDrawer     text_drawer;
@@ -496,9 +496,9 @@ int main(int argc, char *argv[]) {
             text_drawer.SetPos(50, 100);
             text_drawer.SetColor(255, 0, 0, 255);
 
-            text_drawer.RenderText(s_font, u8"Some text. Xj\u3400\u5016\u9D9B\u0001\U00024B62\nNew Line.");
-            text_drawer.RenderText(s_font, u8"\nAnd another line.");
-            text_drawer.RenderText(s_font, u8"\n\tTab.\b");
+            text_drawer.RenderText(font, u8"Some text. Xj\u3400\u5016\u9D9B\u0001\U00024B62\nNew Line.");
+            text_drawer.RenderText(font, u8"\nAnd another line.");
+            text_drawer.RenderText(font, u8"\n\tTab.\b");
 
             TOGL_FineText text = TOGL_FineText(
                 TOGL_Color4U8(0, 0, 0, 255),
@@ -514,17 +514,17 @@ int main(int argc, char *argv[]) {
                 u8"Very-long-text-to-split-apart. ");
 
             text_adjuster.SetLineWrapWidth(s_test_image.GetSize().width - 10);
-            text = text_adjuster.AdjustText(s_font, text);
+            text = text_adjuster.AdjustText(font, text);
 
-            const TOGL_SizeU text_size = text_drawer.GetTextSize(s_font, text);
+            const TOGL_SizeU text_size = text_drawer.GetTextSize(font, text);
 
             glColor3f(1, 1, 1);
             DrawRectangle(0, s_test_image.GetSize().height - text_size.height, s_test_image.GetSize().width - 10, text_size.height);
 
-            text_drawer.SetPos(0 , s_test_image.GetSize().height - s_font.GetGlyphHeight());
+            text_drawer.SetPos(0 , s_test_image.GetSize().height - font.GetGlyphHeight());
             
             text_drawer.SetColor(255, 0, 0, 255);
-            text_drawer.RenderText(s_font, text);
+            text_drawer.RenderText(font, text);
             
         };
 

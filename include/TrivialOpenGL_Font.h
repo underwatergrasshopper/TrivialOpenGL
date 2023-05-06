@@ -230,26 +230,47 @@ private:
 };
 
 //-----------------------------------------------------------------------------
-// TOGL_Font
+// Global Font
 //-----------------------------------------------------------------------------
 
+class TOGL_Font;
+TOGL_Font& TOGL_ToGlobalFont();
+
+// If global font has been loaded successfully, then TOGL_IsFontOk() should return true. Otherwise, global font failed to load, and error message can be retrieved by TOGL_GetFontErrMsg().
+void TOGL_LoadFont(const TOGL_FontInfo& font_info);
+void TOGL_LoadFont(const std::string& name, uint32_t size, TOGL_FontSizeUnitId size_unit, TOGL_FontStyleId style, const TOGL_UnicodeRangeGroup& unicode_range_group);
+
+void TOGL_UnloadFont();
+
+bool TOGL_IsFontOk();
+std::string TOGL_GetFontErrMsg();
+
+//-----------------------------------------------------------------------------
+// TOGL_Font
+//-----------------------------------------------------------------------------
 class TOGL_Font {
 public:
     TOGL_Font();
     virtual ~TOGL_Font();
 
+    // If font has been loaded successfully, then IsOk() should return true. Otherwise, font failed to load, and error message can be retrieved by GetErrMsg().
     void Load(const TOGL_FontInfo& font_info);
     void Load(const std::string& name, uint32_t size, TOGL_FontSizeUnitId size_unit, TOGL_FontStyleId style, const TOGL_UnicodeRangeGroup& unicode_range_group);
+
     void Unload();
     bool IsLoaded() const;
 
+    // Warning!!! Each text render section of code which starts with RenderBegin() MUST end with RenderEnd().
     void RenderBegin();
     void RenderEnd();
 
+    // Renders single glyph.
+    // Can be used only in between RenderBegin() and RenderEnd().
     void RenderGlyph(uint32_t code);
 
     // Renders array of glyphs. 
     // Special characters (like '\n', '\t', ... and so on) are interpreted as "unknown characters".
+    // Must be used in between RenderBegin() and RenderEnd().
     // text         - Encoding format: UTF8.
     void RenderGlyphs(const std::string& text);
 
@@ -281,6 +302,30 @@ private:
     bool                    m_is_loaded;
     std::string             m_err_msg;
 };
+
+inline TOGL_Font& TOGL_ToGlobalFont() {
+    return TOGL_Global<TOGL_Font>::To();
+}
+
+inline void TOGL_LoadFont(const TOGL_FontInfo& font_info) {
+    TOGL_ToGlobalFont().Load(font_info);
+}
+
+inline void TOGL_LoadFont(const std::string& name, uint32_t size, TOGL_FontSizeUnitId size_unit, TOGL_FontStyleId style, const TOGL_UnicodeRangeGroup& unicode_range_group) {
+    TOGL_ToGlobalFont().Load(name, size, size_unit, style, unicode_range_group);
+}
+
+inline void TOGL_UnloadFont() {
+    TOGL_ToGlobalFont().Unload();
+}
+
+inline bool TOGL_IsFontOk() {
+    TOGL_ToGlobalFont().IsOk();
+}
+
+inline std::string TOGL_GetFontErrMsg() {
+    TOGL_ToGlobalFont().GetErrMsg();
+}
 
 //==========================================================================
 // Definitions
