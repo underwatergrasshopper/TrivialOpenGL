@@ -100,9 +100,11 @@ void TOGL_AdjustAndRenderText(const TOGL_PointI& pos, const TOGL_Color4U8& color
 TOGL_SizeU TOGL_GetTextSize(const std::string& text);
 TOGL_SizeU TOGL_GetTextSize(const TOGL_FineText& fine_text);
 
+// Adjusts with global text adjuster, accessed by TOGL_ToGlobalTextAdjuster().
 TOGL_SizeU TOGL_AdjustAndGetTextSize(const std::string& text);
 TOGL_SizeU TOGL_AdjustAndGetTextSize(const TOGL_FineText& fine_text);
 
+// Sets text line draw orientation.
 void TOGL_SetOrientation(TOGL_TextDrawerOrientationId orientation);
 
 TOGL_TextDrawerOrientationId TOGL_GetOrientation();
