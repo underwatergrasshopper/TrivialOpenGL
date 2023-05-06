@@ -258,6 +258,10 @@ public:
     // Returns glyph height in pixels.
     uint32_t GetGlyphHeight() const;
 
+    // width        - In pixels.
+    // Returns number of glyphs from text which will fit in width.
+    uint32_t GetGlyphCountInWidth(const std::wstring& text, uint32_t width) const;
+
     bool IsOk() const;
     std::string GetErrMsg() const;
 
@@ -967,6 +971,17 @@ inline TOGL_SizeU TOGL_Font::GetGlyphSize(uint32_t code) const {
 
 inline uint32_t TOGL_Font::GetGlyphHeight() const {
     return m_data.glyph_height;
+}
+
+inline uint32_t TOGL_Font::GetGlyphCountInWidth(const std::wstring& text, uint32_t width) const {
+    uint32_t    count           = 0;
+    uint32_t    current_width   = 0;
+    for (const wchar_t c : text) {
+        current_width += GetGlyphSize(c).width;
+        if (current_width > width) break;
+        count += 1;
+    }
+    return count;
 }
 
 inline bool TOGL_Font::IsOk() const {

@@ -40,19 +40,20 @@ private:
 };
 
 //------------------------------------------------------------------------------
-// TOGL_FineTextElement
+// TOGL_FineTextElementContainer
 //------------------------------------------------------------------------------
 
-class TOGL_FineTextElement {
+class TOGL_FineTextElementContainer {
 public:
-    TOGL_FineTextElement()                                                   : m_container(nullptr) {}
-    TOGL_FineTextElement(const std::string& text_utf8)                       : m_container(new TextContainer(text_utf8)) {}
-    TOGL_FineTextElement(const std::wstring& text)                           : m_container(new TextContainer(text)) {}
-    TOGL_FineTextElement(const TOGL_Color4U8& color)                         : m_container(new TextColorContainer(color)) {}
-    TOGL_FineTextElement(const TOGL_TextHorizontalSpacer& horizontal_spacer) : m_container(new TextHorizontalSpacerContainer(horizontal_spacer)) {}
+    TOGL_FineTextElementContainer()                                                   : m_container(nullptr) {}
+    TOGL_FineTextElementContainer(const std::string& text_utf8)                       : m_container(new TextContainer(text_utf8)) {}
+    TOGL_FineTextElementContainer(const std::wstring& text)                           : m_container(new TextContainer(text)) {}
+    TOGL_FineTextElementContainer(const TOGL_Color4U8& color)                         : m_container(new TextColorContainer(color)) {}
+    TOGL_FineTextElementContainer(const TOGL_TextHorizontalSpacer& horizontal_spacer) : m_container(new TextHorizontalSpacerContainer(horizontal_spacer)) {}
 
-    TOGL_FineTextElement(const TOGL_FineTextElement& text_element)           : m_container(text_element.m_container->CopyNew()) {}
-    TOGL_FineTextElement& operator=(const TOGL_FineTextElement& text_element) {
+    TOGL_FineTextElementContainer(const TOGL_FineTextElementContainer& text_element)  : m_container(text_element.m_container->CopyNew()) {}
+
+    TOGL_FineTextElementContainer& operator=(const TOGL_FineTextElementContainer& text_element) {
         if (this != &text_element) {
             delete m_container;
             m_container = text_element.m_container->CopyNew();
@@ -60,19 +61,19 @@ public:
         return *this;
     }
 
-    TOGL_FineTextElement(TOGL_FineTextElement&& text_element) noexcept {
+    TOGL_FineTextElementContainer(TOGL_FineTextElementContainer&& text_element) noexcept {
         m_container = text_element.m_container;
         text_element.m_container = nullptr;
     }
 
-    TOGL_FineTextElement& operator=(TOGL_FineTextElement&& text_element) noexcept {
+    TOGL_FineTextElementContainer& operator=(TOGL_FineTextElementContainer&& text_element) noexcept {
         delete m_container;
         m_container = text_element.m_container;
         text_element.m_container = nullptr;
         return *this;
     }
 
-    virtual ~TOGL_FineTextElement() {
+    virtual ~TOGL_FineTextElementContainer() {
         delete m_container;
     }
 
@@ -184,68 +185,99 @@ private:
 };
 
 //------------------------------------------------------------------------------
-// TOGL_FineTextElement
+// TOGL_FineText
 //------------------------------------------------------------------------------
 
 class TOGL_FineText {
 public:
+    using ElementContainer = TOGL_FineTextElementContainer;
+
     TOGL_FineText() {}
 
     // text - Encoding format: UTF8.
     TOGL_FineText(const std::string& text) {
-        Append(TOGL_FineTextElement(text));
+        Append(text);
     }
 
     TOGL_FineText(const std::wstring& text) {
-        Append(TOGL_FineTextElement(text));
+        Append(text);
     }
 
-    template <typename... Types>
-    explicit TOGL_FineText(const TOGL_FineTextElement& element, const Types&... arguments) {
-        Append(element, TOGL_FineTextElement(arguments)...);
+    template <typename Type, typename... Types>
+    explicit TOGL_FineText(const Type& element, const Types&... elements) {
+        Append(element, elements...);
     }
 
-    explicit TOGL_FineText(const std::vector<TOGL_FineTextElement>& elements) : m_elements(elements) {}
+    explicit TOGL_FineText(const std::vector<ElementContainer>& element_containers) : m_element_containers(element_containers) {}
 
     virtual ~TOGL_FineText() {}
 
-
-    void Append(const TOGL_FineTextElement& element) {
-        m_elements.push_back(element);
+    // element, elements    - Any of those types: std::string, std::wstring,TOGL_ Color3FU, 
+    //                        TOGL_TextHorizontalSpacer, ElementContainer, std::vector<TOGL_FineTextElementContainer>.
+    template <typename Type, typename... Types>
+    void Set(const Type& element, const Types&... elements) {
+        Clear();
+        Append(element, elements...);
     }
 
-    template <typename... Types>
-    void Append(const TOGL_FineTextElement& element1, const TOGL_FineTextElement& element2, const Types&... arguments) {
+    // Adds new text.
+    void Append(const std::string& text) {
+        m_element_containers.push_back(ElementContainer(text));
+    }
+
+    // Adds new text.
+    void Append(const std::wstring& text) {
+        m_element_containers.push_back(ElementContainer(text));
+    }
+
+    // Sets text color. Will be used for text newly added after this element.
+    void Append(const TOGL_Color4U8& color) {
+        m_element_containers.push_back(ElementContainer(color));
+    }
+
+    // Adds horizontal spacer to text.
+    void Append(const TOGL_TextHorizontalSpacer& horizontal_spacer) {
+        m_element_containers.push_back(ElementContainer(horizontal_spacer));
+    }
+
+    void Append(const ElementContainer& element) {
+        m_element_containers.push_back(element);
+    }
+
+    void Append(const std::vector<ElementContainer>& element_containers) {
+        m_element_containers.insert(m_element_containers.end(), element_containers.begin(), element_containers.end());
+    }
+
+    // element1, element2, elements   - Any of those types: std::string, std::wstring,TOGL_ Color3FU, 
+    //                                  TOGL_TextHorizontalSpacer, ElementContainer, std::vector<TOGL_FineTextElementContainer>.
+    template <typename Type1, typename Type2, typename... Types>
+    void Append(const Type1& element1, const Type2& element2, const Types&... elements) {
         Append(element1);
-        Append(element2, TOGL_FineTextElement(arguments)...);
+        Append(element2, elements...);
     }
 
-    void Append(const std::vector<TOGL_FineTextElement>& elements) {
-        m_elements.insert(m_elements.end(), elements.begin(), elements.end());
+    void Clear() {
+        m_element_containers.clear();
     }
 
-    void Clean() {
-        m_elements.clear();
+    std::vector<ElementContainer> GetElementContainers() const {
+        return m_element_containers;
     }
 
-    std::vector<TOGL_FineTextElement> GetElements() const {
-        return m_elements;
+    std::vector<ElementContainer>& ToElementContainers() {
+        return m_element_containers;
     }
 
-    std::vector<TOGL_FineTextElement>& ToElements() {
-        return m_elements;
-    }
-
-    const std::vector<TOGL_FineTextElement>& ToElements() const {
-        return m_elements;
+    const std::vector<ElementContainer>& ToElementContainers() const {
+        return m_element_containers;
     }
 
 private:
-    std::vector<TOGL_FineTextElement> m_elements;
+    std::vector<ElementContainer> m_element_containers;
 };
 
 inline TOGL_FineText& operator+=(TOGL_FineText& l, const TOGL_FineText& r) {
-    l.Append(r.ToElements());
+    l.Append(r.ToElementContainers());
     return l;
 }
 

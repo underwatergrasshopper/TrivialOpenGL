@@ -23,26 +23,42 @@ namespace {
 
     TOGL_FontStyleId     s_font_style                   = TOGL_FONT_STYLE_ID_NORMAL;
     TOGL_FontCharSetId   s_font_char_set                = TOGL_FONT_CHAR_SET_ID_ENGLISH;
-                         
-    TOGL_Font            s_font;
-    TOGL_TextDrawer      s_text_drawer;
 
     TestFont             s_test_font;
     FPS                  s_fps;
+
+    TOGL_Font            s_font;
+    TOGL_FineText        s_text;
+    TOGL_TextDrawer      s_text_drawer;
+    TOGL_TextAdjuster    s_text_adjuster;
+
 };
 
 //------------------------------------------------------------------------------
 
-void LoadFont() {
+void LoadFont(const std::string& text = "") {
     s_font.Load("Courier New", FONT_SIZE, TOGL_FONT_SIZE_UNIT_ID_PIXELS, s_font_style, s_font_char_set);
 
     s_text_drawer.SetColor(255, 255, 255, 255);
+
+    if (!text.empty()) {
+        s_text = s_text_adjuster.AdjustText(s_font, text);
+    }
+}
+
+void SetInfoText(const std::string& text) {
+    s_text = s_text_adjuster.AdjustText(s_font, text);
 }
 
 void DrawInfoText(const std::string& text = "") {
     s_text_drawer.SetPos(10, TOGL_GetDrawAreaSize().height - s_font.GetGlyphHeight());
     
-    s_text_drawer.RenderText(s_font, TOGL_FineText(text));
+    if (!text.empty()) {
+        s_text_drawer.RenderText(s_font, text);
+    } else {
+        s_text_drawer.RenderText(s_font, s_text);
+    }
+    
 }
 
 //------------------------------------------------------------------------------
@@ -472,18 +488,19 @@ int main(int argc, char *argv[]) {
             s_font.RenderGlyphs(u8"Somme text. Xj\u3400\u5016\u9D9B\u0001\U00024B62");
             glPopMatrix();
 
-            TOGL_TextDrawer text_drawer;
+            TOGL_TextDrawer     text_drawer;
+            TOGL_TextAdjuster   text_adjuster;
             
             //text_drawer.SetOrientation(TEXT_DRAWER_ORIENTATION_LEFT_TOP);
 
             text_drawer.SetPos(50, 100);
             text_drawer.SetColor(255, 0, 0, 255);
+
             text_drawer.RenderText(s_font, u8"Some text. Xj\u3400\u5016\u9D9B\u0001\U00024B62\nNew Line.");
             text_drawer.RenderText(s_font, u8"\nAnd another line.");
             text_drawer.RenderText(s_font, u8"\n\tTab.\b");
 
-
-            const TOGL_FineText text = TOGL_FineText(
+            TOGL_FineText text = TOGL_FineText(
                 TOGL_Color4U8(0, 0, 0, 255),
                 u8"Some text. Xj\u3400\u5016\u9D9B\u0001\U00024B62 "
                 u8"Many words in line. Many words in line. Many words in line. Many words in line. Many words in line. Many words in line.\n"
@@ -495,7 +512,9 @@ int main(int argc, char *argv[]) {
                 u8"New line. "
                 u8"\tTab.Long                                 line. "
                 u8"Very-long-text-to-split-apart. ");
-            text_drawer.SetLineWrapWidth(s_test_image.GetSize().width - 10);
+
+            text_adjuster.SetLineWrapWidth(s_test_image.GetSize().width - 10);
+            text = text_adjuster.AdjustText(s_font, text);
 
             const TOGL_SizeU text_size = text_drawer.GetTextSize(s_font, text);
 
@@ -542,6 +561,7 @@ int main(int argc, char *argv[]) {
         data.style                  = 0;
         data.style                  |= TOGL_WINDOW_STYLE_BIT_CENTERED;
         data.icon_resource_id       = ICON_ID;
+        data.timer_time_interval    = 1000;
 
         if (!IsOption("no_debug"))                      data.log_level = TOGL_LOG_LEVEL_DEBUG;
 
@@ -573,12 +593,10 @@ int main(int argc, char *argv[]) {
             };
         }
 
-        data.draw = []() {
-            s_test_image.Animate();
-
-            DrawInfoText(
+        data.do_on_time = [](uint32_t time_interval) {
+            SetInfoText(
                 std::string() +
-                "FPS: " + std::to_string(s_fps.Measure()) + "\n"
+                "FPS: " + std::to_string(s_fps.Get()) + "\n"
                 "X - Exit\n"
                 "R - Redraw\n"
                 "C - Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.height) + ") (as window size)\n"
@@ -600,6 +618,14 @@ int main(int argc, char *argv[]) {
                 "I - Display Info\n"
                 "D - on/off TOGL Debug\n"
             );
+        };
+
+        data.draw = []() {
+            s_fps.Measure();
+
+            s_test_image.Animate();
+
+            DrawInfoText();
 
             s_actions.Run();
         };
