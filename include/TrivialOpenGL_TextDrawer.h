@@ -219,34 +219,38 @@ inline void TOGL_TextAdjuster::SetNumberOfSpacesInTab(uint32_t number) {
     m_tab_as_spaces = std::wstring(number, L' ');
 }
 
-inline TOGL_FineText TOGL_TextAdjuster::AdjustText(const TOGL_Font& font, const  TOGL_FineText& text) const {
-    TOGL_FineText prepared_text;
+inline TOGL_FineText TOGL_TextAdjuster::AdjustText(const TOGL_Font& font, const  TOGL_FineText& fine_text) const {
+    TOGL_FineText adjusted_fine_text;
 
-    uint32_t line_width = 0; // in pixels
+    if (font.IsLoaded()) {
+        uint32_t line_width = 0; // in pixels
 
-    for (const TOGL_FineTextElementContainer& element : text.ToElementContainers()) {
-        switch (element.GetTypeId()) {
-        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_TEXT:
-            prepared_text += PrepareTextElementText(font, element.GetText(), line_width);
-            break;
-        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
-            prepared_text += PrepareTextElementHorizontalSpacer(font, element.GetTextHorizontalSpacer(), line_width);
-            break;
-        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_COLOR:
-            prepared_text.Append(element);
-            break;
+        for (const TOGL_FineTextElementContainer& element_container : fine_text.ToElementContainers()) {
+            switch (element_container.GetTypeId()) {
+            case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_TEXT:
+                adjusted_fine_text += PrepareTextElementText(font, element_container.GetText(), line_width);
+                break;
+            case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
+                adjusted_fine_text += PrepareTextElementHorizontalSpacer(font, element_container.GetTextHorizontalSpacer(), line_width);
+                break;
+            case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_COLOR:
+                adjusted_fine_text.Append(element_container);
+                break;
 
-        } // switch
+            } // switch
+        }
+    } else {
+        adjusted_fine_text = fine_text;
     }
- 
-    return prepared_text;
+
+    return adjusted_fine_text;
 }
 
 //------------------------------------------------------------------------------
 
 inline TOGL_SizeU TOGL_TextAdjuster::GetWordSize(const TOGL_Font& font, const std::wstring& word) {
     TOGL_SizeU size;
-    size.height = font.GetGlyphHeight();
+    size.height = font.GetHeight();
     for (const wchar_t c : word) size.width += font.GetGlyphSize(c).width;
     return size;
 }
@@ -491,42 +495,44 @@ inline void TOGL_TextDrawer::RenderText(TOGL_Font& font, const std::string& text
 }
 
 inline void TOGL_TextDrawer::RenderText(TOGL_Font& font, const TOGL_FineText& fine_text) {
-    glPushAttrib(GL_CURRENT_BIT);
-    glColor4ubv(m_color.ToData());
+    if (font.IsLoaded()) {
+        glPushAttrib(GL_CURRENT_BIT);
+        glColor4ubv(m_color.ToData());
 
-    for (const TOGL_FineTextElementContainer& element : fine_text.ToElementContainers()) {
-        switch (element.GetTypeId()) {
+        for (const TOGL_FineTextElementContainer& element : fine_text.ToElementContainers()) {
+            switch (element.GetTypeId()) {
 
-        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_TEXT:
-            font.RenderBegin();
-            for (const uint32_t code : element.GetText()) {
-                if (code == '\n') {
-                    m_pos.x = m_base.x;
-                    m_pos.y += font.GetGlyphHeight() * m_orientation_factor_y;
-                } else {
-                    glPushMatrix();
-                    glTranslatef(float(m_pos.x), float(m_pos.y), 0);
+            case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_TEXT:
+                font.RenderBegin();
+                for (const uint32_t code : element.GetText()) {
+                    if (code == '\n') {
+                        m_pos.x = m_base.x;
+                        m_pos.y += font.GetHeight() * m_orientation_factor_y;
+                    } else {
+                        glPushMatrix();
+                        glTranslatef(float(m_pos.x), float(m_pos.y), 0);
 
-                    font.RenderGlyph(code);
-                    m_pos.x += font.GetGlyphSize(code).width;
+                        font.RenderGlyph(code);
+                        m_pos.x += font.GetGlyphSize(code).width;
 
-                    glPopMatrix();
+                        glPopMatrix();
+                    }
                 }
-            }
-            font.RenderEnd();
-            break;
+                font.RenderEnd();
+                break;
 
-        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_COLOR:
-            glColor4ubv(element.GetColor().ToData());
-            break;
+            case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_COLOR:
+                glColor4ubv(element.GetColor().ToData());
+                break;
 
-        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
-            m_pos.x += element.GetTextHorizontalSpacer().GetWidth();
-            break;
-        } // switch
+            case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
+                m_pos.x += element.GetTextHorizontalSpacer().GetWidth();
+                break;
+            } // switch
+        }
+
+        glPopAttrib();
     }
-
-    glPopAttrib();
 }
 
 inline TOGL_SizeU TOGL_TextDrawer::GetTextSize(TOGL_Font& font, const std::string& text) const {
@@ -534,35 +540,35 @@ inline TOGL_SizeU TOGL_TextDrawer::GetTextSize(TOGL_Font& font, const std::strin
 }
 
 inline TOGL_SizeU TOGL_TextDrawer::GetTextSize(TOGL_Font& font, const  TOGL_FineText& fine_text) const {
-    TOGL_SizeU size = {0, font.GetGlyphHeight()};
+    TOGL_SizeU size = {0, font.GetHeight()};
     uint32_t width = 0;
+    
+    if (font.IsLoaded()) {
+        for (const TOGL_FineTextElementContainer& element : fine_text.ToElementContainers()) {
+            switch (element.GetTypeId()) {
 
+            case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_TEXT:
+                for (const uint32_t code : element.GetText()) {
+                    if (code == '\n') {
+                        size.height += font.GetHeight();
 
-    for (const TOGL_FineTextElementContainer& element : fine_text.ToElementContainers()) {
-        switch (element.GetTypeId()) {
-
-        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_TEXT:
-            for (const uint32_t code : element.GetText()) {
-                if (code == '\n') {
-                    size.height += font.GetGlyphHeight();
-
-                    if (size.width < width) size.width = width;
-                    width = 0;
-                } else {
-                    width += font.GetGlyphSize(code).width;
+                        if (size.width < width) size.width = width;
+                        width = 0;
+                    } else {
+                        width += font.GetGlyphSize(code).width;
+                    }
                 }
+                break;
+            case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_COLOR:
+                break;
+
+            case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
+                width += element.GetTextHorizontalSpacer().GetWidth();
+                break;
             }
-            break;
-        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_COLOR:
-            break;
-
-        case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
-            width += element.GetTextHorizontalSpacer().GetWidth();
-            break;
         }
+        if (size.width < width) size.width = width;
     }
-
-    if (size.width < width) size.width = width;
 
     return size;
 }

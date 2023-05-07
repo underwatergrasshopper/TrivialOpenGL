@@ -119,10 +119,10 @@ struct TOGL_GlyphData {
 struct TOGL_FontData {
     TOGL_FontInfo info;
 
-    uint32_t glyph_height;               // in pixels
-    uint32_t glyph_ascent;               // in pixels
-    uint32_t glyph_descent;              // in pixels
-    uint32_t glyph_internal_leading;     // in pixels
+    uint32_t font_height;               // in pixels
+    uint32_t font_ascent;               // in pixels
+    uint32_t font_descent;              // in pixels
+    uint32_t font_internal_leading;     // in pixels
 
     std::map<uint32_t, TOGL_GlyphData> glyphs;     // indexed by character code from unicode space
 
@@ -210,8 +210,7 @@ private:
 
     TOGL_SizeU16 GetCharSize(wchar_t c) const;
 
-    void AddErrMsg(const std::string& err_msg);
-    void MergErrMsg(const std::string& err_msg);
+    void SetErrMsg(const std::string& err_msg);
 
     static uint32_t PointsToPixels(uint32_t points) {
         return points * 4 / 3;
@@ -236,11 +235,23 @@ private:
 class TOGL_Font;
 TOGL_Font& TOGL_ToGlobalFont();
 
-// If global font has been loaded successfully, then TOGL_IsFontOk() should return true. Otherwise, global font failed to load, and error message can be retrieved by TOGL_GetFontErrMsg().
+// If font has been loaded successfully, then TOGL_IsFontOk() should return true. Otherwise, font failed to load, and error message can be retrieved by TOGL_GetFontErrMsg().
+// Font size for loaded font might be different than requested font size (font_info.size, size) when size unit (font_info.size_unit, size_unit) is TOGL_FONT_SIZE_UNIT_ID_PIXELS.
+// To get loaded font size (in pixels) call TOGL_GetFontHeight().
 void TOGL_LoadFont(const TOGL_FontInfo& font_info);
 void TOGL_LoadFont(const std::string& name, uint32_t size, TOGL_FontSizeUnitId size_unit, TOGL_FontStyleId style, const TOGL_UnicodeRangeGroup& unicode_range_group);
 
 void TOGL_UnloadFont();
+bool TOGL_IsFontLoaded();
+
+// Returns font height in pixels.
+uint32_t TOGL_GetFontHeight();
+
+// Returns font ascent in pixels.
+uint32_t TOGL_GetFontAscent();
+
+// Returns font descent in pixels.
+uint32_t TOGL_GetFontDescent();
 
 bool TOGL_IsFontOk();
 std::string TOGL_GetFontErrMsg();
@@ -248,19 +259,22 @@ std::string TOGL_GetFontErrMsg();
 //-----------------------------------------------------------------------------
 // TOGL_Font
 //-----------------------------------------------------------------------------
+
 class TOGL_Font {
 public:
     TOGL_Font();
     virtual ~TOGL_Font();
 
     // If font has been loaded successfully, then IsOk() should return true. Otherwise, font failed to load, and error message can be retrieved by GetErrMsg().
+    // Font size for loaded font might be different than requested font size (font_info.size, size) when size unit (font_info.size_unit, size_unit) is TOGL_FONT_SIZE_UNIT_ID_PIXELS.
+    // To get loaded font size (in pixels) call GetHeight().
     void Load(const TOGL_FontInfo& font_info);
     void Load(const std::string& name, uint32_t size, TOGL_FontSizeUnitId size_unit, TOGL_FontStyleId style, const TOGL_UnicodeRangeGroup& unicode_range_group);
 
     void Unload();
     bool IsLoaded() const;
 
-    // Warning!!! Each text render section of code which starts with RenderBegin() MUST end with RenderEnd().
+    // Warning!!! Each section of code which starts with RenderBegin() MUST end with RenderEnd().
     void RenderBegin();
     void RenderEnd();
 
@@ -269,15 +283,24 @@ public:
     void RenderGlyph(uint32_t code);
 
     // Renders array of glyphs. 
-    // Special characters (like '\n', '\t', ... and so on) are interpreted as "unknown characters".
-    // Must be used in between RenderBegin() and RenderEnd().
+    // Special characters (like '\n', '\t', ... and so on) are interpreted as "unrepresented characters".
+    // Can be used only in between RenderBegin() and RenderEnd().
     // text         - Encoding format: UTF8.
     void RenderGlyphs(const std::string& text);
 
+    // Returns glyph size (width and height, both in pixels).
     TOGL_SizeU GetGlyphSize(uint32_t code) const;
 
-    // Returns glyph height in pixels.
-    uint32_t GetGlyphHeight() const;
+    // height = ascent + descent
+
+    // Returns font height in pixels.
+    uint32_t GetHeight() const;
+    
+    // Returns font descent length in pixels.
+    uint32_t GetDescent() const;
+
+    // Returns font ascent length in pixels.
+    uint32_t GetAscent() const;
 
     // width        - In pixels.
     // Returns number of glyphs from text which will fit in width.
@@ -286,6 +309,8 @@ public:
     bool IsOk() const;
     std::string GetErrMsg() const;
 
+    // Saves font textures as series of bitmaps.
+    // Returns true if all bitmaps has been saved successfully.
     bool SaveAsBMP(const std::string& path = "") const;
 
 private:
@@ -293,8 +318,7 @@ private:
 
     void Initialize();
 
-    void AddErrMsg(const std::string& err_msg);
-    void MergeErrMsg(const std::string& err_msg);
+    void SetErrMsg(const std::string& err_msg);
 
     const TOGL_GlyphData* FindGlyphData(uint32_t code) const;
 
@@ -390,10 +414,10 @@ inline TOGL_GlyphData::TOGL_GlyphData() {
 inline TOGL_FontData::TOGL_FontData() {
     info                    = {};
 
-    glyph_height            = 0;           
-    glyph_ascent            = 0;           
-    glyph_descent           = 0;          
-    glyph_internal_leading  = 0; 
+    font_height             = 0;           
+    font_ascent             = 0;           
+    font_descent            = 0;          
+    font_internal_leading   = 0; 
 }
 
 //-----------------------------------------------------------------------------
@@ -409,158 +433,175 @@ inline TOGL_FontDataGenerator::~TOGL_FontDataGenerator() {
 }
 
 inline TOGL_FontData TOGL_FontDataGenerator::Generate(const TOGL_FontInfo& font_info) {
-    m_data.info     = font_info;
-    m_err_msg       = "";
+    m_err_msg           = "";
+    m_data.info         = font_info;
 
     _TOGL_WindowInnerAccessor& window_inner_accessor = TOGL_ToWindow();
     HWND window_handle = window_inner_accessor.ToHWND();
 
     m_device_context_handle = GetDC(window_handle);
+    
+    UINT old_text_align = SetTextAlign(m_device_context_handle, TA_LEFT | TA_TOP | TA_NOUPDATECP);
+    if (old_text_align == GDI_ERROR) {
+        SetErrMsg("Can set window device context text aling.");
 
-    m_data.glyph_height = ToPixels(font_info.size, font_info.size_unit);
-
-    HFONT font_handle = CreateFontW(
-            m_data.glyph_height,                    
-            0, 0, 0,                            
-            (font_info.style == TOGL_FONT_STYLE_ID_BOLD) ? FW_BOLD : FW_NORMAL,
-            FALSE, FALSE, FALSE,
-            ANSI_CHARSET, // For W version of this function, should create a font bitmap with all having glyphs for unicode range from 0000 to FFFF.
-            OUT_TT_PRECIS,
-            CLIP_DEFAULT_PRECIS,
-            ANTIALIASED_QUALITY,
-            FF_DONTCARE | DEFAULT_PITCH,
-            TOGL_ToUTF16(font_info.name).c_str());  
-
-    if (font_handle == NULL) {
-        AddErrMsg("Can not create font source.");
     } else {
-        HFONT old_font_handle = (HFONT)SelectObject(m_device_context_handle, font_handle); 
+        int old_map_mode = SetMapMode(m_device_context_handle, MM_TEXT);
+        if (old_map_mode == 0) {
+            SetErrMsg("Can set window device context map mode.");
 
-        // --- Gets Font Metrics --- //
-        TEXTMETRICW metric;
-        GetTextMetricsW(m_device_context_handle, &metric);
-        const uint32_t glyph_height    = metric.tmHeight;
-        m_data.glyph_ascent            = metric.tmAscent;
-        m_data.glyph_descent           = metric.tmDescent;
-        m_data.glyph_internal_leading  = metric.tmInternalLeading;
-
-        if (false && glyph_height != m_data.glyph_height) {
-            AddErrMsg(std::string() + "Mismatch between font height requested (" + std::to_string(glyph_height) + "px) and created (" + std::to_string(glyph_height) + "px).");
         } else {
-            auto GetUnicodeRangesOfCurrentWinFont = [](HDC device_context_handle) {
-                std::vector<TOGL_UnicodeRange> unicode_ranges;
+            const uint32_t requested_font_height = ToPixels(font_info.size, font_info.size_unit);
 
-                DWORD buffer_size = GetFontUnicodeRanges(device_context_handle, NULL);
-                BYTE* buffer = new BYTE[buffer_size];
+            HFONT font_handle = CreateFontW(
+                    requested_font_height,                    
+                    0, 0, 0,                            
+                    (font_info.style == TOGL_FONT_STYLE_ID_BOLD) ? FW_BOLD : FW_NORMAL,
+                    FALSE, FALSE, FALSE,
+                    ANSI_CHARSET, // For W version of this function, should create a font bitmap with all having glyphs for unicode range from 0000 to FFFF.
+                    OUT_TT_PRECIS,
+                    CLIP_DEFAULT_PRECIS,
+                    ANTIALIASED_QUALITY,
+                    FF_DONTCARE | DEFAULT_PITCH,
+                    TOGL_ToUTF16(font_info.name).c_str());  
 
-                GLYPHSET* glyphset = (GLYPHSET*)buffer;
-                GetFontUnicodeRanges(device_context_handle, glyphset);
-                // debug
-                //togl_print_i32(glyphset->cbThis);
-                //togl_print_i32(glyphset->flAccel);
-                //togl_print_i32(glyphset->cGlyphsSupported);
-                //togl_print_i32(glyphset->cRanges);
+            if (font_handle == NULL) {
+                SetErrMsg("Can not create font source.");
+            } else {
+                HFONT old_font_handle = (HFONT)SelectObject(m_device_context_handle, font_handle); 
 
-                for (uint32_t ix = 0; ix < glyphset->cRanges; ++ix) {
-                    const uint32_t from = glyphset->ranges[ix].wcLow;
-                    const uint32_t to   = from + glyphset->ranges[ix].cGlyphs - 1;
+                // --- Gets Font Metrics --- //
+                TEXTMETRICW metric;
+                GetTextMetricsW(m_device_context_handle, &metric);
+                m_data.font_height              = metric.tmHeight;
+                m_data.font_ascent              = metric.tmAscent;
+                m_data.font_descent             = metric.tmDescent;
+                m_data.font_internal_leading    = metric.tmInternalLeading;
 
-                    unicode_ranges.push_back({from, to});
-                }
+                // debug section
+                //togl_print_i32(m_data.font_height);
+                //togl_print_i32(m_data.font_ascent);
+                //togl_print_i32(m_data.font_descent);
+                //togl_print_i32(m_data.font_internal_leading);
 
-                delete[] buffer;
+                // Note: Requested font size (requested_font_height) might be different from created font size (m_data.font_height).
 
-                return unicode_ranges;
-            };
+                auto GetUnicodeRangesOfCurrentWinFont = [](HDC device_context_handle) {
+                    std::vector<TOGL_UnicodeRange> unicode_ranges;
 
-            // debug
-            //for (const auto& range : GetUnicodeRangesOfCurrentWinFont(m_device_context_handle)) {
-            //    LogDebug(std::string() + "[" + HexToStr(range.from) + ".." + HexToStr(range.to) + "]");
-            //}
+                    DWORD buffer_size = GetFontUnicodeRanges(device_context_handle, NULL);
+                    BYTE* buffer = new BYTE[buffer_size];
 
-            // --- Generates Display Lists and Intermediary Font Bitmaps --- //
+                    GLYPHSET* glyphset = (GLYPHSET*)buffer;
+                    GetFontUnicodeRanges(device_context_handle, glyphset);
+                    // debug
+                    //togl_print_i32(glyphset->cbThis);
+                    //togl_print_i32(glyphset->flAccel);
+                    //togl_print_i32(glyphset->cGlyphsSupported);
+                    //togl_print_i32(glyphset->cRanges);
 
-            std::vector<TOGL_UnicodeRange> ranges;
-            for (TOGL_UnicodeRange range : m_data.info.unicode_range_group.ToRanges()) {
-                if (range.from > 0xFFFF || range.to > 0xFFFF) {
-                        AddErrMsg("Unicode code point is out of supported range. Supported unicode code point range is from 0000 to (including) FFFF. ");
-                        break;
-                }
+                    for (uint32_t ix = 0; ix < glyphset->cRanges; ++ix) {
+                        const uint32_t from = glyphset->ranges[ix].wcLow;
+                        const uint32_t to   = from + glyphset->ranges[ix].cGlyphs - 1;
 
-                auto PushRangeWithoutCodePoint = [](uint32_t code_point, const TOGL_UnicodeRange& range, std::vector<TOGL_UnicodeRange>& ranges) {
-                    auto IsIn = [](uint32_t code, const TOGL_UnicodeRange& range) -> bool {
-                        return range.from <= code && code <= range.to;
-                    };
-
-                    if (IsIn(code_point, range)) {
-                        if (range.from != code_point) {
-                            ranges.push_back({range.from, code_point - 1});
-                        }
-                        if (range.to != code_point) {
-                            ranges.push_back({code_point + 1, range.to});
-                        }
-                    } else {
-                        ranges.push_back(range);
+                        unicode_ranges.push_back({from, to});
                     }
+
+                    delete[] buffer;
+
+                    return unicode_ranges;
                 };
 
-                // Function wglUseFontBitmapsW have problem with generating font bitmap when FFFF code point is present in range.
-                // Workaround: Remove this code point from range, since it's a non-character code point. 
-                PushRangeWithoutCodePoint(0xFFFF, range, ranges);
-            }
+                // debug
+                //for (const auto& range : GetUnicodeRangesOfCurrentWinFont(m_device_context_handle)) {
+                //    LogDebug(std::string() + "[" + HexToStr(range.from) + ".." + HexToStr(range.to) + "]");
+                //}
 
-            if (IsOk()) {
-                for (const auto& range : ranges) {
-                    //LogDebug(std::string() + "[" + HexToStr(range.from) + ".." + HexToStr(range.to) + "]"); // debug
+                // --- Generates Display Lists and Intermediary Font Bitmaps --- //
 
-                    DisplayListSet display_list_set(range.from, range.to);
-
-                    display_list_set.first  = display_list_set.unicode_range.from;
-                    display_list_set.range  = GLsizei(display_list_set.unicode_range.to - display_list_set.unicode_range.from + 1);
-                    display_list_set.base   = glGenLists(display_list_set.range);
-
-                    if (display_list_set.base == 0) {
-                        AddErrMsg(std::string() + "Can not generate display list for unicode range [" + TOGL_HexToStr(display_list_set.unicode_range.from) + ".." + TOGL_HexToStr(display_list_set.unicode_range.to) + "].");
-                        break;
+                std::vector<TOGL_UnicodeRange> ranges;
+                for (TOGL_UnicodeRange range : m_data.info.unicode_range_group.ToRanges()) {
+                    if (range.from > 0xFFFF || range.to > 0xFFFF) {
+                            SetErrMsg("Unicode code point is out of supported range. Supported unicode code point range is from 0000 to (including) FFFF. ");
+                            break;
                     }
 
-                    bool is_success = wglUseFontBitmapsW(m_device_context_handle, display_list_set.first, display_list_set.range, display_list_set.base);
+                    auto PushRangeWithoutCodePoint = [](uint32_t code_point, const TOGL_UnicodeRange& range, std::vector<TOGL_UnicodeRange>& ranges) {
+                        auto IsIn = [](uint32_t code, const TOGL_UnicodeRange& range) -> bool {
+                            return range.from <= code && code <= range.to;
+                        };
 
-                    // Workaround for strange behavior. For POPUP window first call of wglUseFontBitmapsA fail with GetError() = 0.
-                    // Second call, right after first, seams to succeed.
-                    if (!is_success) is_success = wglUseFontBitmapsW(m_device_context_handle, display_list_set.first, display_list_set.range, display_list_set.base);
+                        if (IsIn(code_point, range)) {
+                            if (range.from != code_point) {
+                                ranges.push_back({range.from, code_point - 1});
+                            }
+                            if (range.to != code_point) {
+                                ranges.push_back({code_point + 1, range.to});
+                            }
+                        } else {
+                            ranges.push_back(range);
+                        }
+                    };
 
-                    if (!is_success) {
-                        AddErrMsg("Error: Can not create intermediary font bitmap for unicode range [" + TOGL_HexToStr(display_list_set.unicode_range.from) + ".." + TOGL_HexToStr(display_list_set.unicode_range.to) + "].");
-                        break;
-                    }
-
-                    m_display_list_sets.push_back(display_list_set);
+                    // Function wglUseFontBitmapsW have problem with generating font bitmap when FFFF code point is present in range.
+                    // Workaround: Remove this code point from range, since it's a non-character code point. 
+                    PushRangeWithoutCodePoint(0xFFFF, range, ranges);
                 }
-
-                // --- Generate Font Textures --- //
 
                 if (IsOk()) {
-                    GenerateFontTextures(1024, 1024);
-                }
+                    for (const auto& range : ranges) {
+                        //LogDebug(std::string() + "[" + HexToStr(range.from) + ".." + HexToStr(range.to) + "]"); // debug
 
-                // --- Destroys Display Lists and Clears Ranges --- //
+                        DisplayListSet display_list_set(range.from, range.to);
 
-                for (auto& display_list_set : m_display_list_sets) {
-                    glDeleteLists(display_list_set.base, display_list_set.range);
+                        display_list_set.first  = display_list_set.unicode_range.from;
+                        display_list_set.range  = GLsizei(display_list_set.unicode_range.to - display_list_set.unicode_range.from + 1);
+                        display_list_set.base   = glGenLists(display_list_set.range);
+
+                        if (display_list_set.base == 0) {
+                            SetErrMsg(std::string() + "Can not generate display list for unicode range [" + TOGL_HexToStr(display_list_set.unicode_range.from) + ".." + TOGL_HexToStr(display_list_set.unicode_range.to) + "].");
+                            break;
+                        }
+
+                        bool is_success = wglUseFontBitmapsW(m_device_context_handle, display_list_set.first, display_list_set.range, display_list_set.base);
+
+                        // Workaround for strange behavior. For POPUP window first call of wglUseFontBitmapsA fail with GetError() = 0.
+                        // Second call, right after first, seams to succeed.
+                        if (!is_success) is_success = wglUseFontBitmapsW(m_device_context_handle, display_list_set.first, display_list_set.range, display_list_set.base);
+
+                        if (!is_success) {
+                            SetErrMsg("Error: Can not create intermediary font bitmap for unicode range [" + TOGL_HexToStr(display_list_set.unicode_range.from) + ".." + TOGL_HexToStr(display_list_set.unicode_range.to) + "].");
+                            break;
+                        }
+
+                        m_display_list_sets.push_back(display_list_set);
+                    }
+
+                    // --- Generate Font Textures --- //
+
+                    if (IsOk()) {
+                        GenerateFontTextures(1024, 1024);
+                    }
+
+                    // --- Destroys Display Lists and Clears Ranges --- //
+
+                    for (auto& display_list_set : m_display_list_sets) {
+                        glDeleteLists(display_list_set.base, display_list_set.range);
+                    }
+                    m_display_list_sets.clear();
                 }
-                m_display_list_sets.clear();
+                SelectObject(m_device_context_handle, old_font_handle);
+                DeleteObject(font_handle);
             }
+            SetMapMode(m_device_context_handle, old_map_mode);
         }
-        SelectObject(m_device_context_handle, old_font_handle);
-        DeleteObject(font_handle);
-    }
+        SetTextAlign(m_device_context_handle, old_text_align);
+    } 
 
     ReleaseDC(window_handle, m_device_context_handle);
     m_device_context_handle = NULL;
 
     TOGL_FontData data = m_data;
-
     m_data = {};
 
     return IsOk() ? data : TOGL_FontData();
@@ -724,7 +765,7 @@ inline void TOGL_FontDataGenerator::GenerateFontTextures(uint16_t width, uint16_
 
         glClear(GL_COLOR_BUFFER_BIT);
 
-        int y = int(height) - int(m_data.glyph_height);
+        int y = int(height) - int(m_data.font_height);
         TOGL_PointI pos = {0, y};
  
         for (const DisplayListSet& display_list_set : m_display_list_sets) {
@@ -735,12 +776,12 @@ inline void TOGL_FontDataGenerator::GenerateFontTextures(uint16_t width, uint16_
                 if ((pos.x + size.width) >= width) {
                     pos.x = 0;
 
-                    if ((pos.y - m_data.glyph_height) <= 0) {
+                    if ((pos.y - m_data.font_height) <= 0) {
                         // run out of space in texture, generate next texture
                         tex_obj = frame_buffer.GenAndBindTex();
 
                         if (!frame_buffer.IsOk()) {
-                            MergErrMsg(frame_buffer.GetErrMsg());
+                            SetErrMsg(frame_buffer.GetErrMsg());
                             break;
                         }
                         glClear(GL_COLOR_BUFFER_BIT);
@@ -751,7 +792,7 @@ inline void TOGL_FontDataGenerator::GenerateFontTextures(uint16_t width, uint16_
 
                         pos = {0, y};
                     } else {
-                        pos.y -= m_data.glyph_height;
+                        pos.y -= m_data.font_height;
                     }
                 }
 
@@ -765,9 +806,9 @@ inline void TOGL_FontDataGenerator::GenerateFontTextures(uint16_t width, uint16_
                 glyph_data.tex_obj = tex_obj;
 
                 glyph_data.x1 = ToTexSpace(pos.x, width);
-                glyph_data.y1 = ToTexSpace(pos.y - m_data.glyph_descent, height);
+                glyph_data.y1 = ToTexSpace(pos.y - m_data.font_descent, height);
                 glyph_data.x2 = ToTexSpace(pos.x + size.width, width);
-                glyph_data.y2 = ToTexSpace(pos.y - m_data.glyph_descent + m_data.glyph_height, height);
+                glyph_data.y2 = ToTexSpace(pos.y - m_data.font_descent + m_data.font_height, height);
 
                 m_data.glyphs[code] = glyph_data;
               
@@ -822,14 +863,8 @@ inline TOGL_SizeU16 TOGL_FontDataGenerator::GetCharSize(wchar_t c) const {
     return {};
 }
 
-inline void TOGL_FontDataGenerator::AddErrMsg(const std::string& err_msg) {
-    if (!m_err_msg.empty()) m_err_msg += "\n";
-    m_err_msg += err_msg;
-}
-
-inline void TOGL_FontDataGenerator::MergErrMsg(const std::string& err_msg) {
-    if (!m_err_msg.empty()) m_err_msg += "\n";
-    m_err_msg += err_msg;
+inline void TOGL_FontDataGenerator::SetErrMsg(const std::string& err_msg) {
+    m_err_msg = err_msg;
 }
 
 inline uint32_t TOGL_FontDataGenerator::ToPixels(uint32_t size, TOGL_FontSizeUnitId size_unit) {
@@ -844,7 +879,7 @@ template <typename Type>
 inline void TOGL_FontDataGenerator::Load(Type& function, const std::string& function_name) {
     function = (Type)wglGetProcAddress(function_name.c_str());
     if (!function) {
-        AddErrMsg(std::string() + "Can not load function: \"" + function_name + "\".");
+        SetErrMsg(std::string() + "Can not load function: \"" + function_name + "\".");
     }
 }
 
@@ -868,12 +903,28 @@ inline void TOGL_UnloadFont() {
     TOGL_ToGlobalFont().Unload();
 }
 
+inline bool TOGL_IsFontLoaded() {
+    return TOGL_ToGlobalFont().IsLoaded();
+}
+
+inline uint32_t TOGL_GetFontHeight() {
+    return TOGL_ToGlobalFont().GetHeight();
+}
+
+inline uint32_t TOGL_GetFontAscent() {
+    return TOGL_ToGlobalFont().GetAscent();
+}
+
+inline uint32_t TOGL_GetFontDescent() {
+    return TOGL_ToGlobalFont().GetDescent();
+}
+
 inline bool TOGL_IsFontOk() {
     return TOGL_ToGlobalFont().IsOk();
 }
 
 inline std::string TOGL_GetFontErrMsg() {
-    TOGL_ToGlobalFont().GetErrMsg();
+    return TOGL_ToGlobalFont().GetErrMsg();
 }
 
 //-----------------------------------------------------------------------------
@@ -916,8 +967,7 @@ inline void TOGL_Font::Load(const TOGL_FontInfo& font_info) {
 
         m_is_loaded = true;
     } else {
-        m_data = {};
-        MergeErrMsg(font_data_generator.GetErrMsg());
+        SetErrMsg(font_data_generator.GetErrMsg());
     }
 } 
 
@@ -969,10 +1019,10 @@ inline void TOGL_Font::RenderGlyph(uint32_t code) {
             glVertex2i(glyph_data->width, 0);
 
             glTexCoord2d(glyph_data->x2, glyph_data->y2);
-            glVertex2i(glyph_data->width, m_data.glyph_height);
+            glVertex2i(glyph_data->width, m_data.font_height);
                 
             glTexCoord2d(glyph_data->x1, glyph_data->y2);
-            glVertex2i(0, m_data.glyph_height);
+            glVertex2i(0, m_data.font_height);
             glEnd();
         } else {
             // Renders replacement for missing glyph.
@@ -980,9 +1030,9 @@ inline void TOGL_Font::RenderGlyph(uint32_t code) {
 
             glBegin(GL_TRIANGLE_FAN);
             glVertex2i(0, 0);
-            glVertex2i(m_data.glyph_height, 0);
-            glVertex2i(m_data.glyph_height, m_data.glyph_height);
-            glVertex2i(0, m_data.glyph_height);
+            glVertex2i(m_data.font_height, 0);
+            glVertex2i(m_data.font_height, m_data.font_height);
+            glVertex2i(0, m_data.font_height);
             glEnd();
         }
     }
@@ -1010,16 +1060,24 @@ inline TOGL_SizeU TOGL_Font::GetGlyphSize(uint32_t code) const {
     if (m_is_loaded) {
         const TOGL_GlyphData* glyph_data = FindGlyphData(code);
         if (glyph_data) {
-            size = {glyph_data->width, m_data.glyph_height};
+            size = {glyph_data->width, m_data.font_height};
         } else {
-            size = {m_data.glyph_height, m_data.glyph_height};
+            size = {m_data.font_height, m_data.font_height};
         }
     }
     return size;
 }
 
-inline uint32_t TOGL_Font::GetGlyphHeight() const {
-    return m_data.glyph_height;
+inline uint32_t TOGL_Font::GetHeight() const {
+    return m_data.font_height;
+}
+
+inline uint32_t TOGL_Font::GetDescent() const {
+    return m_data.font_descent;
+}
+
+inline uint32_t TOGL_Font::GetAscent() const {
+    return m_data.font_ascent;
 }
 
 inline uint32_t TOGL_Font::GetGlyphCountInWidth(const std::wstring& text, uint32_t width) const {
@@ -1072,15 +1130,8 @@ inline void TOGL_Font::Initialize() {
     m_err_msg       = "";
 }
 
-inline void TOGL_Font::AddErrMsg(const std::string& err_msg) {
-    if (!m_err_msg.empty()) m_err_msg += "\n";
-    m_err_msg += "Font Error: ";
-    m_err_msg += err_msg;
-}
-
-inline void TOGL_Font::MergeErrMsg(const std::string& err_msg) {
-    if (!m_err_msg.empty()) m_err_msg += "\n";
-    m_err_msg += err_msg;
+inline void TOGL_Font::SetErrMsg(const std::string& err_msg) {
+    m_err_msg = err_msg;
 }
 
 inline const TOGL_GlyphData* TOGL_Font::FindGlyphData(uint32_t code) const {

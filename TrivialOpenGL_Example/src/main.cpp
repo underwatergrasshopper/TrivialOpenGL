@@ -37,12 +37,12 @@ void LoadFont(const std::string& text = "") {
     TOGL_ResetTextDrawer();
     TOGL_ResetTextAdjuster();
 
-    TOGL_LoadFont("Courier New", FONT_SIZE, TOGL_FONT_SIZE_UNIT_ID_PIXELS, s_font_style, s_font_char_set);
+    TOGL_LoadFont("Courier New", FONT_SIZE, TOGL_FONT_SIZE_UNIT_ID_POINTS, s_font_style, s_font_char_set);
 
     if (TOGL_IsFontOk()) {
-        puts("Font Loaded.");
+        printf("Font Loaded, size=%dpx.\n", TOGL_GetFontHeight());
     } else {
-        printf("Font Error: %s.\n", TOGL_GetFontErrMsg().c_str());
+        printf("Font Error: %s\n", TOGL_GetFontErrMsg().c_str());
     }
     fflush(stdout);
 
@@ -56,7 +56,7 @@ void SetInfoText(const std::string& text) {
 }
 
 void DrawInfoText(const std::string& text = "") {
-    const int           height  = TOGL_GetDrawAreaSize().height - TOGL_ToGlobalFont().GetGlyphHeight();
+    const int           height  = TOGL_GetDrawAreaSize().height - TOGL_ToGlobalFont().GetHeight();
     const TOGL_PointI   pos     = {TEXT_PADDING, height};
     const TOGL_Color4U8 color   = {255, 255, 255, 255};
 
@@ -513,8 +513,9 @@ int main(int argc, char *argv[]) {
 
             TOGL_FineText text = TOGL_FineText(
                 TOGL_Color4U8(0, 0, 0, 255),
-                u8"Some text. Xj\u3400\u5016\u9D9B\u0001\U00024B62 "
-                u8"Many words in line. Many words in line. Many words in line. Many words in line. Many words in line. Many words in line.\n"
+                u8"Xj\n"
+                u8"Xj\n"
+                u8"Some text. \u3400\u5016\u9D9B\u0001\U00024B62. Many words in line. Many words in line. Many words in line. Many words in line. Many words in line. Many words in line.\n"
                 u8"Many words in line with \ttab.\n"
                 u8"Many words in line with i\ttab.\n"
                 u8"Many words in line with ii\ttab.\n"
@@ -532,7 +533,7 @@ int main(int argc, char *argv[]) {
             glColor3f(1, 1, 1);
             DrawRectangle(0, s_test_image.GetSize().height - text_size.height, s_test_image.GetSize().width - 10, text_size.height);
 
-            text_drawer.SetPos(0 , s_test_image.GetSize().height - font.GetGlyphHeight());
+            text_drawer.SetPos(0 , s_test_image.GetSize().height - font.GetHeight());
             
             text_drawer.SetColor(255, 0, 0, 255);
             text_drawer.RenderText(font, text);
