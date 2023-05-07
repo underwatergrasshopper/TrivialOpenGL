@@ -431,7 +431,7 @@ inline TOGL_SizeU TOGL_GetTextSize(const TOGL_FineText& fine_text) {
     TOGL_Font&          font            = TOGL_ToGlobalFont();
     TOGL_TextDrawer&    drawer          = TOGL_ToGlobalTextDrawer();
 
-    drawer.GetTextSize(font, fine_text);
+    return drawer.GetTextSize(font, fine_text);
 }
 
 inline TOGL_SizeU TOGL_AdjustAndGetTextSize(const std::string& text) {
@@ -443,7 +443,7 @@ inline TOGL_SizeU TOGL_AdjustAndGetTextSize(const TOGL_FineText& fine_text) {
     TOGL_TextAdjuster&  text_adjuster   = TOGL_ToGlobalTextAdjuster();
     TOGL_TextDrawer&    drawer          = TOGL_ToGlobalTextDrawer();
 
-    drawer.GetTextSize(font, text_adjuster.AdjustText(font, fine_text));
+    return drawer.GetTextSize(font, text_adjuster.AdjustText(font, fine_text));
 }
 
 inline void TOGL_SetOrientation(TOGL_TextDrawerOrientationId orientation) {

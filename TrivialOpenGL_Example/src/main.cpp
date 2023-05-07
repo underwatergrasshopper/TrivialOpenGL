@@ -37,7 +37,7 @@ void LoadFont(const std::string& text = "") {
     TOGL_ResetTextDrawer();
     TOGL_ResetTextAdjuster();
 
-    TOGL_LoadFont("Courier New", FONT_SIZE, TOGL_FONT_SIZE_UNIT_ID_POINTS, s_font_style, s_font_char_set);
+    TOGL_LoadFont("Courier New", FONT_SIZE, TOGL_FONT_SIZE_UNIT_ID_PIXELS, s_font_style, s_font_char_set);
 
     if (TOGL_IsFontOk()) {
         printf("Font Loaded, size=%dpx.\n", TOGL_GetFontHeight());
