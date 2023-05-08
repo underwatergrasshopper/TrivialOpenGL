@@ -222,12 +222,21 @@ public:
 
     // Adds new text.
     void Append(const std::string& text) {
-        m_element_containers.push_back(ElementContainer(text));
+        Append(TOGL_ToUTF16(text));
     }
 
     // Adds new text.
     void Append(const std::wstring& text) {
-        m_element_containers.push_back(ElementContainer(text));
+        // std::vector<Type>::size_type can be uint32_t or uint64_t or something else. 
+        // To avoid problems with converting to type with smaller range, max_size will be at maximum half size of UINT32.
+        const std::vector<ElementContainer>::size_type max_size = min(UINT_MAX / 2, m_element_containers.max_size());
+
+        if (text.size() > max_size) {
+            m_element_containers.push_back(ElementContainer(text.substr(0, max_size)));
+            Append(text.substr(max_size));
+        } else {
+            m_element_containers.push_back(ElementContainer(text));
+        }
     }
 
     // Sets text color. Will be used for text newly added after this element.

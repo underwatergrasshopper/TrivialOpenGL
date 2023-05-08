@@ -163,6 +163,11 @@ public:
 
     using RunFnP_T = void (*)();
 
+    void Reset() {
+        m_actions.clear();
+        m_time_lapse.Reset();
+    }
+
     // delay - in seconds
     void Add(double delay, RunFnP_T run) {
         m_actions.push_back({delay, run});

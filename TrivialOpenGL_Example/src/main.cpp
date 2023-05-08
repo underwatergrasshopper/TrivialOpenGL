@@ -8,7 +8,7 @@
 //------------------------------------------------------------------------------
 
 enum {
-    FONT_SIZE       = 16,   // in pixels
+    DEF_FONT_SIZE   = 16,   // in pixels
     TEXT_PADDING    = 10,   // in pixels
 };
 
@@ -22,8 +22,15 @@ namespace {
 
     DelayedActionManager    s_actions;
 
-    TOGL_FontStyleId        s_font_style                    = TOGL_FONT_STYLE_ID_NORMAL;
-    TOGL_FontCharSetId      s_font_char_set                 = TOGL_FONT_CHAR_SET_ID_ENGLISH;
+    TOGL_FontInfo           s_font_info = {
+        "Courier New",
+        DEF_FONT_SIZE,
+        TOGL_FONT_SIZE_UNIT_ID_PIXELS,
+        TOGL_FONT_STYLE_ID_NORMAL,
+        TOGL_FONT_CHAR_SET_ID_ENGLISH,
+        0,
+        0
+    };
 
     TestFont                s_test_font;
     FPS                     s_fps;
@@ -34,13 +41,36 @@ namespace {
     uint32_t                s_line_spacing                  = 0;
 };
 
+void Reset() {
+    s_resolution                    = {800, 400};
+    s_is_client                     = false;
+    s_is_display_mose_move_data     = false;
+
+    s_actions.Reset();
+
+    s_font_info = {
+        "Courier New",
+        DEF_FONT_SIZE,
+        TOGL_FONT_SIZE_UNIT_ID_PIXELS,
+        TOGL_FONT_STYLE_ID_NORMAL,
+        TOGL_FONT_CHAR_SET_ID_ENGLISH,
+        0,
+        0
+    };
+
+    s_text.Clear();
+
+    s_glyph_spacing                 = 0;
+    s_line_spacing                  = 0;
+}
+
 //------------------------------------------------------------------------------
 
 void LoadFont(const std::string& text = "") {
     TOGL_ResetTextDrawer();
     TOGL_ResetTextAdjuster();
 
-    TOGL_LoadFont({"Courier New", FONT_SIZE, TOGL_FONT_SIZE_UNIT_ID_PIXELS, s_font_style, s_font_char_set, s_glyph_spacing , s_line_spacing});
+    TOGL_LoadFont(s_font_info);
 
     if (TOGL_IsFontOk()) {
         printf("Font Loaded, size=%dpx.\n", TOGL_GetFontHeight());
@@ -272,6 +302,8 @@ int main(int argc, char *argv[]) {
     ////////////////////////////////////////////////////////////////////////////////
 
     example_manager.AddExample("draw_triangle", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        Reset();
+
         TOGL_Data data = {};
 
         data.window_name        = "TrivialOpenGL_Example ";
@@ -323,6 +355,8 @@ int main(int argc, char *argv[]) {
     };
 
     example_manager.AddExample("move_and_resize", all_options, {}, [](const std::string& name, const std::set<std::string>& options) {
+        Reset();
+
         auto IsOption = [&options](const std::string& option) { return options.find(option) != options.end(); };
 
         s_resolution = {600, 300};
@@ -449,7 +483,9 @@ int main(int argc, char *argv[]) {
     // font
     ////////////////////////////////////////////////////////////////////////////////
 
-    example_manager.AddExample("font", Combine(all_options, {"unicode", "bold", "glyph_spacing_5", "line_spacing_5"}), {}, [](const std::string& name, const std::set<std::string>& options) {
+    example_manager.AddExample("font", Combine(all_options, {"unicode", "bold", "glyph_spacing_5", "line_spacing_5", "arial"}), {}, [](const std::string& name, const std::set<std::string>& options) {
+        Reset();
+
         auto IsOption = [&options](const std::string& option) { return options.find(option) != options.end(); };
 
         s_resolution = {800, 400};
@@ -476,12 +512,12 @@ int main(int argc, char *argv[]) {
         if (IsOption("notify_mouse_move"))              data.special_debug.is_notify_mouse_move         = true;
         if (IsOption("notify_key_message"))             data.special_debug.is_notify_key_message        = true;
         if (IsOption("notify_character_message"))       data.special_debug.is_notify_character_message  = true;
-
-        s_font_char_set = IsOption("unicode") ? TOGL_FONT_CHAR_SET_ID_RANGE_0000_FFFF : TOGL_FONT_CHAR_SET_ID_ENGLISH;
-        s_font_style    = IsOption("bold") ? TOGL_FONT_STYLE_ID_BOLD : TOGL_FONT_STYLE_ID_NORMAL;
-
-        s_glyph_spacing = IsOption("glyph_spacing_5") ? 5 : 0;
-        s_line_spacing  = IsOption("line_spacing_5") ? 5 : 0;
+        
+        if (IsOption("arial"))              s_font_info.name = "Arial";
+        if (IsOption("unicode"))            s_font_info.unicode_range_group = TOGL_FONT_CHAR_SET_ID_RANGE_0000_FFFF;
+        if (IsOption("bold"))               s_font_info.style = TOGL_FONT_STYLE_ID_BOLD;
+        if (IsOption("glyph_spacing_5"))    s_font_info.distance_between_glyphs = 5;
+        if (IsOption("line_spacing_5"))     s_font_info.distance_between_lines = 5;
 
         data.do_on_create = []() {
             s_test_image.Initialize(TOGL_GetDrawAreaSize());
@@ -567,6 +603,8 @@ int main(int argc, char *argv[]) {
     std::set<std::string> window_state_all_options = Combine(all_options, {"full_screen_at_start"});
 
     example_manager.AddExample("window_state", window_state_all_options, {"draw_area_size"}, [](const std::string& name, const std::set<std::string>& options) {
+        Reset();
+
         auto IsOption = [&options](const std::string& option) { return options.find(option) != options.end(); };
 
         s_resolution = {800, 400};
@@ -990,6 +1028,8 @@ int main(int argc, char *argv[]) {
     ////////////////////////////////////////////////////////////////////////////////
 
     example_manager.AddExample("opengl_version", {"wrong"}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        Reset();
+
         auto IsOption = [&options](const std::string& option) { return options.find(option) != options.end(); };
 
         TOGL_Data data = {};
@@ -1043,6 +1083,8 @@ int main(int argc, char *argv[]) {
     ////////////////////////////////////////////////////////////////////////////////
     
     example_manager.AddExample("keyboard_and_mouse", all_options, {}, [](const std::string& name, const std::set<std::string>& options) {
+        Reset();
+
         auto IsOption = [&options](const std::string& option) { return options.find(option) != options.end(); };
 
         s_resolution = {600, 300};
@@ -1191,6 +1233,8 @@ int main(int argc, char *argv[]) {
     ////////////////////////////////////////////////////////////////////////////////
     
     example_manager.AddExample("timer", {"100ms", "500ms", "1s"}, {"500ms"}, [](const std::string& name, const std::set<std::string>& options) {
+        Reset();
+
         auto IsOption = [&options](const std::string& option) { return options.find(option) != options.end(); };
 
         s_resolution = {600, 300};
@@ -1238,6 +1282,8 @@ int main(int argc, char *argv[]) {
     ////////////////////////////////////////////////////////////////////////////////
     
     example_manager.AddExample("test_font", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        Reset();
+
         auto IsOption = [&options](const std::string& option) { return options.find(option) != options.end(); };
 
         s_resolution = {800, 400};
