@@ -90,9 +90,18 @@ struct TOGL_FontInfo {
     TOGL_FontSizeUnitId     size_unit;
     TOGL_FontStyleId        style;
     TOGL_UnicodeRangeGroup  unicode_range_group;
+    uint32_t                distance_between_glyphs;
+    uint32_t                distance_between_lines;
 
     TOGL_FontInfo();
-    TOGL_FontInfo(const std::string& name, uint32_t size, TOGL_FontSizeUnitId size_unit, TOGL_FontStyleId style, const TOGL_UnicodeRangeGroup& unicode_range_group);
+    TOGL_FontInfo(
+        const std::string& name, 
+        uint32_t size, 
+        TOGL_FontSizeUnitId size_unit, 
+        TOGL_FontStyleId style, 
+        const TOGL_UnicodeRangeGroup& unicode_range_group,
+        uint32_t distance_between_glyphs = 0,
+        uint32_t distance_between_lines = 0);
 };
 
 //-----------------------------------------------------------------------------
@@ -288,6 +297,12 @@ public:
     // text         - Encoding format: UTF8.
     void RenderGlyphs(const std::string& text);
 
+    // Returns distance between rendered glyphs in pixels.
+    uint32_t GetDistanceBetweenGlyphs() const;
+
+    // Returns distance between rendered lines in pixels.
+    uint32_t GetDistanceBetweenLines() const;
+
     // Returns glyph size (width and height, both in pixels).
     TOGL_SizeU GetGlyphSize(uint32_t code) const;
 
@@ -302,6 +317,7 @@ public:
     // Returns font ascent length in pixels.
     uint32_t GetAscent() const;
 
+    // text         - Each code point is interpreted as single printable glyph (even '\t' and 'n').
     // width        - In pixels.
     // Returns number of glyphs from text which will fit in width.
     uint32_t GetGlyphCountInWidth(const std::wstring& text, uint32_t width) const;
@@ -385,12 +401,21 @@ inline TOGL_FontInfo::TOGL_FontInfo() {
     unicode_range_group = TOGL_FONT_CHAR_SET_ID_ENGLISH;
 }
         
-inline TOGL_FontInfo::TOGL_FontInfo(const std::string& name, uint32_t size, TOGL_FontSizeUnitId size_unit, TOGL_FontStyleId style, const TOGL_UnicodeRangeGroup& unicode_range_group) {
-    this->name                  = name;
-    this->size                  = size;    
-    this->size_unit             = size_unit;
-    this->style                 = style;    
-    this->unicode_range_group   = unicode_range_group;
+inline TOGL_FontInfo::TOGL_FontInfo(
+        const std::string& name, 
+        uint32_t size, TOGL_FontSizeUnitId size_unit, 
+        TOGL_FontStyleId style, 
+        const TOGL_UnicodeRangeGroup& unicode_range_group,
+        uint32_t distance_between_glyphs,
+        uint32_t distance_between_lines) {
+    this->name                      = name;
+    this->size                      = size;    
+    this->size_unit                 = size_unit;
+    this->style                     = style;    
+    this->unicode_range_group       = unicode_range_group;
+    this->distance_between_glyphs   = distance_between_glyphs;
+    this->distance_between_lines    = distance_between_lines;
+
 }
 
 //-----------------------------------------------------------------------------
@@ -1048,11 +1073,19 @@ inline void TOGL_Font::RenderGlyphs(const std::string& text) {
             glPushMatrix();
             glTranslatef(float(x), 0, 0);
             RenderGlyph(code);
-            x += GetGlyphSize(code).width;
+            x += GetGlyphSize(code).width + m_data.info.distance_between_glyphs;
             glPopMatrix();
         }
         RenderEnd();
     }
+}
+
+inline uint32_t TOGL_Font::GetDistanceBetweenGlyphs() const {
+    return m_data.info.distance_between_glyphs;
+}
+
+inline uint32_t TOGL_Font::GetDistanceBetweenLines() const {
+    return m_data.info.distance_between_lines;
 }
 
 inline TOGL_SizeU TOGL_Font::GetGlyphSize(uint32_t code) const {
@@ -1083,7 +1116,14 @@ inline uint32_t TOGL_Font::GetAscent() const {
 inline uint32_t TOGL_Font::GetGlyphCountInWidth(const std::wstring& text, uint32_t width) const {
     uint32_t    count           = 0;
     uint32_t    current_width   = 0;
+
+    bool is_first = true;
     for (const wchar_t c : text) {
+        if (is_first) {
+            is_first = false;
+        } else {
+            current_width += m_data.info.distance_between_glyphs;
+        }
         current_width += GetGlyphSize(c).width;
         if (current_width > width) break;
         count += 1;

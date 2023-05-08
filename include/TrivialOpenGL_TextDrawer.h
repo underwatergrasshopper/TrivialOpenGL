@@ -47,7 +47,6 @@ public:
 
 private:
     uint32_t            m_num_of_spaces_in_tab;
-    std::wstring        m_tab_as_spaces;
 
     uint32_t            m_wrap_line_width;          // in pixels
 
@@ -61,9 +60,8 @@ private:
     //     '[^\t\n ]'   # any array of characters which doesn't contain tab, new line or space
     static size_t GetWordPos(const std::wstring& text, size_t current_pos);
 
-    static TOGL_SizeU GetWordSize(const TOGL_Font& font, const std::wstring& word);
-
-    static uint32_t GetWordWidth(const TOGL_Font& font, const std::wstring& word);
+    TOGL_SizeU GetWordSize(const TOGL_Font& font, const std::wstring& word) const;
+    uint32_t GetWordWidth(const TOGL_Font& font, const std::wstring& word) const;
 
     static std::vector<std::wstring> SplitToWords(const std::wstring& text);
 
@@ -216,7 +214,6 @@ inline void TOGL_TextAdjuster::SetLineWrapWidth(uint32_t width) {
 
 inline void TOGL_TextAdjuster::SetNumberOfSpacesInTab(uint32_t number) {
     m_num_of_spaces_in_tab = number;
-    m_tab_as_spaces = std::wstring(number, L' ');
 }
 
 inline TOGL_FineText TOGL_TextAdjuster::AdjustText(const TOGL_Font& font, const  TOGL_FineText& fine_text) const {
@@ -248,16 +245,33 @@ inline TOGL_FineText TOGL_TextAdjuster::AdjustText(const TOGL_Font& font, const 
 
 //------------------------------------------------------------------------------
 
-inline TOGL_SizeU TOGL_TextAdjuster::GetWordSize(const TOGL_Font& font, const std::wstring& word) {
-    TOGL_SizeU size;
-    size.height = font.GetHeight();
-    for (const wchar_t c : word) size.width += font.GetGlyphSize(c).width;
-    return size;
+inline TOGL_SizeU TOGL_TextAdjuster::GetWordSize(const TOGL_Font& font, const std::wstring& word) const {
+    return {GetWordWidth(font, word), font.GetHeight()};
 }
 
-inline uint32_t TOGL_TextAdjuster::GetWordWidth(const TOGL_Font& font, const std::wstring& word) {
+inline uint32_t TOGL_TextAdjuster::GetWordWidth(const TOGL_Font& font, const std::wstring& word) const {
     uint32_t width = 0;
-    for (const wchar_t c : word) width += font.GetGlyphSize(c).width;
+
+    bool is_glyph_before = false;
+
+    for (const wchar_t c : word) {
+        if (c == L'\t') {
+            if (is_glyph_before) width += font.GetDistanceBetweenGlyphs();
+
+            width += font.GetGlyphSize(L' ').width * m_num_of_spaces_in_tab;
+            if (m_num_of_spaces_in_tab > 1) width += (font.GetDistanceBetweenGlyphs() * (m_num_of_spaces_in_tab - 1));
+
+            is_glyph_before = true;
+        } else if (c == L'\n') {
+            is_glyph_before = false;
+        } else {
+            if (is_glyph_before) width += font.GetDistanceBetweenGlyphs();
+
+            width += font.GetGlyphSize(c).width;
+            is_glyph_before = true;
+        }
+    }
+
     return width;
 }
 
@@ -311,18 +325,23 @@ inline TOGL_FineText TOGL_TextAdjuster::PrepareTextElementText(const TOGL_Font& 
     TOGL_FineText prepared_fine_text;
     std::wstring prepared_text;
 
-    const uint32_t width_of_full_tab = GetWordWidth(font, m_tab_as_spaces); // in pixels
-
     const std::vector<std::wstring> words = SplitToWords(text);
 
+    bool is_glyph_before = false;
+
     for (const auto& word : words) {
-        const uint32_t word_width = GetWordWidth(font, word);
+        const uint32_t word_width = GetWordWidth(font, word) + (is_glyph_before ? font.GetDistanceBetweenGlyphs() : 0);
 
         if (word == L"\n") {
+            // New line.
             prepared_text   += word;
             line_width      = 0;
 
+            is_glyph_before = false;
         } else if (word == L"\t") {
+            // Tab.
+            const uint32_t width_of_full_tab = word_width;
+
             uint32_t width_of_tab = width_of_full_tab - (line_width % width_of_full_tab);
             if (width_of_tab == 0) width_of_tab = width_of_full_tab;
                         
@@ -337,13 +356,17 @@ inline TOGL_FineText TOGL_TextAdjuster::PrepareTextElementText(const TOGL_Font& 
             prepared_text = L"";
 
             line_width += width_of_tab;
+
+            is_glyph_before = true;
         } else {
+            // Text or Space.
             if (m_wrap_line_width != 0 && (line_width + word_width) > m_wrap_line_width) {
                 // Word is crossing wrap line width. Needs to be moved or split.
 
                 // Spaces are ignored if they are behind wrap line width.
+                
                 if (word != L" ") {
-
+                    // Text.
                     if (word_width > m_wrap_line_width) {
                         // Word is longer than line. Must be split between two or multiple lines.
                         std::wstring    long_word       = word;
@@ -364,22 +387,23 @@ inline TOGL_FineText TOGL_TextAdjuster::PrepareTextElementText(const TOGL_Font& 
 
                         prepared_text   += long_word;
                         line_width      += long_word_width;
-
                     } else {
-                        // Word is shorter than line. Whole word is moved to next line
+                        // Word is shorter than line. Whole word is moved to next line.
                         prepared_text   += L"\n";
                         line_width      = 0;
 
                         prepared_text   += word;
                         line_width      += word_width;
                     }
+                    is_glyph_before = true;
                 }
-  
             } else {
+                // Entire text fits in line.
                 prepared_text   += word;
                 line_width      += word_width;
-            }
 
+                is_glyph_before = true;
+            }
         }
     }
     prepared_fine_text.Append(prepared_text);
@@ -507,13 +531,13 @@ inline void TOGL_TextDrawer::RenderText(TOGL_Font& font, const TOGL_FineText& fi
                 for (const uint32_t code : element.GetText()) {
                     if (code == '\n') {
                         m_pos.x = m_base.x;
-                        m_pos.y += font.GetHeight() * m_orientation_factor_y;
+                        m_pos.y += (font.GetHeight() + font.GetDistanceBetweenLines()) * m_orientation_factor_y;
                     } else {
                         glPushMatrix();
                         glTranslatef(float(m_pos.x), float(m_pos.y), 0);
 
                         font.RenderGlyph(code);
-                        m_pos.x += font.GetGlyphSize(code).width;
+                        m_pos.x += font.GetGlyphSize(code).width + font.GetDistanceBetweenGlyphs();
 
                         glPopMatrix();
                     }
@@ -542,6 +566,8 @@ inline TOGL_SizeU TOGL_TextDrawer::GetTextSize(TOGL_Font& font, const std::strin
 inline TOGL_SizeU TOGL_TextDrawer::GetTextSize(TOGL_Font& font, const  TOGL_FineText& fine_text) const {
     TOGL_SizeU size = {0, font.GetHeight()};
     uint32_t width = 0;
+
+    bool is_glyph_before = false;
     
     if (font.IsLoaded()) {
         for (const TOGL_FineTextElementContainer& element : fine_text.ToElementContainers()) {
@@ -550,12 +576,18 @@ inline TOGL_SizeU TOGL_TextDrawer::GetTextSize(TOGL_Font& font, const  TOGL_Fine
             case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_TEXT:
                 for (const uint32_t code : element.GetText()) {
                     if (code == '\n') {
-                        size.height += font.GetHeight();
+                        size.height += font.GetHeight() + font.GetDistanceBetweenLines();
 
                         if (size.width < width) size.width = width;
                         width = 0;
+
+                        is_glyph_before = false;
                     } else {
+                        if (is_glyph_before) width += font.GetDistanceBetweenGlyphs();
+
                         width += font.GetGlyphSize(code).width;
+
+                        is_glyph_before = true;
                     }
                 }
                 break;
@@ -564,6 +596,8 @@ inline TOGL_SizeU TOGL_TextDrawer::GetTextSize(TOGL_Font& font, const  TOGL_Fine
 
             case TOGL_FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER:
                 width += element.GetTextHorizontalSpacer().GetWidth();
+
+                is_glyph_before = false;
                 break;
             }
         }
