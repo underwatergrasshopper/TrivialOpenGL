@@ -227,7 +227,7 @@ public:
 
     // Adds new text.
     void Append(const std::wstring& text) {
-        auto _TOGL_Min = [](const auto& a, const auto& b) -> auto {
+        auto _TOGL_Min = [](const auto& a, const auto& b) -> decltype(a + b) {
             return a < b ? a : b;
         };
 
