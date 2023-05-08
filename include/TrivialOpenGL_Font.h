@@ -152,6 +152,9 @@ public:
     TOGL_FontDataGenerator();
     virtual ~TOGL_FontDataGenerator();
 
+    // Returns generated font data.
+    // If generating fails then returned font data is invalid, and IsOk() returns false.
+    // Error message can be retrieved by GetErrMsg().
     TOGL_FontData Generate(const TOGL_FontInfo& font_info);
 
     bool IsOk() const;

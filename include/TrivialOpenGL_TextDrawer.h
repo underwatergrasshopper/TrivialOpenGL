@@ -22,10 +22,13 @@ TOGL_TextAdjuster& TOGL_ToGlobalTextAdjuster();
 
 void TOGL_ResetTextAdjuster();
 
+// Sets line width in pixels after which words are wrapped.
 // width        - In pixels.
 void TOGL_SetLineWrapWidth(uint32_t width);
+
 void TOGL_SetNumberOfSpacesInTab(uint32_t number);
 
+// Adjust text by using word wrapping and replaces tabs with equivalent in length (in pixels) in spaces.
 TOGL_FineText TOGL_AdjustText(const TOGL_FineText& text);
 
 //------------------------------------------------------------------------------
@@ -39,10 +42,12 @@ public:
 
     void Reset();
 
+    // Sets line width in pixels after which words are wrapped.
     // width        - In pixels.
     void SetLineWrapWidth(uint32_t width);
     void SetNumberOfSpacesInTab(uint32_t number);
 
+    // Adjust text by using word wrapping and replaces tabs with equivalent in length (in pixels) in spaces.
     TOGL_FineText AdjustText(const TOGL_Font& font, const  TOGL_FineText& text) const;
 
 private:
@@ -120,14 +125,17 @@ public:
 
     void Reset();
 
+    // Sets start position of text.
     void SetPos(int x, int y);
     void SetPos(const TOGL_PointI& pos);
-
+    
+    // Sets color of text.
     void SetColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
     void SetColor(const TOGL_Color4U8& color);
 
     // ---
 
+    // Renders text by using provided font.
     void RenderText(TOGL_Font& font, const std::string& text);
     void RenderText(TOGL_Font& font, const TOGL_FineText& fine_text);
 
@@ -137,6 +145,7 @@ public:
 
     // ---
 
+    // Sets origin of coordinate system to be in specific place in window area rectangle.
     void SetOrientation(TOGL_TextDrawerOrientationId orientation);
     TOGL_TextDrawerOrientationId GetOrientation() const;
 

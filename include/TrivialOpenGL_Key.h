@@ -171,6 +171,7 @@ std::string TOGL_KeyIdToStr(TOGL_KeyId key_id);
 std::string TOGL_KeyboardSideToStr(TOGL_KeyboardSideId side);
 std::string TOGL_ExtraToStr(const TOGL_Extra& extra);
 
+// Returns true if key is toggled. For Example: KEY_ID_CAPS_LOCK, KEY_ID_INSERT.
 bool TOGL_IsKeyToggled(TOGL_KeyId key_id);
     
 //------------------------------------------------------------------------------
