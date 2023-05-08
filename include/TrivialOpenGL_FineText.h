@@ -227,9 +227,13 @@ public:
 
     // Adds new text.
     void Append(const std::wstring& text) {
+        auto _TOGL_Min = [](const auto& a, const auto& b) -> auto {
+            return a < b ? a : b;
+        };
+
         // std::vector<Type>::size_type can be uint32_t or uint64_t or something else. 
         // To avoid problems with converting to type with smaller range, max_size will be at maximum half size of UINT32.
-        const std::vector<ElementContainer>::size_type max_size = min(UINT_MAX / 2, m_element_containers.max_size());
+        const std::vector<ElementContainer>::size_type max_size = _TOGL_Min(UINT_MAX / 2, m_element_containers.max_size());
 
         if (text.size() > max_size) {
             m_element_containers.push_back(ElementContainer(text.substr(0, max_size)));
