@@ -14,21 +14,24 @@ enum {
 
 
 namespace {
-    TOGL_Window&         s_window                       = TOGL_ToWindow();
-    TOGL_SizeU16         s_resolution;
-    bool                 s_is_client;
-    TestImage            s_test_image;
-    bool                 s_is_display_mose_move_data;
+    TOGL_Window&            s_window                        = TOGL_ToWindow();
+    TOGL_SizeU16            s_resolution;
+    bool                    s_is_client;
+    TestImage               s_test_image;
+    bool                    s_is_display_mose_move_data;
 
-    DelayedActionManager s_actions;
+    DelayedActionManager    s_actions;
 
-    TOGL_FontStyleId     s_font_style                   = TOGL_FONT_STYLE_ID_NORMAL;
-    TOGL_FontCharSetId   s_font_char_set                = TOGL_FONT_CHAR_SET_ID_ENGLISH;
+    TOGL_FontStyleId        s_font_style                    = TOGL_FONT_STYLE_ID_NORMAL;
+    TOGL_FontCharSetId      s_font_char_set                 = TOGL_FONT_CHAR_SET_ID_ENGLISH;
 
-    TestFont             s_test_font;
-    FPS                  s_fps;
+    TestFont                s_test_font;
+    FPS                     s_fps;
 
-    TOGL_FineText        s_text;
+    TOGL_FineText           s_text;
+
+    uint32_t                s_glyph_spacing                 = 0;
+    uint32_t                s_line_spacing                  = 0;
 };
 
 //------------------------------------------------------------------------------
@@ -37,7 +40,7 @@ void LoadFont(const std::string& text = "") {
     TOGL_ResetTextDrawer();
     TOGL_ResetTextAdjuster();
 
-    TOGL_LoadFont({"Courier New", FONT_SIZE, TOGL_FONT_SIZE_UNIT_ID_PIXELS, s_font_style, s_font_char_set, 5 , 0});
+    TOGL_LoadFont({"Courier New", FONT_SIZE, TOGL_FONT_SIZE_UNIT_ID_PIXELS, s_font_style, s_font_char_set, s_glyph_spacing , s_line_spacing});
 
     if (TOGL_IsFontOk()) {
         printf("Font Loaded, size=%dpx.\n", TOGL_GetFontHeight());
@@ -446,7 +449,7 @@ int main(int argc, char *argv[]) {
     // font
     ////////////////////////////////////////////////////////////////////////////////
 
-    example_manager.AddExample("font", Combine(all_options, {"unicode", "bold"}), {}, [](const std::string& name, const std::set<std::string>& options) {
+    example_manager.AddExample("font", Combine(all_options, {"unicode", "bold", "glyph_spacing_5", "line_spacing_5"}), {}, [](const std::string& name, const std::set<std::string>& options) {
         auto IsOption = [&options](const std::string& option) { return options.find(option) != options.end(); };
 
         s_resolution = {800, 400};
@@ -476,6 +479,9 @@ int main(int argc, char *argv[]) {
 
         s_font_char_set = IsOption("unicode") ? TOGL_FONT_CHAR_SET_ID_RANGE_0000_FFFF : TOGL_FONT_CHAR_SET_ID_ENGLISH;
         s_font_style    = IsOption("bold") ? TOGL_FONT_STYLE_ID_BOLD : TOGL_FONT_STYLE_ID_NORMAL;
+
+        s_glyph_spacing = IsOption("glyph_spacing_5") ? 5 : 0;
+        s_line_spacing  = IsOption("line_spacing_5") ? 5 : 0;
 
         data.do_on_create = []() {
             s_test_image.Initialize(TOGL_GetDrawAreaSize());

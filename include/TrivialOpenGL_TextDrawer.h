@@ -53,17 +53,17 @@ private:
     uint32_t            m_width_of_full_tab;        // in pixels
     uint32_t            m_line_width;               // in pixels
 
-    // <word>
+    // <sentence_part>
     //     '\t'         # tab
     //     '\n'         # new line
     //     ' '          # space
-    //     '[^\t\n ]'   # any array of characters which doesn't contain tab, new line or space
-    static size_t GetWordPos(const std::wstring& text, size_t current_pos);
+    //     '[^\t\n ]'   # word (any array of characters which doesn't contain tab, new line or space
+    static size_t GetSentencePartPos(const std::wstring& sentence, size_t current_pos);
 
-    TOGL_SizeU GetWordSize(const TOGL_Font& font, const std::wstring& word) const;
-    uint32_t GetWordWidth(const TOGL_Font& font, const std::wstring& word) const;
+    TOGL_SizeU GetSentenceSize(const TOGL_Font& font, const std::wstring& sentence) const;
+    uint32_t GetSentenceWidth(const TOGL_Font& font, const std::wstring& sentence) const;
 
-    static std::vector<std::wstring> SplitToWords(const std::wstring& text);
+    static std::vector<std::wstring> SplitSentenceToParts(const std::wstring& sentence);
 
     TOGL_FineText PrepareTextElementHorizontalSpacer(const TOGL_Font & font, const TOGL_TextHorizontalSpacer& text_horizontal_spacer, uint32_t & line_width) const;
     TOGL_FineText PrepareTextElementText(const TOGL_Font& font, const std::wstring& text, uint32_t& line_width) const;
@@ -245,16 +245,16 @@ inline TOGL_FineText TOGL_TextAdjuster::AdjustText(const TOGL_Font& font, const 
 
 //------------------------------------------------------------------------------
 
-inline TOGL_SizeU TOGL_TextAdjuster::GetWordSize(const TOGL_Font& font, const std::wstring& word) const {
-    return {GetWordWidth(font, word), font.GetHeight()};
+inline TOGL_SizeU TOGL_TextAdjuster::GetSentenceSize(const TOGL_Font& font, const std::wstring& sentence) const {
+    return {GetSentenceWidth(font, sentence), font.GetHeight()};
 }
 
-inline uint32_t TOGL_TextAdjuster::GetWordWidth(const TOGL_Font& font, const std::wstring& word) const {
+inline uint32_t TOGL_TextAdjuster::GetSentenceWidth(const TOGL_Font& font, const std::wstring& sentence) const {
     uint32_t width = 0;
 
     bool is_glyph_before = false;
 
-    for (const wchar_t c : word) {
+    for (const wchar_t c : sentence) {
         if (c == L'\t') {
             if (is_glyph_before) width += font.GetDistanceBetweenGlyphs();
 
@@ -275,35 +275,34 @@ inline uint32_t TOGL_TextAdjuster::GetWordWidth(const TOGL_Font& font, const std
     return width;
 }
 
-
-inline size_t TOGL_TextAdjuster::GetWordPos(const std::wstring& text, size_t current_pos) {
+inline size_t TOGL_TextAdjuster::GetSentencePartPos(const std::wstring& sentence, size_t current_pos) {
     auto IsWhiteSpace = [](wchar_t c) -> bool {
         return c == L' ' || c == L'\t' || c == L'\n';
     };
 
-    for (size_t next_word_pos = current_pos; next_word_pos < text.size(); ++next_word_pos) {
-        const wchar_t c = text[next_word_pos];
+    for (size_t next_sentence_part_pos = current_pos; next_sentence_part_pos < sentence.size(); ++next_sentence_part_pos) {
+        const wchar_t c = sentence[next_sentence_part_pos];
 
-        if (IsWhiteSpace(text[next_word_pos])) return next_word_pos + 1;
-        if (next_word_pos + 1 < text.size() && IsWhiteSpace(text[next_word_pos + 1])) return next_word_pos + 1;
+        if (IsWhiteSpace(sentence[next_sentence_part_pos])) return next_sentence_part_pos + 1;
+        if (next_sentence_part_pos + 1 < sentence.size() && IsWhiteSpace(sentence[next_sentence_part_pos + 1])) return next_sentence_part_pos + 1;
     }
     return std::wstring::npos;
 };
 
-inline std::vector<std::wstring> TOGL_TextAdjuster::SplitToWords(const std::wstring& text) {
-    std::vector<std::wstring> words;
+inline std::vector<std::wstring> TOGL_TextAdjuster::SplitSentenceToParts(const std::wstring& sentence) {
+    std::vector<std::wstring> parts;
 
     size_t pos = 0;
-    while (pos < text.size()) {
-        size_t next_word_pos = GetWordPos(text, pos);
+    while (pos < sentence.size()) {
+        size_t next_part_pos = GetSentencePartPos(sentence, pos);
 
-        const std::wstring word = text.substr(pos, next_word_pos - pos);
+        const std::wstring part = sentence.substr(pos, next_part_pos - pos);
 
-        words.push_back(word);
-        pos = next_word_pos;
+        parts.push_back(part);
+        pos = next_part_pos;
     }
 
-    return words;
+    return parts;
 };
 
 inline TOGL_FineText TOGL_TextAdjuster::PrepareTextElementHorizontalSpacer(const TOGL_Font & font, const TOGL_TextHorizontalSpacer& text_horizontal_spacer, uint32_t & line_width) const {
@@ -325,22 +324,23 @@ inline TOGL_FineText TOGL_TextAdjuster::PrepareTextElementText(const TOGL_Font& 
     TOGL_FineText prepared_fine_text;
     std::wstring prepared_text;
 
-    const std::vector<std::wstring> words = SplitToWords(text);
+    const std::vector<std::wstring> sentence_parts = SplitSentenceToParts(text);
 
     bool is_glyph_before = false;
 
-    for (const auto& word : words) {
-        const uint32_t word_width = GetWordWidth(font, word) + (is_glyph_before ? font.GetDistanceBetweenGlyphs() : 0);
+    for (const auto& part : sentence_parts) {
+        // Any first glyph in line don't have spacing. Only following ones.
+        const uint32_t part_width = GetSentenceWidth(font, part) + (is_glyph_before ? font.GetDistanceBetweenGlyphs() : 0);
 
-        if (word == L"\n") {
+        if (part == L"\n") {
             // New line.
-            prepared_text   += word;
+            prepared_text   += part;
             line_width      = 0;
 
             is_glyph_before = false;
-        } else if (word == L"\t") {
+        } else if (part == L"\t") {
             // Tab.
-            const uint32_t width_of_full_tab = word_width;
+            const uint32_t width_of_full_tab = part_width;
 
             uint32_t width_of_tab = width_of_full_tab - (line_width % width_of_full_tab);
             if (width_of_tab == 0) width_of_tab = width_of_full_tab;
@@ -352,6 +352,7 @@ inline TOGL_FineText TOGL_TextAdjuster::PrepareTextElementText(const TOGL_Font& 
                 width_of_tab = width_of_full_tab;
             } 
 
+            // To preserve same length of tabs, horizontal spacer is used for custom pixel perfect lengths.
             prepared_fine_text.Append(prepared_text, TOGL_TextHorizontalSpacer(width_of_tab));
             prepared_text = L"";
 
@@ -359,48 +360,49 @@ inline TOGL_FineText TOGL_TextAdjuster::PrepareTextElementText(const TOGL_Font& 
 
             is_glyph_before = true;
         } else {
-            // Text or Space.
-            if (m_wrap_line_width != 0 && (line_width + word_width) > m_wrap_line_width) {
-                // Word is crossing wrap line width. Needs to be moved or split.
+            // Word or Space.
+            if (m_wrap_line_width != 0 && (line_width + part_width) > m_wrap_line_width) {
+                // Word or Space is crossing wrap line width. Needs to be moved or split.
 
-                // Spaces are ignored if they are behind wrap line width.
-                
-                if (word != L" ") {
-                    // Text.
-                    if (word_width > m_wrap_line_width) {
+                if (part == L" ") {
+                    // Spaces are ignored if they are behind wrap line width.
+                    // Current value of is_glyph_before is preserved. 
+                } else {
+                    // Word.
+                    if (part_width > m_wrap_line_width) {
                         // Word is longer than line. Must be split between two or multiple lines.
-                        std::wstring    long_word       = word;
-                        uint32_t        long_word_width = word_width;
+                        std::wstring    long_part       = part;
+                        uint32_t        long_part_width = part_width;
 
-                        while (long_word_width > m_wrap_line_width) {
+                        while (long_part_width > m_wrap_line_width) {
                             const uint32_t line_width_left = m_wrap_line_width - line_width;
 
-                            const size_t glyph_count = font.GetGlyphCountInWidth(long_word, line_width_left);
+                            const size_t glyph_count = font.GetGlyphCountInWidth(long_part, line_width_left);
 
-                            prepared_text   += long_word.substr(0, glyph_count);
+                            prepared_text   += long_part.substr(0, glyph_count);
                             prepared_text   += L"\n";
                             line_width      = 0;
 
-                            long_word       = long_word.substr(glyph_count);
-                            long_word_width = GetWordWidth(font, long_word);
+                            long_part       = long_part.substr(glyph_count);
+                            long_part_width = GetSentenceWidth(font, long_part);
                         }
 
-                        prepared_text   += long_word;
-                        line_width      += long_word_width;
+                        prepared_text   += long_part;
+                        line_width      += long_part_width;
                     } else {
                         // Word is shorter than line. Whole word is moved to next line.
                         prepared_text   += L"\n";
                         line_width      = 0;
 
-                        prepared_text   += word;
-                        line_width      += word_width;
+                        prepared_text   += part;
+                        line_width      += part_width;
                     }
                     is_glyph_before = true;
                 }
             } else {
-                // Entire text fits in line.
-                prepared_text   += word;
-                line_width      += word_width;
+                // Entire Word or Space fits in line.
+                prepared_text   += part;
+                line_width      += part_width;
 
                 is_glyph_before = true;
             }
