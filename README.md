@@ -105,7 +105,7 @@ Procedure:
 
 Recommended examples to select:
 - `window_state`
-- `font` (if window size is change by dragging frame, then text should align)
+- `font` (if window size is changed, then text will align)
 
 ---
 
