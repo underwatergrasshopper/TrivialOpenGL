@@ -246,7 +246,7 @@ TOGL_AreaIU16 TOGL_GetDrawArea();
 void TOGL_Hide();
 void TOGL_Show();
 
-// Returns true if window is sho
+// Returns true when window is showed, false when window is hidden.
 bool TOGL_IsVisible();
 
 // ---
@@ -297,7 +297,6 @@ private:
     virtual HWND ToHWND() = 0;
 };
 
-
 // Singleton.
 class TOGL_Window : public _TOGL_WindowInnerAccessor {
 public:
@@ -326,6 +325,8 @@ public:
     // ---
 
     // Moves window to position in screen coordinates.
+    // is_draw_area     - If true then x, y and pos refers to left top corner of window draw area.
+    //                    If false then x, y and pos refers to left top corner of window.
     void MoveTo(int x, int y, bool is_draw_area = false);
     void MoveTo(const TOGL_PointI& pos, bool is_draw_area = false);
 
@@ -334,19 +335,32 @@ public:
     void MoveBy(const TOGL_PointI& offset);
 
     // Resizes window and keeps current window position.
+    // is_draw_area     - If true then width, height and size is interpreted as window draw area size.
+    //                    If false then width, height and size is interpreted as window.
     void Resize(uint16_t width, uint16_t height, bool is_draw_area = false);
     void Resize(const TOGL_SizeU16& size, bool is_draw_area = false);
 
     // Moves and resizes window area.
+    // is_draw_area     - If true then x, y and pos refers to left top corner of window draw area.
+    //                    If false then x, y and pos refers to left top corner of window.
+    //                    If true then width, height and size is interpreted as window draw area size.
+    //                    If false then width, height and size is interpreted as window size.
     void SetArea(int x, int y, uint16_t width, uint16_t height, bool is_draw_area = false);
     void SetArea(const TOGL_AreaIU16& area, bool is_draw_area = false);
 
-    // Puts window in center of desktop area excluding task bar area.
-
-    // If STYLE_BIT_DRAW_AREA_SIZE then width and height correspond to draw area.
+    // Resize window and puts it in center of working area. 
+    // Where working area is desktop area excluding task bar area.
+    // 
+    // If STYLE_BIT_DRAW_AREA_SIZE then width and height are interpreted as window draw area size.
+    // Otherwise they are interpreted as window size.
     void Center(uint16_t width, uint16_t height);
     void Center(const TOGL_SizeU16& size);
 
+    // Resize window and puts it in center of working area. 
+    // Where working area is desktop area excluding task bar area.
+    // 
+    // If is_draw_area_size is false then width and height are interpreted as window draw area size.
+    // Otherwise they are interpreted as window size.
     void Center(uint16_t width, uint16_t height, bool is_draw_area_size);
     void Center(const TOGL_SizeU16& size, bool is_draw_area_size);
 
@@ -374,6 +388,8 @@ public:
 
     void Hide();
     void Show();
+
+    // Returns true when window is showed, false when window is hidden.
     bool IsVisible() const;
 
     // ---
