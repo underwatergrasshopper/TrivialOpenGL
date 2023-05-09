@@ -554,9 +554,11 @@ int main(int argc, char *argv[]) {
             text_drawer.RenderText(font, u8"\n\tTab.\b");
 
             TOGL_FineText text = TOGL_FineText(
+                TOGL_Color4U8(0, 255, 0, 255),
+                u8"Xj\n",
+                TOGL_Color4U8(255, 0, 0, 255),
+                u8"Xj\n",
                 TOGL_Color4U8(0, 0, 0, 255),
-                u8"Xj\n"
-                u8"Xj\n"
                 u8"Some text. \u3400\u5016\u9D9B\u0001\U00024B62. Many words in line. Many words in line. Many words in line. Many words in line. Many words in line. Many words in line.\n"
                 u8"Many words in line with \ttab.\n"
                 u8"Many words in line with i\ttab.\n"
