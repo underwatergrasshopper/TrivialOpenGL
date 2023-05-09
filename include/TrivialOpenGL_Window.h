@@ -46,7 +46,7 @@ enum TOGL_WindowOptionId {
 // Data used to run window.
 struct TOGL_Data {
     // Encoding: ASCII or UTF8.
-    std::string                 window_name             = "Window";
+    std::string                 window_name             = "Trivial OpenGL Window";
 
     // Window area.
     // If area is equal to {0, 0, 0, 0} then created window will be centered in screen working area (desktop area excluding task bar) 
@@ -59,11 +59,11 @@ struct TOGL_Data {
     // CENTERED                       - Window will be centered at middle of working area (desktop area excluding task bar area).
     // DRAW_AREA_SIZE                 - Width and height from 'area' variable will set size of window draw area instead whole window area.
     // DRAW_AREA_ONLY                 - Window will contain only draw area (without borders and title bar).
-    // REDRAW_ON_CHANGE_OR_REQUEST    - Window will only be redrawing on change or call of Window::RequestDraw method.
+    // REDRAW_ON_CHANGE_OR_REQUEST    - Window will only be redrawing on change or call of TOGL_Window::RequestDraw().
     TOGL_WindowStyleBitfield    style                   = 0;
 
     // Tries create OpenGL Rendering Context which support to at least this version, with compatibility to all previous versions.
-    // If opengl_version.major and opengl_version.minor is DEF then creates for any available OpenGL version. Can be checked by GetOpenGL_Version().
+    // If opengl_version.major and opengl_version.minor is 0 then creates for any available OpenGL version. Can be checked by GetOpenGL_Version().
     TOGL_GL_Version             opengl_verion           = {0, 0};
 
     // File name of icon image file (.ico). 
@@ -90,7 +90,7 @@ struct TOGL_Data {
     bool                        is_auto_sleep_blocked   = false;
 
     // LOG_LEVEL_ERROR         - error messages only
-    // LOG_LEVEL_WARNING        - warning and error messages
+    // LOG_LEVEL_WARNING       - warning and error messages
     // LOG_LEVEL_INFO          - info, warning and error messages
     // LOG_LEVEL_DEBUG         - debug, info, warning and error messages
     TOGL_LogLevel               log_level               = TOGL_LOG_LEVEL_INFO;
@@ -114,18 +114,22 @@ struct TOGL_Data {
     //                    indicator if pressed key is left right or doesn't matter (extra.keyboard_side).
     void (*do_on_key)(TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra)   = nullptr;
 
+    // Called when window receive character message (from keyboard single key or key combination).
     // code     - code unit of utf8 character
     void (*do_on_char)(char code)                                       = nullptr;
 
+    // Called when window receive character message (from keyboard single key or key combination).
     // code     - code unit of utf16 character
     void (*do_on_char_utf16)(wchar_t code)                              = nullptr;
 
+    // Called when window receive character message (from keyboard single key or key combination).
     // code     - code unit of utf32 character
     void (*do_on_char_utf32)(int code)                                  = nullptr;
 
     // Called each time window resize.
     void (*do_on_resize)(uint16_t width, uint16_t height)               = nullptr;
 
+    // Called when mouse wheel is rolled.
     // step_count       - Number of wheel rotation steps away from user.
     // x, y             - Cursor position in draw area.
     void (*do_on_mouse_wheel_roll)(int step_count, int x, int y)        = nullptr;
@@ -141,11 +145,16 @@ struct TOGL_Data {
     // WINDOWED_FULL_SCREENED.
     void (*do_on_state_change)(TOGL_WindowStateId window_state)         = nullptr;
 
+    // Called when window is about to show.
     void (*do_on_show)()                                                = nullptr;
+
+    // Called when window is about to hide.
     void (*do_on_hide)()                                                = nullptr;
 
+    // Called when window goes to foreground (gain keyboard focus or is activated).
     void (*do_on_foreground)(bool is_gain)                              = nullptr;   
 
+    // Called periodically. Call delay is taken from timer_time_interval variable and is provided as time_interval parameter.
     // time_interval - in milliseconds
     void (*do_on_time)(uint32_t time_interval)                          = nullptr;
 };
@@ -171,6 +180,8 @@ bool TOGL_IsEnabled(TOGL_WindowOptionId window_option);
 // ---
 
 // Moves window to position in screen coordinates.
+// is_draw_area     - If true then x, y and pos refers to left top corner of window draw area.
+//                    If false then x, y and pos refers to left top corner of window.
 void TOGL_MoveTo(int x, int y, bool is_draw_area = false);
 void TOGL_MoveTo(const TOGL_PointI& pos, bool is_draw_area = false);
 
@@ -179,21 +190,34 @@ void TOGL_MoveBy(int x, int y);
 void TOGL_MoveBy(const TOGL_PointI& offset);
 
 // Resizes window and keeps current window position.
+// is_draw_area     - If true then width, height and size is interpreted as window draw area size.
+//                    If false then width, height and size is interpreted as window.
 void TOGL_Resize(uint16_t width, uint16_t height, bool is_draw_area = false);
 void TOGL_Resize(const TOGL_SizeU16& size, bool is_draw_area = false);
 
 // Moves and resizes window area.
+// is_draw_area     - If true then x, y and pos refers to left top corner of window draw area.
+//                    If false then x, y and pos refers to left top corner of window.
+//                    If true then width, height and size is interpreted as window draw area size.
+//                    If false then width, height and size is interpreted as window size.
 void TOGL_SetArea(int x, int y, uint16_t width, uint16_t height, bool is_draw_area = false);
 void TOGL_SetArea(const TOGL_AreaIU16& area, bool is_draw_area = false);
 
 // ---
-// 
-// Puts window in center of working area. 
+
+// Resize window and puts it in center of working area. 
 // Where working area is desktop area excluding task bar area.
-// If STYLE_BIT_DRAW_AREA_SIZE then width and height correspond to draw area.
+// 
+// If STYLE_BIT_DRAW_AREA_SIZE then width and height are interpreted as window draw area size.
+// Otherwise they are interpreted as window size.
 void TOGL_Center(uint16_t width, uint16_t height);
 void TOGL_Center(const TOGL_SizeU16& size);
 
+// Resize window and puts it in center of working area. 
+// Where working area is desktop area excluding task bar area.
+// 
+// If is_draw_area_size is false then width and height are interpreted as window draw area size.
+// Otherwise they are interpreted as window size.
 void TOGL_Center(uint16_t width, uint16_t height, bool is_draw_area_size);
 void TOGL_Center(const TOGL_SizeU16& size, bool is_draw_area_size);
 
@@ -221,35 +245,37 @@ TOGL_AreaIU16 TOGL_GetDrawArea();
 
 void TOGL_Hide();
 void TOGL_Show();
+
+// Returns true if window is sho
 bool TOGL_IsVisible();
 
 // ---
 
-inline void TOGL_Minimize();
-inline void TOGL_Maximize();
-inline void TOGL_GoWindowedFullScreen();
+void TOGL_Minimize();
+void TOGL_Maximize();
+void TOGL_GoWindowedFullScreen();
 
-inline TOGL_WindowStateId TOGL_GetState();
+TOGL_WindowStateId TOGL_GetState();
 
-inline bool TOGL_IsNormal();
-inline bool TOGL_IsMinimized();
-inline bool TOGL_IsMaximized();
-inline bool TOGL_IsFullScreen();
+bool TOGL_IsNormal();
+bool TOGL_IsMinimized();
+bool TOGL_IsMaximized();
+bool TOGL_IsFullScreen();
 
 // ---
 
 // Moves window to foreground.
-inline void TOGL_GoForeground();
-inline bool TOGL_IsForeground();
+void TOGL_GoForeground();
+bool TOGL_IsForeground();
 
 // ---
-// 
+
 // Returns window style.
-inline TOGL_WindowStyleBitfield TOGL_GetStyle();
+TOGL_WindowStyleBitfield TOGL_GetStyle();
 
-inline TOGL_PointI TOGL_GetCursorPosInDrawArea();
+TOGL_PointI TOGL_GetCursorPosInDrawArea();
 
-inline TOGL_GL_Version TOGL_GetOpenGL_Version();
+TOGL_GL_Version TOGL_GetOpenGL_Version();
 
 // ---
 
