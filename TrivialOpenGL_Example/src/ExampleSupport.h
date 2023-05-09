@@ -277,54 +277,56 @@ public:
                 continue;
             }
 
-            size_t counter = 0;
-            for (const auto& option : example->all_options) {
-                if (counter != 0 && counter % 3 == 0) puts("");
-                printf("%25s, ", option.c_str());
-
-                counter += 1;
-            }
-            printf("%s", "\n\n");
-
-            std::string raw_default_options;
-            for (const auto& option : example->default_options) raw_default_options += option + " ";
-
-            printf("(e=exit, d=%s)\n", raw_default_options.c_str());
-            printf("%s", "Options: ");
-            fflush(stdout);
-
-            std::string raw_options;
-
-            if (!GetStdIn(raw_options)) {
-                puts("");
-                puts("Example Error: Can not read arguments.");
-                continue;
-            } 
-            puts("");
-
-            if (raw_options == "d") {
-                raw_options = raw_default_options;
-            } else if (raw_options == "e") {
-                result = EXIT_SUCCESS;
-                break;
-            } 
-
             std::set<std::string> options;
-            for (const auto& option : RemoveEmpty(TOGL_Split(raw_options, ' '))) options.insert(option);
+            if (example->all_options.size() > 0) {
+                size_t counter = 0;
+                for (const auto& option : example->all_options) {
+                    if (counter != 0 && counter % 3 == 0) puts("");
+                    printf("%25s, ", option.c_str());
 
-            auto IsContainAllIn = [](const std::set<std::string>& elements, const std::set<std::string>& container) -> std::string {
-                for (const auto& element : elements) {
-                    if (container.find(element) == container.end()) {
-                        return element;
-                    }
+                    counter += 1;
                 }
-                return "";
-            };
+                printf("%s", "\n\n");
 
-            const std::string missing_option = IsContainAllIn(options, example->all_options);
-            if (!missing_option.empty()) {
-                printf("Example Error: Unknown option \"%s\".\n", missing_option.c_str());
-                continue;
+                std::string raw_default_options;
+                for (const auto& option : example->default_options) raw_default_options += option + " ";
+
+                printf("(e=exit, d=%s)\n", raw_default_options.c_str());
+                printf("%s", "Options: ");
+                fflush(stdout);
+
+                std::string raw_options;
+
+                if (!GetStdIn(raw_options)) {
+                    puts("");
+                    puts("Example Error: Can not read arguments.");
+                    continue;
+                } 
+                puts("");
+
+                if (raw_options == "d") {
+                    raw_options = raw_default_options;
+                } else if (raw_options == "e") {
+                    result = EXIT_SUCCESS;
+                    break;
+                } 
+
+                for (const auto& option : RemoveEmpty(TOGL_Split(raw_options, ' '))) options.insert(option);
+
+                auto IsContainAllIn = [](const std::set<std::string>& elements, const std::set<std::string>& container) -> std::string {
+                    for (const auto& element : elements) {
+                        if (container.find(element) == container.end()) {
+                            return element;
+                        }
+                    }
+                    return "";
+                };
+
+                const std::string missing_option = IsContainAllIn(options, example->all_options);
+                if (!missing_option.empty()) {
+                    printf("Example Error: Unknown option \"%s\".\n", missing_option.c_str());
+                    continue;
+                }
             }
 
             result = example->run(name, options);

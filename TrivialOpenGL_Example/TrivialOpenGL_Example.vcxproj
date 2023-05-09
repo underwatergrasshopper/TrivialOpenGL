@@ -161,6 +161,7 @@
   <ItemGroup>
     <ClCompile Include="src\ExampleSupport.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\SimpleTriangle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="MinGW_Make.bat" />
@@ -171,6 +172,7 @@
   <ItemGroup>
     <ClInclude Include="src\ExampleSupport.h" />
     <ClInclude Include="src\Resource.h" />
+    <ClInclude Include="src\SimpleTriangle.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resources\Resource.rc" />

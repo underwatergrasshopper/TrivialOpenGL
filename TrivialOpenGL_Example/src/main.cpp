@@ -5,6 +5,8 @@
 
 #include "ExampleSupport.h"
 
+#include "SimpleTriangle.h"
+
 //------------------------------------------------------------------------------
 
 enum {
@@ -337,6 +339,14 @@ int main(int argc, char *argv[]) {
         };
 
         return TOGL_Run(data);
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // simple_triangle
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("simple_triangle", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        return RunSimpleTriangle();
     });
 
     ////////////////////////////////////////////////////////////////////////////////
