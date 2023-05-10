@@ -160,6 +160,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\ExampleSupport.cpp" />
+    <ClCompile Include="src\IconFromResource.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\SimpleTriangle.cpp" />
   </ItemGroup>
@@ -171,6 +172,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ExampleSupport.h" />
+    <ClInclude Include="src\IconFromResource.h" />
     <ClInclude Include="src\Resource.h" />
     <ClInclude Include="src\SimpleTriangle.h" />
   </ItemGroup>

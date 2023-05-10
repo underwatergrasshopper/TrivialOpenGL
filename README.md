@@ -129,9 +129,8 @@ Compiler: **MSVC** (automated)
 
 ### Simple Triangle
 
+`main.cpp`
 ```c++
-#include "SimpleTriangle.h"
-
 #include <stdio.h>
 #include <TrivialOpenGL.h>
 
@@ -178,6 +177,62 @@ int main() {
             glVertex2f(0, 0.5);
 
             glEnd();
+        };
+
+        data.do_on_key = [](TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra) {
+            if (key_id == 'X' && !is_down) {
+                TOGL_RequestClose();
+            }
+        };
+
+        return TOGL_Run(data);
+}
+```
+
+### Icon from Resource
+Icon imported this way will be visible on:
+- executable
+- window title bar
+- task bar
+
+`Resource.h`
+```c++
+#ifndef RESOURCE_H_
+#define RESOURCE_H_
+
+#define ICON_ID 1001
+
+#endif // RESOURCE_H_
+```
+
+`Resource.rc`
+```c++
+#include "Resource.h"
+
+ICON_ID ICON "icon.ico"
+```
+
+`main.cpp`
+```c++
+#include <stdio.h>
+#include <TrivialOpenGL.h>
+
+#include "Resource.h"
+
+int main() {
+        TOGL_Data data = {};
+
+        data.window_name        = "Icon from Resource";
+        data.icon_resource_id   = ICON_ID;
+
+        data.do_on_create = []() {
+            puts("X - Exit");
+            fflush(stdout);
+        };
+
+        data.do_on_destroy = []() {
+            puts("Bye. Bye.");
+            fflush(stdout);
         };
 
         data.do_on_key = [](TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra) {

@@ -6,6 +6,7 @@
 #include "ExampleSupport.h"
 
 #include "SimpleTriangle.h"
+#include "IconFromResource.h"
 
 //------------------------------------------------------------------------------
 
@@ -347,6 +348,14 @@ int main(int argc, char *argv[]) {
 
     example_manager.AddExample("simple_triangle", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
         return RunSimpleTriangle();
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // icon_from_resource
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("icon_from_resource", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        return RunIconFromResource();
     });
 
     ////////////////////////////////////////////////////////////////////////////////
