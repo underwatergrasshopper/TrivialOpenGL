@@ -1,5 +1,5 @@
 /**
-* @file Icon.h
+* @file IconFromResource.h
 * @author underwatergrasshopper
 */
 

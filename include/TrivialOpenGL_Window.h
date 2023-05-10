@@ -108,7 +108,7 @@ struct TOGL_Data {
     void (*draw)()                                                      = nullptr;
 
     // Called when window receive keyboard key or mouse button message.
-    // is_down          - true when key is down, false when key is down.
+    // is_down          - true when key is down, false when key is up.
     // extra            - Contains additional informations, like: 
     //                    cursor position in draw area (extra.x, extra.y), 
     //                    indicator if pressed key is left right or doesn't matter (extra.keyboard_side).

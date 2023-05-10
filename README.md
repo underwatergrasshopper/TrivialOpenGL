@@ -191,7 +191,7 @@ int main() {
 
 ### Icon from Resource
 Icon imported this way will be visible on:
-- executable
+- executable file
 - window title bar
 - task bar
 
@@ -223,7 +223,55 @@ int main() {
         TOGL_Data data = {};
 
         data.window_name        = "Icon from Resource";
+        // Icon will show on:
+        // - executable file
+        // - window title bar
+        // - task bar
         data.icon_resource_id   = ICON_ID;
+
+        data.do_on_create = []() {
+            puts("X - Exit");
+            fflush(stdout);
+        };
+
+        data.do_on_destroy = []() {
+            puts("Bye. Bye.");
+            fflush(stdout);
+        };
+
+        data.do_on_key = [](TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra) {
+            if (key_id == 'X' && !is_down) {
+                TOGL_RequestClose();
+            }
+        };
+
+        return TOGL_Run(data);
+}
+```
+
+
+### Icon from File
+Icon imported this way will be visible on:
+- window title bar
+- task bar
+
+It will not show on executable file.
+
+`main.cpp`
+```c++
+#include <stdio.h>
+#include <TrivialOpenGL.h>
+
+#include "Resource.h"
+
+int main() {
+        TOGL_Data data = {};
+
+        data.window_name        = "Icon from File";
+        // Icon will show on:
+        // - window title bar
+        // - task bar
+        data.icon_file_name     = "icon.ico";
 
         data.do_on_create = []() {
             puts("X - Exit");

@@ -1,24 +1,21 @@
 /**
-* @file IconFromResource.cpp
+* @file IconFromFile.cpp
 * @author underwatergrasshopper
 */
 
-#include "IconFromResource.h"
+#include "IconFromFile.h"
 
 #include <stdio.h>
 #include <TrivialOpenGL.h>
 
-#include "Resource.h"
-
-int RunIconFromResource() {
+int RunIconFromFile() {
         TOGL_Data data = {};
 
-        data.window_name        = "Icon from Resource";
+        data.window_name        = "Icon from File";
         // Icon will show on:
-        // - executable file
         // - window title bar
         // - task bar
-        data.icon_resource_id   = ICON_ID;
+        data.icon_file_name     = "..\\..\\..\\..\\TrivialOpenGL_Example\\assets\\icon.ico";
 
         data.do_on_create = []() {
             puts("X - Exit");
