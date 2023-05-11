@@ -125,7 +125,11 @@ Compiler: **MSVC** (automated)
 
 ---
 
-## Examples
+## Code Examples
+- [Simple Triangle](#simple-triangle)
+- [Animated Triangle](#animated-triangle)
+- [Icon from Resource](#icon-from-resource)
+- [Icon from File](#icon-from-file)
 
 ---
 
@@ -190,6 +194,7 @@ int main() {
         return TOGL_Run(data);
 }
 ```
+[Back to: Code Examples](#code-examples)
 
 ---
 
@@ -306,6 +311,7 @@ int main() {
         return TOGL_Run(data);
 }
 ```
+[Back to: Code Examples](#code-examples)
 
 ---
 
@@ -368,6 +374,7 @@ int main() {
         return TOGL_Run(data);
 }
 ```
+[Back to: Code Examples](#code-examples)
 
 ---
 
@@ -411,3 +418,4 @@ int main() {
         return TOGL_Run(data);
 }
 ```
+[Back to: Code Examples](#code-examples)
