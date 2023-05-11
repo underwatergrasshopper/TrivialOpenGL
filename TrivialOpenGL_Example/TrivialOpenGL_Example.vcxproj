@@ -159,6 +159,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\AnimatedTriangle.cpp" />
     <ClCompile Include="src\ExampleSupport.cpp" />
     <ClCompile Include="src\IconFromFile.cpp" />
     <ClCompile Include="src\IconFromResource.cpp" />
@@ -172,6 +173,7 @@
     <Text Include="CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\AnimatedTriangle.h" />
     <ClInclude Include="src\ExampleSupport.h" />
     <ClInclude Include="src\IconFromFile.h" />
     <ClInclude Include="src\IconFromResource.h" />

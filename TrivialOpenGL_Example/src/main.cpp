@@ -6,6 +6,7 @@
 #include "ExampleSupport.h"
 
 #include "SimpleTriangle.h"
+#include "AnimatedTriangle.h"
 #include "IconFromResource.h"
 #include "IconFromFile.h"
 
@@ -15,7 +16,6 @@ enum {
     DEF_FONT_SIZE   = 16,   // in pixels
     TEXT_PADDING    = 10,   // in pixels
 };
-
 
 namespace {
     TOGL_Window&            s_window                        = TOGL_ToWindow();
@@ -349,6 +349,14 @@ int main(int argc, char *argv[]) {
 
     example_manager.AddExample("simple_triangle", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
         return RunSimpleTriangle();
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // animated_triangle
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("animated_triangle", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        return RunAnimatedTriangle();
     });
 
     ////////////////////////////////////////////////////////////////////////////////
