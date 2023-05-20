@@ -111,7 +111,7 @@ struct TOGL_Data {
     // is_down          - true when key is down, false when key is up.
     // extra            - Contains additional informations, like: 
     //                    cursor position in draw area (extra.x, extra.y), 
-    //                    indicator if pressed key is left right or doesn't matter (extra.keyboard_side).
+    //                    indicator if pressed key is left or right or doesn't matter (extra.keyboard_side).
     void (*do_on_key)(TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra)   = nullptr;
 
     // Called when window receive character message (from keyboard single key or key combination).

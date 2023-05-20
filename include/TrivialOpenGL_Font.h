@@ -265,6 +265,9 @@ uint32_t TOGL_GetFontAscent();
 // Returns font descent in pixels.
 uint32_t TOGL_GetFontDescent();
 
+// Returns font internal leading in pixels.
+uint32_t GetInternalLeading();
+
 bool TOGL_IsFontOk();
 std::string TOGL_GetFontErrMsg();
 
@@ -319,6 +322,9 @@ public:
 
     // Returns font ascent length in pixels.
     uint32_t GetAscent() const;
+    
+    // Returns font internal leading in pixels.
+    uint32_t GetInternalLeading() const;
 
     // text         - Each code point is interpreted as single printable glyph (even '\t' and 'n').
     // width        - In pixels.
@@ -947,6 +953,10 @@ inline uint32_t TOGL_GetFontDescent() {
     return TOGL_ToGlobalFont().GetDescent();
 }
 
+inline uint32_t GetInternalLeading() {
+    return TOGL_ToGlobalFont().GetInternalLeading();
+}
+
 inline bool TOGL_IsFontOk() {
     return TOGL_ToGlobalFont().IsOk();
 }
@@ -1114,6 +1124,10 @@ inline uint32_t TOGL_Font::GetDescent() const {
 
 inline uint32_t TOGL_Font::GetAscent() const {
     return m_data.font_ascent;
+}
+
+inline uint32_t TOGL_Font::GetInternalLeading() const {
+    return m_data.font_internal_leading;
 }
 
 inline uint32_t TOGL_Font::GetGlyphCountInWidth(const std::wstring& text, uint32_t width) const {
