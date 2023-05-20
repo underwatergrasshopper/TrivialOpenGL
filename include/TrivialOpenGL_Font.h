@@ -425,7 +425,6 @@ inline TOGL_FontInfo::TOGL_FontInfo(
     this->unicode_range_group       = unicode_range_group;
     this->distance_between_glyphs   = distance_between_glyphs;
     this->distance_between_lines    = distance_between_lines;
-
 }
 
 //-----------------------------------------------------------------------------
