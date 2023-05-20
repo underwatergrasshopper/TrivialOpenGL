@@ -458,7 +458,7 @@ int main() {
 
         TOGL_LoadFont("Courier New", FONT_SIZE, TOGL_FONT_SIZE_UNIT_ID_PIXELS, TOGL_FONT_STYLE_ID_NORMAL, TOGL_FONT_CHAR_SET_ID_ENGLISH);
 
-        if (!TOGL_IsFontLoaded()) {
+        if (!TOGL_IsFontOk()) {
             printf("Error: %s.", TOGL_GetFontErrMsg().c_str());
             fflush(stdout);
         }
