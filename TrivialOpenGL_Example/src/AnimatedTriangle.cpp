@@ -1,5 +1,5 @@
 /**
-* @file AnimatedTriangle.h
+* @file AnimatedTriangle.cpp
 * @author underwatergrasshopper
 */
 

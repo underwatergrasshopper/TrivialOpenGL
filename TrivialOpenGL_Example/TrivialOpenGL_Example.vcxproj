@@ -164,6 +164,7 @@
     <ClCompile Include="src\IconFromFile.cpp" />
     <ClCompile Include="src\IconFromResource.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\SimpleText.cpp" />
     <ClCompile Include="src\SimpleTriangle.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -178,6 +179,7 @@
     <ClInclude Include="src\IconFromFile.h" />
     <ClInclude Include="src\IconFromResource.h" />
     <ClInclude Include="src\Resource.h" />
+    <ClInclude Include="src\SimpleText.h" />
     <ClInclude Include="src\SimpleTriangle.h" />
   </ItemGroup>
   <ItemGroup>

@@ -9,6 +9,7 @@
 #include "AnimatedTriangle.h"
 #include "IconFromResource.h"
 #include "IconFromFile.h"
+#include "SimpleText.h"
 
 //------------------------------------------------------------------------------
 
@@ -375,6 +376,13 @@ int main(int argc, char *argv[]) {
         return RunIconFromFile();
     });
 
+    ////////////////////////////////////////////////////////////////////////////////
+    // simple_text
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("simple_text", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        return RunSimpleText();
+    });
 
     ////////////////////////////////////////////////////////////////////////////////
     // move_and_resize

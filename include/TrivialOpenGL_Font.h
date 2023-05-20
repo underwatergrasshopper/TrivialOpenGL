@@ -26,6 +26,8 @@ enum TOGL_FontStyleId {
 // Font might not have all glyphs from this ranges.
 enum TOGL_FontCharSetId {
     TOGL_FONT_CHAR_SET_ID_CUSTOM,
+
+    // Unicode Plane 0 - BMP - Basic Multilingual Plane 
     TOGL_FONT_CHAR_SET_ID_RANGE_0000_FFFF,
 
     TOGL_FONT_CHAR_SET_ID_ENGLISH,
@@ -40,7 +42,6 @@ enum {
     // Represent out of range character code from unicode space.
     TOGL_UNICODE_REPLACEMENT_CHARACTER      = 0xFFFD,
 };
-
 
 //-----------------------------------------------------------------------------
 // TOGL_UnicodeRange

@@ -1,18 +1,24 @@
 /**
-* @file SimpleTriangle.cpp
+* @file SimpleText.cpp
 * @author underwatergrasshopper
 */
 
-#include "SimpleTriangle.h"
+#include "SimpleText.h"
 
 #include <stdio.h>
 #include <TrivialOpenGL.h>
 
-int RunSimpleTriangle() {
+enum : uint16_t {
+    FONT_SIZE = 16,   // in pixels
+};
+
+static TOGL_SizeU16 s_size = {800, 400};
+
+int RunSimpleText() {
         TOGL_Data data = {};
 
-        data.window_name        = "Simple Triangle";
-        data.area               = {0, 0, 800, 400};
+        data.window_name        = "Simple Text";
+        data.area               = {0, 0, s_size.width, s_size.height};
         // Ignores data.area.x and data.area.y coordinates 
         // and centers window in middle of work area (screen area excluding task bar).
         data.style              |= TOGL_WINDOW_STYLE_BIT_CENTERED;
@@ -22,6 +28,19 @@ int RunSimpleTriangle() {
 
         data.do_on_create = []() {
             glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
+
+            // Sets draw area for drawing text. 
+            // Origin of coordinates system is at left-bottom corner of draw area.
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            glOrtho(0, s_size.width, 0, s_size.height, 1, -1);
+
+            TOGL_LoadFont("Courier New", FONT_SIZE, TOGL_FONT_SIZE_UNIT_ID_PIXELS, TOGL_FONT_STYLE_ID_NORMAL, TOGL_FONT_CHAR_SET_ID_ENGLISH);
+
+            if (!TOGL_IsFontLoaded()) {
+                printf("Error: %s.", TOGL_GetFontErrMsg().c_str());
+                fflush(stdout);
+            }
 
             puts("X - Exit");
             fflush(stdout);
@@ -34,23 +53,22 @@ int RunSimpleTriangle() {
 
         data.do_on_resize = [](uint16_t width, uint16_t height) {
             glViewport(0, 0, width, height);
+
+            // When window size changes, text size stays same.
+            glMatrixMode(GL_PROJECTION);
+            glLoadIdentity();
+            glOrtho(0, width, 0, height, 1, -1);
+
+            s_size = {width, height};
         };
 
         data.draw = []() {
             glClear(GL_COLOR_BUFFER_BIT);
 
-            glBegin(GL_TRIANGLES);
+            glMatrixMode(GL_MODELVIEW);
+            glLoadIdentity();
 
-            glColor3f(1, 0, 0);
-            glVertex2f(-0.5, -0.5);
-
-            glColor3f(0, 1, 0);
-            glVertex2f(0.5, -0.5);
-
-            glColor3f(0, 0, 1);
-            glVertex2f(0, 0.5);
-
-            glEnd();
+            TOGL_RenderText({0, s_size.height - FONT_SIZE}, {255, 255, 255, 255}, "This is simple text.\nX - Exit.");
         };
 
         data.do_on_key = [](TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra) {
