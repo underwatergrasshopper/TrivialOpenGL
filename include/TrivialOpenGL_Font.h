@@ -248,6 +248,7 @@ private:
 class TOGL_Font;
 TOGL_Font& TOGL_ToGlobalFont();
 
+// Unload current font if loaded. Loads new font.
 // If font has been loaded successfully, then TOGL_IsFontOk() should return true. Otherwise, font failed to load, and error message can be retrieved by TOGL_GetFontErrMsg().
 // Font size for loaded font might be smaller than requested font size (font_info.size, size) when size unit (font_info.size_unit, size_unit) is TOGL_FONT_SIZE_UNIT_ID_PIXELS.
 // To get loaded font size (in pixels) call TOGL_GetFontHeight().
@@ -281,6 +282,7 @@ public:
     TOGL_Font();
     virtual ~TOGL_Font();
 
+    // Unload current font if loaded. Loads new font.
     // If font has been loaded successfully, then IsOk() should return true. Otherwise, font failed to load, and error message can be retrieved by GetErrMsg().
     // Font size for loaded font might be different than requested font size (font_info.size, size) when size unit (font_info.size_unit, size_unit) is TOGL_FONT_SIZE_UNIT_ID_PIXELS.
     // To get loaded font size (in pixels) call GetHeight().
