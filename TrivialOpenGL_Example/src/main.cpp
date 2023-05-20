@@ -10,6 +10,7 @@
 #include "IconFromResource.h"
 #include "IconFromFile.h"
 #include "SimpleText.h"
+#include "ColoredText.h"
 
 //------------------------------------------------------------------------------
 
@@ -382,6 +383,14 @@ int main(int argc, char *argv[]) {
 
     example_manager.AddExample("simple_text", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
         return RunSimpleText();
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // colored_text
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("colored_text", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        return RunColoredText();
     });
 
     ////////////////////////////////////////////////////////////////////////////////

@@ -3,7 +3,7 @@
 * @author underwatergrasshopper
 */
 
-#include "SimpleText.h"
+#include "ColoredText.h"
 
 #include <stdio.h>
 #include <TrivialOpenGL.h>
@@ -14,10 +14,10 @@ enum : uint16_t {
 
 static TOGL_SizeU16 s_size = {800, 400};
 
-int RunSimpleText() {
+int RunColoredText() {
     TOGL_Data data = {};
 
-    data.window_name        = "Simple Text";
+    data.window_name        = "Colored Text";
     data.area               = {0, 0, s_size.width, s_size.height};
     // Ignores data.area.x and data.area.y coordinates 
     // and centers window in middle of work area (screen area excluding task bar).
@@ -70,7 +70,14 @@ int RunSimpleText() {
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
 
-        TOGL_RenderText({0, s_size.height - FONT_SIZE}, {255, 255, 255, 255}, "This is simple text.\nX - Exit.");
+        const auto text = TOGL_FineText(
+            "Text with default color.\n", 
+            TOGL_Color4U8(255, 0, 0, 255), "Red text. ", 
+            TOGL_Color4U8(0, 255, 0, 255), "Greed text. ", 
+            TOGL_Color4U8(0, 0, 255, 255), "Blue text. ", 
+            TOGL_Color4U8(255, 255, 255, 127), "Transparent text. ");
+
+        TOGL_RenderText({0, s_size.height - FONT_SIZE}, {255, 255, 255, 255}, text);
     };
 
     data.do_on_key = [](TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra) {
