@@ -130,6 +130,7 @@ Compiler: **MSVC** (automated)
 - [Animated Triangle](#animated-triangle)
 - [Icon from Resource](#icon-from-resource)
 - [Icon from File](#icon-from-file)
+- [Simple Text](#simple-text)
 
 ---
 
