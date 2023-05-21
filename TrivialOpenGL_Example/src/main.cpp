@@ -12,6 +12,8 @@
 #include "SimpleText.h"
 #include "ColoredText.h"
 #include "UnicodeText.h"
+#include "FormatedText.h"
+
 
 //------------------------------------------------------------------------------
 
@@ -402,6 +404,13 @@ int main(int argc, char *argv[]) {
         return RunUnicodeText();
     });
 
+    ////////////////////////////////////////////////////////////////////////////////
+    // formated_text
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("formated_text", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        return RunFormatedText();
+    });
 
     ////////////////////////////////////////////////////////////////////////////////
     // move_and_resize
