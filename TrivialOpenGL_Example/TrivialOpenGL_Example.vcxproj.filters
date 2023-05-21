@@ -39,6 +39,9 @@
     <ClCompile Include="src\ColoredText.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\UnicodeText.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="MinGW_Make.bat" />
@@ -69,6 +72,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\ColoredText.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\UnicodeText.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

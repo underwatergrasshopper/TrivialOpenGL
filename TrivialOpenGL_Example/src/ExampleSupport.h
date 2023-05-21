@@ -137,7 +137,7 @@ public:
 
         m_size = {width, height};
 
-        TOGL_RequestRedraw();
+        TOGL_RequestDraw();
     }
 
     TOGL_SizeU16 GetSize() const {

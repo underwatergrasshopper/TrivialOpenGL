@@ -11,6 +11,7 @@
 #include "IconFromFile.h"
 #include "SimpleText.h"
 #include "ColoredText.h"
+#include "UnicodeText.h"
 
 //------------------------------------------------------------------------------
 
@@ -392,6 +393,15 @@ int main(int argc, char *argv[]) {
     example_manager.AddExample("colored_text", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
         return RunColoredText();
     });
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // unicode_text
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("unicode_text", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        return RunUnicodeText();
+    });
+
 
     ////////////////////////////////////////////////////////////////////////////////
     // move_and_resize
@@ -782,7 +792,7 @@ int main(int argc, char *argv[]) {
                 switch (key_id) {
 
                 case 'X':               TOGL_RequestClose(); break;
-                case KEY_ID_R:    TOGL_RequestRedraw(); break;
+                case KEY_ID_R:    TOGL_RequestDraw(); break;
                 case KEY_ID_C:    TOGL_Center(s_resolution, false); break;
                 case KEY_ID_V:    TOGL_Center(s_resolution, true); break;
 

@@ -168,7 +168,10 @@ int TOGL_Run(const TOGL_Data& data);
 void TOGL_RequestClose();
 
 // If called from inside of do_on_{...} function, then redraws window after exiting from current do_on_{...} function.
-void TOGL_RequestRedraw();
+void TOGL_RequestDraw();
+
+// Redraws window draw area manually. Do nothing if called within data.draw function.
+void TOGL_DrawNow();
 
 // ---
         
@@ -313,7 +316,10 @@ public:
     void RequestClose();
 
     // If called from inside of do_on_{...} function, then redraws window after exiting from current do_on_{...} function.
-    void RequestRedraw();
+    void RequestDraw();
+
+    // Redraws window draw area manually. Do nothing if called within data.draw function.
+    void DrawNow();
 
     // ---
         
@@ -480,8 +486,6 @@ private:
     HICON TryLoadIcon();
     int ExecuteMainLoop();
 
-    void Draw();
-
     TOGL_AreaIU16 GenerateWindowArea(const TOGL_AreaIU16& area);
     void Restore();
     void SetArea(const TOGL_AreaIU16& area, AreaPartId area_part_id, bool is_client_area);
@@ -527,6 +531,7 @@ private:
     bool                    m_is_apply_fake_width;
     bool                    m_is_enable_do_on_resize;
     bool                    m_is_enable_change_state_at_resize;
+    bool                    m_is_in_draw;
 
     uint64_t                m_dbg_message_id;
 
@@ -549,8 +554,12 @@ inline void TOGL_RequestClose() {
     TOGL_ToWindow().RequestClose();
 }
 
-inline void TOGL_RequestRedraw() {
-    TOGL_ToWindow().RequestRedraw();
+inline void TOGL_RequestDraw() {
+    TOGL_ToWindow().RequestDraw();
+}
+
+inline void TOGL_DrawNow() {
+    TOGL_ToWindow().DrawNow();
 }
 
 // ---
@@ -896,9 +905,26 @@ inline void TOGL_Window::RequestClose() {
     DestroyWindow(m_window_handle);
 }
 
-inline void TOGL_Window::RequestRedraw() {
+inline void TOGL_Window::RequestDraw() {
     InvalidateRect(m_window_handle, NULL, FALSE);
 }
+
+inline void TOGL_Window::DrawNow() {
+    if (!m_is_in_draw) {
+        m_is_in_draw = true;
+
+        if (m_data.special_debug.is_notify_draw_call) {
+            TOGL_LogDebug("Window::Draw"); 
+        }
+
+        if (m_data.draw) m_data.draw();
+
+        SwapBuffers(m_device_context_handle);
+
+        m_is_in_draw = false;
+    }
+}
+
 
 //--------------------------------------------------------------------------
 // Option
@@ -1221,6 +1247,7 @@ inline TOGL_Window::TOGL_Window() {
     m_is_apply_fake_width               = false;
     m_is_enable_do_on_resize            = true;
     m_is_enable_change_state_at_resize  = true;
+    m_is_in_draw                        = false;
 
     m_dbg_message_id                    = 0;
 
@@ -1304,22 +1331,12 @@ inline int TOGL_Window::ExecuteMainLoop() {
                 TranslateMessage(&msg);
                 DispatchMessageW(&msg);
             } else {
-                Draw();
+                DrawNow();
             }
         }
     }
 
     return EXIT_FAILURE;
-}
-
-inline void TOGL_Window::Draw() {
-    if (m_data.special_debug.is_notify_draw_call) {
-        TOGL_LogDebug("Window::Draw"); 
-    }
-
-    if (m_data.draw) m_data.draw();
-
-    SwapBuffers(m_device_context_handle);
 }
 
 //--------------------------------------------------------------------------
@@ -1709,7 +1726,7 @@ inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WP
             TOGL_LogDebug("WM_PAINT"); 
         }
 
-        Draw();
+        DrawNow();
 
         ValidateRect(m_window_handle, NULL); // to decrease number of WM_PAINT messages
 
