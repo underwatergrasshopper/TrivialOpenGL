@@ -14,9 +14,9 @@ Includes support for drawing text.
 
 ## What is included in project
 Contains:
-- Source code of library (`include/`).
-- Unit tests (`TrivialOpenGL_Test/`).
-- Examples (`TrivialOpenGL_Example/`).
+- source code of library (`include/`),
+- unit tests (`TrivialOpenGL_Test/`),
+- examples (`TrivialOpenGL_Example/`).
 
 ---
 
