@@ -320,9 +320,9 @@ int main() {
 
 ### Icon from Resource
 Icon imported this way will be visible on:
-- executable file
-- window title bar
-- task bar
+- executable file,
+- window title bar,
+- task bar.
 
 `Resource.h`
 ```c++
@@ -383,8 +383,8 @@ int main() {
 
 ### Icon from File
 Icon imported this way will be visible on:
-- window title bar
-- task bar
+- window title bar,
+- task bar.
 
 It will not show on executable file.
 
