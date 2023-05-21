@@ -13,7 +13,7 @@
 #include "ColoredText.h"
 #include "UnicodeText.h"
 #include "FormatedText.h"
-
+#include "TextBox.h"
 
 //------------------------------------------------------------------------------
 
@@ -410,6 +410,14 @@ int main(int argc, char *argv[]) {
 
     example_manager.AddExample("formated_text", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
         return RunFormatedText();
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // text_box
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("text_box", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        return RunTextBox();
     });
 
     ////////////////////////////////////////////////////////////////////////////////

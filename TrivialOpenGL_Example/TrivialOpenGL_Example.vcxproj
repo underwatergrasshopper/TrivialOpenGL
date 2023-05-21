@@ -168,6 +168,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\SimpleText.cpp" />
     <ClCompile Include="src\SimpleTriangle.cpp" />
+    <ClCompile Include="src\TextBox.cpp" />
     <ClCompile Include="src\UnicodeText.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -186,6 +187,7 @@
     <ClInclude Include="src\Resource.h" />
     <ClInclude Include="src\SimpleText.h" />
     <ClInclude Include="src\SimpleTriangle.h" />
+    <ClInclude Include="src\TextBox.h" />
     <ClInclude Include="src\UnicodeText.h" />
   </ItemGroup>
   <ItemGroup>

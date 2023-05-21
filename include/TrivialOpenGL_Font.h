@@ -268,7 +268,9 @@ uint32_t TOGL_GetFontAscent();
 uint32_t TOGL_GetFontDescent();
 
 // Returns font internal leading in pixels.
-uint32_t GetInternalLeading();
+uint32_t TOGL_GetInternalLeading();
+
+TOGL_FontInfo TOGL_GetFontInfo();
 
 bool TOGL_IsFontOk();
 std::string TOGL_GetFontErrMsg();
@@ -333,6 +335,8 @@ public:
     // width        - In pixels.
     // Returns number of glyphs from text which will fit in width.
     uint32_t GetGlyphCountInWidth(const std::wstring& text, uint32_t width) const;
+
+    const TOGL_FontInfo& ToFontInfo() const;
 
     bool IsOk() const;
     std::string GetErrMsg() const;
@@ -955,8 +959,12 @@ inline uint32_t TOGL_GetFontDescent() {
     return TOGL_ToGlobalFont().GetDescent();
 }
 
-inline uint32_t GetInternalLeading() {
+inline uint32_t TOGL_GetInternalLeading() {
     return TOGL_ToGlobalFont().GetInternalLeading();
+}
+
+inline TOGL_FontInfo TOGL_GetFontInfo() {
+    return TOGL_ToGlobalFont().ToFontInfo();
 }
 
 inline bool TOGL_IsFontOk() {
@@ -1148,6 +1156,10 @@ inline uint32_t TOGL_Font::GetGlyphCountInWidth(const std::wstring& text, uint32
         count += 1;
     }
     return count;
+}
+
+inline const TOGL_FontInfo& TOGL_Font::ToFontInfo() const {
+    return m_data.info;
 }
 
 inline bool TOGL_Font::IsOk() const {
