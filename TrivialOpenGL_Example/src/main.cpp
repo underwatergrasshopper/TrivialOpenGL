@@ -294,8 +294,8 @@ int main(int argc, char *argv[]) {
         };
 
         data.do_on_key = [](TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra) {
-            // TODO: Fix TOGL_KEY_ID...
-            if ((key_id == 'X' || key_id == TOGL_KEY_IDESCAPE) && !is_down) {
+            // TODO: Fix TOGL_KEY_ID_...
+            if ((key_id == 'X' || key_id == TOGL_KEY_ID_ESCAPE) && !is_down) {
                 TOGL_RequestClose();
             }
         };
@@ -538,8 +538,8 @@ int main(int argc, char *argv[]) {
 
                     case TOGL_KEY_ID_C:           window.Center(s_resolution, s_is_client); break;
 
-                    case TOGL_KEY_IDARROW_LEFT:   window.MoveBy(-30, 0); break;
-                    case TOGL_KEY_IDARROW_RIGHT:  window.MoveBy(30, 0); break;
+                    case TOGL_KEY_ID_ARROW_LEFT:   window.MoveBy(-30, 0); break;
+                    case TOGL_KEY_ID_ARROW_RIGHT:  window.MoveBy(30, 0); break;
 
                     case TOGL_KEY_ID_X:           window.RequestClose(); break;
                                    
@@ -563,8 +563,8 @@ int main(int argc, char *argv[]) {
 
                     case TOGL_KEY_ID_C:           window.Center(s_resolution, s_is_client); break;
 
-                    case TOGL_KEY_IDARROW_LEFT:   window.MoveBy(-30, 0); break;
-                    case TOGL_KEY_IDARROW_RIGHT:  window.MoveBy(30, 0); break;
+                    case TOGL_KEY_ID_ARROW_LEFT:   window.MoveBy(-30, 0); break;
+                    case TOGL_KEY_ID_ARROW_RIGHT:  window.MoveBy(30, 0); break;
 
                     case TOGL_KEY_ID_X:           window.RequestClose(); break;
 
@@ -887,19 +887,19 @@ int main(int argc, char *argv[]) {
                     });
                     break;
 
-                case TOGL_KEY_IDARROW_LEFT:
+                case TOGL_KEY_ID_ARROW_LEFT:
                     TOGL_MoveBy(-30, 0);
                     break;
 
-                case TOGL_KEY_IDARROW_RIGHT:
+                case TOGL_KEY_ID_ARROW_RIGHT:
                     TOGL_MoveBy(30, 0);
                     break;
 
-                case TOGL_KEY_IDARROW_UP:
+                case TOGL_KEY_ID_ARROW_UP:
                     TOGL_MoveBy(0, -30);
                     break;
 
-                case TOGL_KEY_IDARROW_DOWN:
+                case TOGL_KEY_ID_ARROW_DOWN:
                     TOGL_MoveBy(0, 30);
                     break;
 
@@ -1279,9 +1279,9 @@ int main(int argc, char *argv[]) {
                 case 'I': {
                     DisplayWindowInfo();
 
-                    togl_print_i32(TOGL_IsKeyToggled(TOGL_KEY_IDCAPS_LOCK));
-                    togl_print_i32(TOGL_IsKeyToggled(TOGL_KEY_IDINSERT));
-                    togl_print_i32(TOGL_IsKeyToggled(TOGL_KEY_IDNUMLOCK));
+                    togl_print_i32(TOGL_IsKeyToggled(TOGL_KEY_ID_CAPS_LOCK));
+                    togl_print_i32(TOGL_IsKeyToggled(TOGL_KEY_ID_INSERT));
+                    togl_print_i32(TOGL_IsKeyToggled(TOGL_KEY_ID_NUMLOCK));
 
                     const TOGL_PointI cursor_pos_in_screen = TOGL_GetCursorPosInScreen();
                     togl_print_i32(cursor_pos_in_screen.x);

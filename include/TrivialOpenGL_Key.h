@@ -14,10 +14,10 @@
 //==============================================================================
 
 enum TOGL_KeyId {
-    TOGL_KEY_IDUNKNOWN              = 0,
+    TOGL_KEY_ID_UNKNOWN             = 0,
 
     // Same id as ascii. Literals can be used instead of key id. For example: '0', '1', ..., '0', 'A', 'B', ..., 'Z'.
-    TOGL_KEY_ID_0                   = '0',  // same id as ascii code for characters: 0-9
+    TOGL_KEY_ID_0                   = '0', // same id as ascii code for characters: 0-9
     TOGL_KEY_ID_1,
     TOGL_KEY_ID_2,
     TOGL_KEY_ID_3,
@@ -55,62 +55,62 @@ enum TOGL_KeyId {
     TOGL_KEY_ID_Y,
     TOGL_KEY_ID_Z,
 
-    TOGL_KEY_IDESCAPE               = 256, // out of ascii scope, no id collision with ascii code
-    TOGL_KEY_IDENTER,  
-    TOGL_KEY_IDCAPS_LOCK,   
-    TOGL_KEY_IDTAB,    
-    TOGL_KEY_IDBACKSPACE,
-    TOGL_KEY_IDSPACE,
+    TOGL_KEY_ID_ESCAPE              = 256, // out of ascii scope, no id collision with ascii code
+    TOGL_KEY_ID_ENTER,  
+    TOGL_KEY_ID_CAPS_LOCK,   
+    TOGL_KEY_ID_TAB,    
+    TOGL_KEY_ID_BACKSPACE,
+    TOGL_KEY_ID_SPACE,
 
-    TOGL_KEY_IDSHIFT,
-    TOGL_KEY_IDCONTROL,
-    TOGL_KEY_IDALT, 
+    TOGL_KEY_ID_SHIFT,
+    TOGL_KEY_ID_CONTROL,
+    TOGL_KEY_ID_ALT, 
 
-    TOGL_KEY_IDPAGE_UP,               
-    TOGL_KEY_IDPAGE_DOWN,       
-    TOGL_KEY_IDEND, 
-    TOGL_KEY_IDHOME,  
+    TOGL_KEY_ID_PAGE_UP,               
+    TOGL_KEY_ID_PAGE_DOWN,       
+    TOGL_KEY_ID_END, 
+    TOGL_KEY_ID_HOME,  
 
-    TOGL_KEY_IDARROW_LEFT,  
-    TOGL_KEY_IDARROW_UP, 
-    TOGL_KEY_IDARROW_RIGHT,
-    TOGL_KEY_IDARROW_DOWN,
+    TOGL_KEY_ID_ARROW_LEFT,  
+    TOGL_KEY_ID_ARROW_UP, 
+    TOGL_KEY_ID_ARROW_RIGHT,
+    TOGL_KEY_ID_ARROW_DOWN,
 
-    TOGL_KEY_IDINSERT,
-    TOGL_KEY_IDDELETE,
-    TOGL_KEY_IDBREAK,        
-    TOGL_KEY_IDPAUSE,
-    TOGL_KEY_IDPRINT,
-    TOGL_KEY_IDPRINT_SCREEN,
+    TOGL_KEY_ID_INSERT,
+    TOGL_KEY_ID_DELETE,
+    TOGL_KEY_ID_BREAK,        
+    TOGL_KEY_ID_PAUSE,
+    TOGL_KEY_ID_PRINT,
+    TOGL_KEY_ID_PRINT_SCREEN,
 
-    TOGL_KEY_IDNUMPAD_0,
-    TOGL_KEY_IDNUMPAD_1,
-    TOGL_KEY_IDNUMPAD_2,
-    TOGL_KEY_IDNUMPAD_3,
-    TOGL_KEY_IDNUMPAD_4,
-    TOGL_KEY_IDNUMPAD_5,
-    TOGL_KEY_IDNUMPAD_6,
-    TOGL_KEY_IDNUMPAD_7,
-    TOGL_KEY_IDNUMPAD_8,
-    TOGL_KEY_IDNUMPAD_9,
-    TOGL_KEY_IDNUMPAD_MULTIPLY,
-    TOGL_KEY_IDNUMPAD_ADD,
-    TOGL_KEY_IDNUMPAD_SEPARATOR,
-    TOGL_KEY_IDNUMPAD_SUBTRACT,
-    TOGL_KEY_IDNUMPAD_DECIMAL,
-    TOGL_KEY_IDNUMPAD_DIVIDE,
+    TOGL_KEY_ID_NUMPAD_0,
+    TOGL_KEY_ID_NUMPAD_1,
+    TOGL_KEY_ID_NUMPAD_2,
+    TOGL_KEY_ID_NUMPAD_3,
+    TOGL_KEY_ID_NUMPAD_4,
+    TOGL_KEY_ID_NUMPAD_5,
+    TOGL_KEY_ID_NUMPAD_6,
+    TOGL_KEY_ID_NUMPAD_7,
+    TOGL_KEY_ID_NUMPAD_8,
+    TOGL_KEY_ID_NUMPAD_9,
+    TOGL_KEY_ID_NUMPAD_MULTIPLY,
+    TOGL_KEY_ID_NUMPAD_ADD,
+    TOGL_KEY_ID_NUMPAD_SEPARATOR,
+    TOGL_KEY_ID_NUMPAD_SUBTRACT,
+    TOGL_KEY_ID_NUMPAD_DECIMAL,
+    TOGL_KEY_ID_NUMPAD_DIVIDE,
 
-    TOGL_KEY_IDSEMICOLON, 
-    TOGL_KEY_IDFORWARD_SLASH,
-    TOGL_KEY_IDACUTE,
-    TOGL_KEY_IDOPEN_BRACKET,
-    TOGL_KEY_IDBACK_SLASH,
-    TOGL_KEY_IDCLOSE_BRACKET,
-    TOGL_KEY_IDAPOSTROPHE,
-    TOGL_KEY_IDCOMMA,
-    TOGL_KEY_IDDOT,
-    TOGL_KEY_IDDASH,
-    TOGL_KEY_IDEQUAL,
+    TOGL_KEY_ID_SEMICOLON, 
+    TOGL_KEY_ID_FORWARD_SLASH,
+    TOGL_KEY_ID_ACUTE,
+    TOGL_KEY_ID_OPEN_BRACKET,
+    TOGL_KEY_ID_BACK_SLASH,
+    TOGL_KEY_ID_CLOSE_BRACKET,
+    TOGL_KEY_ID_APOSTROPHE,
+    TOGL_KEY_ID_COMMA,
+    TOGL_KEY_ID_DOT,
+    TOGL_KEY_ID_DASH,
+    TOGL_KEY_ID_EQUAL,
 
     TOGL_KEY_ID_F1,
     TOGL_KEY_ID_F2,
@@ -137,14 +137,14 @@ enum TOGL_KeyId {
     TOGL_KEY_ID_F23,
     TOGL_KEY_ID_F24,
 
-    TOGL_KEY_IDNUMLOCK,
-    TOGL_KEY_IDSCROLL_LOCK,
+    TOGL_KEY_ID_NUMLOCK,
+    TOGL_KEY_ID_SCROLL_LOCK,
 
-    TOGL_KEY_IDLEFT_MOUSE_BUTTON,
-    TOGL_KEY_IDMIDDLE_MOUSE_BUTTON,
-    TOGL_KEY_IDRIGHT_MOUSE_BUTTON,
-    TOGL_KEY_IDX1_MOUSE_BUTTON,
-    TOGL_KEY_IDX2_MOUSE_BUTTON,
+    TOGL_KEY_ID_LEFT_MOUSE_BUTTON,
+    TOGL_KEY_ID_MIDDLE_MOUSE_BUTTON,
+    TOGL_KEY_ID_RIGHT_MOUSE_BUTTON,
+    TOGL_KEY_ID_X1_MOUSE_BUTTON,
+    TOGL_KEY_ID_X2_MOUSE_BUTTON,
 };
 
 enum TOGL_KeyboardSideId {
@@ -161,17 +161,17 @@ struct TOGL_Extra {
     int             x               = 0;
     int             y               = 0;
 
-    // Stores information if pressed key was from left or right side of keyboard.
+    // Stores information that, on which side of keyboard is used key (left or right).
     // If side of keyboard doesn't matter or when key exists only on one side, then contains KEYBOARD_SIDE_NONE. 
-    // Note: Used for shift, control, alt keys. For ids: TOGL_KEY_IDSHIFT, TOGL_KEY_IDCONTROL, TOGL_KEY_IDALT.
-    TOGL_KeyboardSideId    keyboard_side   = TOGL_KEYBOARD_SIDE_ID_NONE;
+    // Note: Used for shift, control, alt keys. For ids: TOGL_KEY_ID_SHIFT, TOGL_KEY_ID_CONTROL, TOGL_KEY_ID_ALT.
+    TOGL_KeyboardSideId keyboard_side = TOGL_KEYBOARD_SIDE_ID_NONE;
 };
 
 std::string TOGL_KeyIdToStr(TOGL_KeyId key_id);
 std::string TOGL_KeyboardSideToStr(TOGL_KeyboardSideId side);
 std::string TOGL_ExtraToStr(const TOGL_Extra& extra);
 
-// Returns true if key is toggled. For Example: TOGL_KEY_IDCAPS_LOCK, TOGL_KEY_IDINSERT.
+// Returns true if key is toggled. For Example: TOGL_KEY_ID_CAPS_LOCK, TOGL_KEY_ID_INSERT.
 bool TOGL_IsKeyToggled(TOGL_KeyId key_id);
     
 //------------------------------------------------------------------------------
@@ -211,46 +211,46 @@ private:
 
 inline std::string TOGL_KeyIdToStr(TOGL_KeyId key_id) {
     switch (key_id) {
-    TOGL_CASE_STR(TOGL_KEY_IDUNKNOWN);  
-    TOGL_CASE_STR(TOGL_KEY_IDBREAK);                  
-    TOGL_CASE_STR(TOGL_KEY_IDBACKSPACE);              
-    TOGL_CASE_STR(TOGL_KEY_IDTAB);                    
-    TOGL_CASE_STR(TOGL_KEY_IDENTER);                  
-    TOGL_CASE_STR(TOGL_KEY_IDSHIFT);                  
-    TOGL_CASE_STR(TOGL_KEY_IDCONTROL);                
-    TOGL_CASE_STR(TOGL_KEY_IDALT);                    
-    TOGL_CASE_STR(TOGL_KEY_IDPAUSE);                  
-    TOGL_CASE_STR(TOGL_KEY_IDCAPS_LOCK);              
-    TOGL_CASE_STR(TOGL_KEY_IDESCAPE);                 
-    TOGL_CASE_STR(TOGL_KEY_IDSPACE);                  
-    TOGL_CASE_STR(TOGL_KEY_IDPAGE_UP);                
-    TOGL_CASE_STR(TOGL_KEY_IDPAGE_DOWN);              
-    TOGL_CASE_STR(TOGL_KEY_IDEND);                    
-    TOGL_CASE_STR(TOGL_KEY_IDHOME);                   
-    TOGL_CASE_STR(TOGL_KEY_IDARROW_LEFT);             
-    TOGL_CASE_STR(TOGL_KEY_IDARROW_UP);               
-    TOGL_CASE_STR(TOGL_KEY_IDARROW_RIGHT);            
-    TOGL_CASE_STR(TOGL_KEY_IDARROW_DOWN);             
-    TOGL_CASE_STR(TOGL_KEY_IDPRINT);                  
-    TOGL_CASE_STR(TOGL_KEY_IDPRINT_SCREEN);           
-    TOGL_CASE_STR(TOGL_KEY_IDINSERT);                 
-    TOGL_CASE_STR(TOGL_KEY_IDDELETE);                 
-    TOGL_CASE_STR(TOGL_KEY_IDNUMPAD_0);               
-    TOGL_CASE_STR(TOGL_KEY_IDNUMPAD_1);               
-    TOGL_CASE_STR(TOGL_KEY_IDNUMPAD_2);               
-    TOGL_CASE_STR(TOGL_KEY_IDNUMPAD_3);               
-    TOGL_CASE_STR(TOGL_KEY_IDNUMPAD_4);               
-    TOGL_CASE_STR(TOGL_KEY_IDNUMPAD_5);               
-    TOGL_CASE_STR(TOGL_KEY_IDNUMPAD_6);               
-    TOGL_CASE_STR(TOGL_KEY_IDNUMPAD_7);               
-    TOGL_CASE_STR(TOGL_KEY_IDNUMPAD_8);               
-    TOGL_CASE_STR(TOGL_KEY_IDNUMPAD_9);               
-    TOGL_CASE_STR(TOGL_KEY_IDNUMPAD_MULTIPLY);        
-    TOGL_CASE_STR(TOGL_KEY_IDNUMPAD_ADD);             
-    TOGL_CASE_STR(TOGL_KEY_IDNUMPAD_SEPARATOR);       
-    TOGL_CASE_STR(TOGL_KEY_IDNUMPAD_SUBTRACT);        
-    TOGL_CASE_STR(TOGL_KEY_IDNUMPAD_DECIMAL);         
-    TOGL_CASE_STR(TOGL_KEY_IDNUMPAD_DIVIDE);          
+    TOGL_CASE_STR(TOGL_KEY_ID_UNKNOWN);  
+    TOGL_CASE_STR(TOGL_KEY_ID_BREAK);                  
+    TOGL_CASE_STR(TOGL_KEY_ID_BACKSPACE);              
+    TOGL_CASE_STR(TOGL_KEY_ID_TAB);                    
+    TOGL_CASE_STR(TOGL_KEY_ID_ENTER);                  
+    TOGL_CASE_STR(TOGL_KEY_ID_SHIFT);                  
+    TOGL_CASE_STR(TOGL_KEY_ID_CONTROL);                
+    TOGL_CASE_STR(TOGL_KEY_ID_ALT);                    
+    TOGL_CASE_STR(TOGL_KEY_ID_PAUSE);                  
+    TOGL_CASE_STR(TOGL_KEY_ID_CAPS_LOCK);              
+    TOGL_CASE_STR(TOGL_KEY_ID_ESCAPE);                 
+    TOGL_CASE_STR(TOGL_KEY_ID_SPACE);                  
+    TOGL_CASE_STR(TOGL_KEY_ID_PAGE_UP);                
+    TOGL_CASE_STR(TOGL_KEY_ID_PAGE_DOWN);              
+    TOGL_CASE_STR(TOGL_KEY_ID_END);                    
+    TOGL_CASE_STR(TOGL_KEY_ID_HOME);                   
+    TOGL_CASE_STR(TOGL_KEY_ID_ARROW_LEFT);             
+    TOGL_CASE_STR(TOGL_KEY_ID_ARROW_UP);               
+    TOGL_CASE_STR(TOGL_KEY_ID_ARROW_RIGHT);            
+    TOGL_CASE_STR(TOGL_KEY_ID_ARROW_DOWN);             
+    TOGL_CASE_STR(TOGL_KEY_ID_PRINT);                  
+    TOGL_CASE_STR(TOGL_KEY_ID_PRINT_SCREEN);           
+    TOGL_CASE_STR(TOGL_KEY_ID_INSERT);                 
+    TOGL_CASE_STR(TOGL_KEY_ID_DELETE);                 
+    TOGL_CASE_STR(TOGL_KEY_ID_NUMPAD_0);               
+    TOGL_CASE_STR(TOGL_KEY_ID_NUMPAD_1);               
+    TOGL_CASE_STR(TOGL_KEY_ID_NUMPAD_2);               
+    TOGL_CASE_STR(TOGL_KEY_ID_NUMPAD_3);               
+    TOGL_CASE_STR(TOGL_KEY_ID_NUMPAD_4);               
+    TOGL_CASE_STR(TOGL_KEY_ID_NUMPAD_5);               
+    TOGL_CASE_STR(TOGL_KEY_ID_NUMPAD_6);               
+    TOGL_CASE_STR(TOGL_KEY_ID_NUMPAD_7);               
+    TOGL_CASE_STR(TOGL_KEY_ID_NUMPAD_8);               
+    TOGL_CASE_STR(TOGL_KEY_ID_NUMPAD_9);               
+    TOGL_CASE_STR(TOGL_KEY_ID_NUMPAD_MULTIPLY);        
+    TOGL_CASE_STR(TOGL_KEY_ID_NUMPAD_ADD);             
+    TOGL_CASE_STR(TOGL_KEY_ID_NUMPAD_SEPARATOR);       
+    TOGL_CASE_STR(TOGL_KEY_ID_NUMPAD_SUBTRACT);        
+    TOGL_CASE_STR(TOGL_KEY_ID_NUMPAD_DECIMAL);         
+    TOGL_CASE_STR(TOGL_KEY_ID_NUMPAD_DIVIDE);          
     TOGL_CASE_STR(TOGL_KEY_ID_F1);                     
     TOGL_CASE_STR(TOGL_KEY_ID_F2);                     
     TOGL_CASE_STR(TOGL_KEY_ID_F3);                     
@@ -312,26 +312,26 @@ inline std::string TOGL_KeyIdToStr(TOGL_KeyId key_id) {
     TOGL_CASE_STR(TOGL_KEY_ID_Y);    
     TOGL_CASE_STR(TOGL_KEY_ID_Z);
 
-    TOGL_CASE_STR(TOGL_KEY_IDSEMICOLON);
-    TOGL_CASE_STR(TOGL_KEY_IDFORWARD_SLASH);
-    TOGL_CASE_STR(TOGL_KEY_IDACUTE);
-    TOGL_CASE_STR(TOGL_KEY_IDOPEN_BRACKET);
-    TOGL_CASE_STR(TOGL_KEY_IDBACK_SLASH);
-    TOGL_CASE_STR(TOGL_KEY_IDCLOSE_BRACKET);
-    TOGL_CASE_STR(TOGL_KEY_IDAPOSTROPHE);
-    TOGL_CASE_STR(TOGL_KEY_IDCOMMA);
-    TOGL_CASE_STR(TOGL_KEY_IDDOT);
-    TOGL_CASE_STR(TOGL_KEY_IDDASH);
-    TOGL_CASE_STR(TOGL_KEY_IDEQUAL);
+    TOGL_CASE_STR(TOGL_KEY_ID_SEMICOLON);
+    TOGL_CASE_STR(TOGL_KEY_ID_FORWARD_SLASH);
+    TOGL_CASE_STR(TOGL_KEY_ID_ACUTE);
+    TOGL_CASE_STR(TOGL_KEY_ID_OPEN_BRACKET);
+    TOGL_CASE_STR(TOGL_KEY_ID_BACK_SLASH);
+    TOGL_CASE_STR(TOGL_KEY_ID_CLOSE_BRACKET);
+    TOGL_CASE_STR(TOGL_KEY_ID_APOSTROPHE);
+    TOGL_CASE_STR(TOGL_KEY_ID_COMMA);
+    TOGL_CASE_STR(TOGL_KEY_ID_DOT);
+    TOGL_CASE_STR(TOGL_KEY_ID_DASH);
+    TOGL_CASE_STR(TOGL_KEY_ID_EQUAL);
 
-    TOGL_CASE_STR(TOGL_KEY_IDNUMLOCK);                
-    TOGL_CASE_STR(TOGL_KEY_IDSCROLL_LOCK);   
+    TOGL_CASE_STR(TOGL_KEY_ID_NUMLOCK);                
+    TOGL_CASE_STR(TOGL_KEY_ID_SCROLL_LOCK);   
               
-    TOGL_CASE_STR(TOGL_KEY_IDLEFT_MOUSE_BUTTON);   
-    TOGL_CASE_STR(TOGL_KEY_IDMIDDLE_MOUSE_BUTTON);   
-    TOGL_CASE_STR(TOGL_KEY_IDRIGHT_MOUSE_BUTTON);   
-    TOGL_CASE_STR(TOGL_KEY_IDX1_MOUSE_BUTTON);   
-    TOGL_CASE_STR(TOGL_KEY_IDX2_MOUSE_BUTTON);   
+    TOGL_CASE_STR(TOGL_KEY_ID_LEFT_MOUSE_BUTTON);   
+    TOGL_CASE_STR(TOGL_KEY_ID_MIDDLE_MOUSE_BUTTON);   
+    TOGL_CASE_STR(TOGL_KEY_ID_RIGHT_MOUSE_BUTTON);   
+    TOGL_CASE_STR(TOGL_KEY_ID_X1_MOUSE_BUTTON);   
+    TOGL_CASE_STR(TOGL_KEY_ID_X2_MOUSE_BUTTON);   
     }
     return std::string() + "(" + std::to_string(key_id) + ")";
 }
@@ -412,46 +412,46 @@ inline bool TOGL_IsKeyToggled(TOGL_KeyId key_id) {
 
 inline TOGL_KeyId _TOGL_InnerKey::GetKeyId(WPARAM w_param) {
     switch (w_param) {
-    case VK_CANCEL:         return TOGL_KEY_IDBREAK;                  
-    case VK_BACK:           return TOGL_KEY_IDBACKSPACE;              
-    case VK_TAB:            return TOGL_KEY_IDTAB;                    
-    case VK_RETURN:         return TOGL_KEY_IDENTER; 
-    case VK_SHIFT:          return TOGL_KEY_IDSHIFT; 
-    case VK_CONTROL:        return TOGL_KEY_IDCONTROL; 
-    case VK_MENU:           return TOGL_KEY_IDALT; 
+    case VK_CANCEL:         return TOGL_KEY_ID_BREAK;                  
+    case VK_BACK:           return TOGL_KEY_ID_BACKSPACE;              
+    case VK_TAB:            return TOGL_KEY_ID_TAB;                    
+    case VK_RETURN:         return TOGL_KEY_ID_ENTER; 
+    case VK_SHIFT:          return TOGL_KEY_ID_SHIFT; 
+    case VK_CONTROL:        return TOGL_KEY_ID_CONTROL; 
+    case VK_MENU:           return TOGL_KEY_ID_ALT; 
 
-    case VK_PAUSE:          return TOGL_KEY_IDPAUSE;                  
-    case VK_CAPITAL:        return TOGL_KEY_IDCAPS_LOCK;              
-    case VK_ESCAPE:         return TOGL_KEY_IDESCAPE;                 
-    case VK_SPACE:          return TOGL_KEY_IDSPACE;                  
-    case VK_PRIOR:          return TOGL_KEY_IDPAGE_UP;                
-    case VK_NEXT:           return TOGL_KEY_IDPAGE_DOWN;              
-    case VK_END:            return TOGL_KEY_IDEND;                    
-    case VK_HOME:           return TOGL_KEY_IDHOME;                   
-    case VK_LEFT:           return TOGL_KEY_IDARROW_LEFT;             
-    case VK_UP:             return TOGL_KEY_IDARROW_UP;               
-    case VK_RIGHT:          return TOGL_KEY_IDARROW_RIGHT;            
-    case VK_DOWN:           return TOGL_KEY_IDARROW_DOWN;             
-    case VK_PRINT:          return TOGL_KEY_IDPRINT;                  
-    case VK_SNAPSHOT:       return TOGL_KEY_IDPRINT_SCREEN;           
-    case VK_INSERT:         return TOGL_KEY_IDINSERT;                 
-    case VK_DELETE:         return TOGL_KEY_IDDELETE;                 
-    case VK_NUMPAD0:        return TOGL_KEY_IDNUMPAD_0;               
-    case VK_NUMPAD1:        return TOGL_KEY_IDNUMPAD_1;               
-    case VK_NUMPAD2:        return TOGL_KEY_IDNUMPAD_2;               
-    case VK_NUMPAD3:        return TOGL_KEY_IDNUMPAD_3;               
-    case VK_NUMPAD4:        return TOGL_KEY_IDNUMPAD_4;               
-    case VK_NUMPAD5:        return TOGL_KEY_IDNUMPAD_5;               
-    case VK_NUMPAD6:        return TOGL_KEY_IDNUMPAD_6;               
-    case VK_NUMPAD7:        return TOGL_KEY_IDNUMPAD_7;               
-    case VK_NUMPAD8:        return TOGL_KEY_IDNUMPAD_8;               
-    case VK_NUMPAD9:        return TOGL_KEY_IDNUMPAD_9;               
-    case VK_MULTIPLY:       return TOGL_KEY_IDNUMPAD_MULTIPLY;        
-    case VK_ADD:            return TOGL_KEY_IDNUMPAD_ADD;             
-    case VK_SEPARATOR:      return TOGL_KEY_IDNUMPAD_SEPARATOR;       
-    case VK_SUBTRACT:       return TOGL_KEY_IDNUMPAD_SUBTRACT;        
-    case VK_DECIMAL:        return TOGL_KEY_IDNUMPAD_DECIMAL;         
-    case VK_DIVIDE:         return TOGL_KEY_IDNUMPAD_DIVIDE;          
+    case VK_PAUSE:          return TOGL_KEY_ID_PAUSE;                  
+    case VK_CAPITAL:        return TOGL_KEY_ID_CAPS_LOCK;              
+    case VK_ESCAPE:         return TOGL_KEY_ID_ESCAPE;                 
+    case VK_SPACE:          return TOGL_KEY_ID_SPACE;                  
+    case VK_PRIOR:          return TOGL_KEY_ID_PAGE_UP;                
+    case VK_NEXT:           return TOGL_KEY_ID_PAGE_DOWN;              
+    case VK_END:            return TOGL_KEY_ID_END;                    
+    case VK_HOME:           return TOGL_KEY_ID_HOME;                   
+    case VK_LEFT:           return TOGL_KEY_ID_ARROW_LEFT;             
+    case VK_UP:             return TOGL_KEY_ID_ARROW_UP;               
+    case VK_RIGHT:          return TOGL_KEY_ID_ARROW_RIGHT;            
+    case VK_DOWN:           return TOGL_KEY_ID_ARROW_DOWN;             
+    case VK_PRINT:          return TOGL_KEY_ID_PRINT;                  
+    case VK_SNAPSHOT:       return TOGL_KEY_ID_PRINT_SCREEN;           
+    case VK_INSERT:         return TOGL_KEY_ID_INSERT;                 
+    case VK_DELETE:         return TOGL_KEY_ID_DELETE;                 
+    case VK_NUMPAD0:        return TOGL_KEY_ID_NUMPAD_0;               
+    case VK_NUMPAD1:        return TOGL_KEY_ID_NUMPAD_1;               
+    case VK_NUMPAD2:        return TOGL_KEY_ID_NUMPAD_2;               
+    case VK_NUMPAD3:        return TOGL_KEY_ID_NUMPAD_3;               
+    case VK_NUMPAD4:        return TOGL_KEY_ID_NUMPAD_4;               
+    case VK_NUMPAD5:        return TOGL_KEY_ID_NUMPAD_5;               
+    case VK_NUMPAD6:        return TOGL_KEY_ID_NUMPAD_6;               
+    case VK_NUMPAD7:        return TOGL_KEY_ID_NUMPAD_7;               
+    case VK_NUMPAD8:        return TOGL_KEY_ID_NUMPAD_8;               
+    case VK_NUMPAD9:        return TOGL_KEY_ID_NUMPAD_9;               
+    case VK_MULTIPLY:       return TOGL_KEY_ID_NUMPAD_MULTIPLY;        
+    case VK_ADD:            return TOGL_KEY_ID_NUMPAD_ADD;             
+    case VK_SEPARATOR:      return TOGL_KEY_ID_NUMPAD_SEPARATOR;       
+    case VK_SUBTRACT:       return TOGL_KEY_ID_NUMPAD_SUBTRACT;        
+    case VK_DECIMAL:        return TOGL_KEY_ID_NUMPAD_DECIMAL;         
+    case VK_DIVIDE:         return TOGL_KEY_ID_NUMPAD_DIVIDE;          
     case VK_F1:             return TOGL_KEY_ID_F1;                     
     case VK_F2:             return TOGL_KEY_ID_F2;                     
     case VK_F3:             return TOGL_KEY_ID_F3;                     
@@ -513,66 +513,66 @@ inline TOGL_KeyId _TOGL_InnerKey::GetKeyId(WPARAM w_param) {
     case 'Y':               return TOGL_KEY_ID_Y;    
     case 'Z':               return TOGL_KEY_ID_Z;
 
-    case VK_OEM_1:          return TOGL_KEY_IDSEMICOLON;        // ;
-    case VK_OEM_2:          return TOGL_KEY_IDFORWARD_SLASH;    // /
-    case VK_OEM_3:          return TOGL_KEY_IDACUTE;            // `
-    case VK_OEM_4:          return TOGL_KEY_IDOPEN_BRACKET;     // [
-    case VK_OEM_5:          return TOGL_KEY_IDBACK_SLASH;       
-    case VK_OEM_6:          return TOGL_KEY_IDCLOSE_BRACKET;    // ]
-    case VK_OEM_7:          return TOGL_KEY_IDAPOSTROPHE;       // '
-    case VK_OEM_COMMA:      return TOGL_KEY_IDCOMMA;            // ,
-    case VK_OEM_PERIOD:     return TOGL_KEY_IDDOT;              // .
-    case VK_OEM_MINUS:      return TOGL_KEY_IDDASH;             // -
-    case VK_OEM_PLUS:       return TOGL_KEY_IDEQUAL;            // =
+    case VK_OEM_1:          return TOGL_KEY_ID_SEMICOLON;       // ;
+    case VK_OEM_2:          return TOGL_KEY_ID_FORWARD_SLASH;   // /
+    case VK_OEM_3:          return TOGL_KEY_ID_ACUTE;           // `
+    case VK_OEM_4:          return TOGL_KEY_ID_OPEN_BRACKET;    // [
+    case VK_OEM_5:          return TOGL_KEY_ID_BACK_SLASH;      
+    case VK_OEM_6:          return TOGL_KEY_ID_CLOSE_BRACKET;   // ]
+    case VK_OEM_7:          return TOGL_KEY_ID_APOSTROPHE;      // '
+    case VK_OEM_COMMA:      return TOGL_KEY_ID_COMMA;           // ,
+    case VK_OEM_PERIOD:     return TOGL_KEY_ID_DOT;             // .
+    case VK_OEM_MINUS:      return TOGL_KEY_ID_DASH;            // -
+    case VK_OEM_PLUS:       return TOGL_KEY_ID_EQUAL;           // =
 
-    case VK_NUMLOCK:        return TOGL_KEY_IDNUMLOCK;                
-    case VK_SCROLL:         return TOGL_KEY_IDSCROLL_LOCK;      
+    case VK_NUMLOCK:        return TOGL_KEY_ID_NUMLOCK;                
+    case VK_SCROLL:         return TOGL_KEY_ID_SCROLL_LOCK;      
     }
-    return TOGL_KEY_IDUNKNOWN;
+    return TOGL_KEY_ID_UNKNOWN;
 }
 
 inline int _TOGL_InnerKey::GetVirtualKeyCode(TOGL_KeyId key_id) {
     switch (key_id) {
-    case TOGL_KEY_IDBREAK:                  return VK_CANCEL;                           
-    case TOGL_KEY_IDBACKSPACE:              return VK_BACK;           
-    case TOGL_KEY_IDTAB:                    return VK_TAB;            
-    case TOGL_KEY_IDENTER:                  return VK_RETURN;         
-    case TOGL_KEY_IDSHIFT:                  return VK_SHIFT;          
-    case TOGL_KEY_IDCONTROL:                return VK_CONTROL;        
-    case TOGL_KEY_IDALT:                    return VK_MENU;           
+    case TOGL_KEY_ID_BREAK:                 return VK_CANCEL;                           
+    case TOGL_KEY_ID_BACKSPACE:             return VK_BACK;           
+    case TOGL_KEY_ID_TAB:                   return VK_TAB;            
+    case TOGL_KEY_ID_ENTER:                 return VK_RETURN;         
+    case TOGL_KEY_ID_SHIFT:                 return VK_SHIFT;          
+    case TOGL_KEY_ID_CONTROL:               return VK_CONTROL;        
+    case TOGL_KEY_ID_ALT:                   return VK_MENU;           
 
-    case TOGL_KEY_IDPAUSE:                  return VK_PAUSE;          
-    case TOGL_KEY_IDCAPS_LOCK:              return VK_CAPITAL;        
-    case TOGL_KEY_IDESCAPE:                 return VK_ESCAPE;         
-    case TOGL_KEY_IDSPACE:                  return VK_SPACE;          
-    case TOGL_KEY_IDPAGE_UP:                return VK_PRIOR;          
-    case TOGL_KEY_IDPAGE_DOWN:              return VK_NEXT;           
-    case TOGL_KEY_IDEND:                    return VK_END;            
-    case TOGL_KEY_IDHOME:                   return VK_HOME;           
-    case TOGL_KEY_IDARROW_LEFT:             return VK_LEFT;           
-    case TOGL_KEY_IDARROW_UP:               return VK_UP;             
-    case TOGL_KEY_IDARROW_RIGHT:            return VK_RIGHT;          
-    case TOGL_KEY_IDARROW_DOWN:             return VK_DOWN;           
-    case TOGL_KEY_IDPRINT:                  return VK_PRINT;          
-    case TOGL_KEY_IDPRINT_SCREEN:           return VK_SNAPSHOT;       
-    case TOGL_KEY_IDINSERT:                 return VK_INSERT;         
-    case TOGL_KEY_IDDELETE:                 return VK_DELETE;         
-    case TOGL_KEY_IDNUMPAD_0:               return VK_NUMPAD0;        
-    case TOGL_KEY_IDNUMPAD_1:               return VK_NUMPAD1;        
-    case TOGL_KEY_IDNUMPAD_2:               return VK_NUMPAD2;        
-    case TOGL_KEY_IDNUMPAD_3:               return VK_NUMPAD3;        
-    case TOGL_KEY_IDNUMPAD_4:               return VK_NUMPAD4;        
-    case TOGL_KEY_IDNUMPAD_5:               return VK_NUMPAD5;        
-    case TOGL_KEY_IDNUMPAD_6:               return VK_NUMPAD6;        
-    case TOGL_KEY_IDNUMPAD_7:               return VK_NUMPAD7;        
-    case TOGL_KEY_IDNUMPAD_8:               return VK_NUMPAD8;        
-    case TOGL_KEY_IDNUMPAD_9:               return VK_NUMPAD9;        
-    case TOGL_KEY_IDNUMPAD_MULTIPLY:        return VK_MULTIPLY;       
-    case TOGL_KEY_IDNUMPAD_ADD:             return VK_ADD;            
-    case TOGL_KEY_IDNUMPAD_SEPARATOR:       return VK_SEPARATOR;      
-    case TOGL_KEY_IDNUMPAD_SUBTRACT:        return VK_SUBTRACT;       
-    case TOGL_KEY_IDNUMPAD_DECIMAL:         return VK_DECIMAL;        
-    case TOGL_KEY_IDNUMPAD_DIVIDE:          return VK_DIVIDE;         
+    case TOGL_KEY_ID_PAUSE:                 return VK_PAUSE;          
+    case TOGL_KEY_ID_CAPS_LOCK:             return VK_CAPITAL;        
+    case TOGL_KEY_ID_ESCAPE:                return VK_ESCAPE;         
+    case TOGL_KEY_ID_SPACE:                 return VK_SPACE;          
+    case TOGL_KEY_ID_PAGE_UP:               return VK_PRIOR;          
+    case TOGL_KEY_ID_PAGE_DOWN:             return VK_NEXT;           
+    case TOGL_KEY_ID_END:                   return VK_END;            
+    case TOGL_KEY_ID_HOME:                  return VK_HOME;           
+    case TOGL_KEY_ID_ARROW_LEFT:            return VK_LEFT;           
+    case TOGL_KEY_ID_ARROW_UP:              return VK_UP;             
+    case TOGL_KEY_ID_ARROW_RIGHT:           return VK_RIGHT;          
+    case TOGL_KEY_ID_ARROW_DOWN:            return VK_DOWN;           
+    case TOGL_KEY_ID_PRINT:                 return VK_PRINT;          
+    case TOGL_KEY_ID_PRINT_SCREEN:          return VK_SNAPSHOT;       
+    case TOGL_KEY_ID_INSERT:                return VK_INSERT;         
+    case TOGL_KEY_ID_DELETE:                return VK_DELETE;         
+    case TOGL_KEY_ID_NUMPAD_0:              return VK_NUMPAD0;        
+    case TOGL_KEY_ID_NUMPAD_1:              return VK_NUMPAD1;        
+    case TOGL_KEY_ID_NUMPAD_2:              return VK_NUMPAD2;        
+    case TOGL_KEY_ID_NUMPAD_3:              return VK_NUMPAD3;        
+    case TOGL_KEY_ID_NUMPAD_4:              return VK_NUMPAD4;        
+    case TOGL_KEY_ID_NUMPAD_5:              return VK_NUMPAD5;        
+    case TOGL_KEY_ID_NUMPAD_6:              return VK_NUMPAD6;        
+    case TOGL_KEY_ID_NUMPAD_7:              return VK_NUMPAD7;        
+    case TOGL_KEY_ID_NUMPAD_8:              return VK_NUMPAD8;        
+    case TOGL_KEY_ID_NUMPAD_9:              return VK_NUMPAD9;        
+    case TOGL_KEY_ID_NUMPAD_MULTIPLY:       return VK_MULTIPLY;       
+    case TOGL_KEY_ID_NUMPAD_ADD:            return VK_ADD;            
+    case TOGL_KEY_ID_NUMPAD_SEPARATOR:      return VK_SEPARATOR;      
+    case TOGL_KEY_ID_NUMPAD_SUBTRACT:       return VK_SUBTRACT;       
+    case TOGL_KEY_ID_NUMPAD_DECIMAL:        return VK_DECIMAL;        
+    case TOGL_KEY_ID_NUMPAD_DIVIDE:         return VK_DIVIDE;         
     case TOGL_KEY_ID_F1:                    return VK_F1;             
     case TOGL_KEY_ID_F2:                    return VK_F2;             
     case TOGL_KEY_ID_F3:                    return VK_F3;             
@@ -634,22 +634,22 @@ inline int _TOGL_InnerKey::GetVirtualKeyCode(TOGL_KeyId key_id) {
     case TOGL_KEY_ID_Y:                     return 'Y';               
     case TOGL_KEY_ID_Z:                     return 'Z';               
 
-    case TOGL_KEY_IDSEMICOLON:              return VK_OEM_1;          
-    case TOGL_KEY_IDFORWARD_SLASH:          return VK_OEM_2;          
-    case TOGL_KEY_IDACUTE:                  return VK_OEM_3;          
-    case TOGL_KEY_IDOPEN_BRACKET:           return VK_OEM_4;          
-    case TOGL_KEY_IDBACK_SLASH:             return VK_OEM_5;          
-    case TOGL_KEY_IDCLOSE_BRACKET:          return VK_OEM_6;          
-    case TOGL_KEY_IDAPOSTROPHE:             return VK_OEM_7;          
-    case TOGL_KEY_IDCOMMA:                  return VK_OEM_COMMA;        
-    case TOGL_KEY_IDDOT:                    return VK_OEM_PERIOD;        
-    case TOGL_KEY_IDDASH:                   return VK_OEM_MINUS;        
-    case TOGL_KEY_IDEQUAL:                  return VK_OEM_PLUS;        
+    case TOGL_KEY_ID_SEMICOLON:             return VK_OEM_1;          
+    case TOGL_KEY_ID_FORWARD_SLASH:         return VK_OEM_2;          
+    case TOGL_KEY_ID_ACUTE:                 return VK_OEM_3;          
+    case TOGL_KEY_ID_OPEN_BRACKET:          return VK_OEM_4;          
+    case TOGL_KEY_ID_BACK_SLASH:            return VK_OEM_5;          
+    case TOGL_KEY_ID_CLOSE_BRACKET:         return VK_OEM_6;          
+    case TOGL_KEY_ID_APOSTROPHE:            return VK_OEM_7;          
+    case TOGL_KEY_ID_COMMA:                 return VK_OEM_COMMA;        
+    case TOGL_KEY_ID_DOT:                   return VK_OEM_PERIOD;        
+    case TOGL_KEY_ID_DASH:                  return VK_OEM_MINUS;        
+    case TOGL_KEY_ID_EQUAL:                 return VK_OEM_PLUS;        
 
-    case TOGL_KEY_IDNUMLOCK:                return VK_NUMLOCK;        
-    case TOGL_KEY_IDSCROLL_LOCK:            return VK_SCROLL;   
+    case TOGL_KEY_ID_NUMLOCK:               return VK_NUMLOCK;        
+    case TOGL_KEY_ID_SCROLL_LOCK:           return VK_SCROLL;   
 
-    case TOGL_KEY_IDUNKNOWN:
+    case TOGL_KEY_ID_UNKNOWN:
     default:                                return 0;
     }
 }
@@ -658,24 +658,24 @@ inline TOGL_KeyId _TOGL_InnerKey::GetMouseKeyId(UINT message, WPARAM w_param) {
     switch (message) {
     case WM_LBUTTONDOWN:    
     case WM_LBUTTONUP:      
-        return TOGL_KEY_IDLEFT_MOUSE_BUTTON;
+        return TOGL_KEY_ID_LEFT_MOUSE_BUTTON;
 
     case WM_RBUTTONDOWN:    
     case WM_RBUTTONUP:      
-        return TOGL_KEY_IDRIGHT_MOUSE_BUTTON;
+        return TOGL_KEY_ID_RIGHT_MOUSE_BUTTON;
 
     case WM_MBUTTONDOWN:    
     case WM_MBUTTONUP:      
-        return TOGL_KEY_IDMIDDLE_MOUSE_BUTTON;
+        return TOGL_KEY_ID_MIDDLE_MOUSE_BUTTON;
 
     case WM_XBUTTONUP:
     case WM_XBUTTONDOWN:   
-        if (HIWORD(w_param) == XBUTTON1) return TOGL_KEY_IDX1_MOUSE_BUTTON;
-        if (HIWORD(w_param) == XBUTTON2) return TOGL_KEY_IDX2_MOUSE_BUTTON;
-        return TOGL_KEY_IDUNKNOWN;
+        if (HIWORD(w_param) == XBUTTON1) return TOGL_KEY_ID_X1_MOUSE_BUTTON;
+        if (HIWORD(w_param) == XBUTTON2) return TOGL_KEY_ID_X2_MOUSE_BUTTON;
+        return TOGL_KEY_ID_UNKNOWN;
     } // switch
 
-    return TOGL_KEY_IDUNKNOWN;
+    return TOGL_KEY_ID_UNKNOWN;
 }
 
 inline bool _TOGL_InnerKey::IsMouseButtonDown(UINT message) {
@@ -692,17 +692,17 @@ inline bool _TOGL_InnerKey::IsMouseButtonDown(UINT message) {
 
 inline TOGL_KeyboardSideId _TOGL_InnerKey::GetKeyboardSide(TOGL_KeyId key_id, const VirtualKeyData& virtual_key_data) {
     switch(key_id) {
-    case TOGL_KEY_IDSHIFT: {
+    case TOGL_KEY_ID_SHIFT: {
         const int vk_code_ext = MapVirtualKeyA(virtual_key_data.scan_code, MAPVK_VSC_TO_VK_EX);
         if (vk_code_ext == VK_LSHIFT) return TOGL_KEYBOARD_SIDE_ID_LEFT; 
         if (vk_code_ext == VK_RSHIFT) return TOGL_KEYBOARD_SIDE_ID_RIGHT; 
         return TOGL_KEYBOARD_SIDE_ID_NONE;
     } 
-    case TOGL_KEY_IDCONTROL: 
+    case TOGL_KEY_ID_CONTROL: 
         if (virtual_key_data.is_ext) return TOGL_KEYBOARD_SIDE_ID_RIGHT; 
         return TOGL_KEYBOARD_SIDE_ID_LEFT; 
 
-    case TOGL_KEY_IDALT: 
+    case TOGL_KEY_ID_ALT: 
         if (virtual_key_data.is_ext) return TOGL_KEYBOARD_SIDE_ID_RIGHT; 
         return TOGL_KEYBOARD_SIDE_ID_LEFT; 
     default: 

@@ -53,7 +53,7 @@ int RunBorderlessWindow() {
     };
 
     data.do_on_key = [](TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra) {
-        if ((key_id == 'X' || key_id == TOGL_KEY_IDESCAPE) && !is_down) {
+        if ((key_id == 'X' || key_id == TOGL_KEY_ID_ESCAPE) && !is_down) {
             TOGL_RequestClose();
         }
     };
