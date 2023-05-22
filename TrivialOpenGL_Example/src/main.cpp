@@ -460,7 +460,7 @@ int main(int argc, char *argv[]) {
 
         auto IsOption = [&options](const std::string& option) { return options.find(option) != options.end(); };
 
-        s_resolution = {600, 300};
+        s_resolution = {800, 400};
 
         TOGL_Data data = {};
 
@@ -506,9 +506,12 @@ int main(int argc, char *argv[]) {
                 "7 - SetArea(desktop_area_no_taskbar)\n"
                 "8 - SetArea(screen_area)\n"
                 "C - Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.height) + ")\n"
+                "(0, 0) at left-top\n"
                 "Arrow Left     - MoveBy(-30, 0)\n"
                 "Arrow Right    - MoveBy(30, 0)\n"
-                "X - RequestClose()\n"
+                "Arrow Down     - MoveBy(0, -30)\n"
+                "Arrow Up       - MoveBy(0, 30)\n"
+                "X - RequestClose\n"
                 "I - Display Window Info\n"
                 "T - Swap target window_area/draw_area\n"
             );
@@ -524,52 +527,56 @@ int main(int argc, char *argv[]) {
             if (!is_down) {
                 if (!s_is_client) {
                     switch (key_id) {
-                    case TOGL_KEY_ID_1:           window.MoveTo(0, 0); break;
-                    case TOGL_KEY_ID_2:           window.MoveTo(10, 100); break;
+                    case TOGL_KEY_ID_1:             window.MoveTo(0, 0); break;
+                    case TOGL_KEY_ID_2:             window.MoveTo(10, 100); break;
                                     
-                    case TOGL_KEY_ID_3:           window.Resize(400, 200); break;
-                    case TOGL_KEY_ID_4:           window.Resize(800, 400); break;
+                    case TOGL_KEY_ID_3:             window.Resize(400, 200); break;
+                    case TOGL_KEY_ID_4:             window.Resize(800, 400); break;
                                     
-                    case TOGL_KEY_ID_5:           window.SetArea(100, 10, 800, 400); break;
-                    case TOGL_KEY_ID_6:           window.SetArea(window.GetArea()); break;
-                    case TOGL_KEY_ID_7:           window.SetArea(TOGL_GetDesktopAreaNoTaskBar()); break;
-                    case TOGL_KEY_ID_8:           window.SetArea({{}, TOGL_GetScreenSize()}); break;
+                    case TOGL_KEY_ID_5:             window.SetArea(100, 10, 800, 400); break;
+                    case TOGL_KEY_ID_6:             window.SetArea(window.GetArea()); break;
+                    case TOGL_KEY_ID_7:             window.SetArea(TOGL_GetDesktopAreaNoTaskBar()); break;
+                    case TOGL_KEY_ID_8:             window.SetArea({{}, TOGL_GetScreenSize()}); break;
 
-                    case TOGL_KEY_ID_C:           window.Center(s_resolution, s_is_client); break;
+                    case TOGL_KEY_ID_C:             window.Center(s_resolution, s_is_client); break;
 
-                    case TOGL_KEY_ID_ARROW_LEFT:   window.MoveBy(-30, 0); break;
-                    case TOGL_KEY_ID_ARROW_RIGHT:  window.MoveBy(30, 0); break;
+                    case TOGL_KEY_ID_ARROW_LEFT:    window.MoveBy(-30, 0); break;
+                    case TOGL_KEY_ID_ARROW_RIGHT:   window.MoveBy(30, 0); break;
+                    case TOGL_KEY_ID_ARROW_DOWN:    window.MoveBy(0, 30); break;
+                    case TOGL_KEY_ID_ARROW_UP:      window.MoveBy(0, -30); break;
 
-                    case TOGL_KEY_ID_X:           window.RequestClose(); break;
+                    case TOGL_KEY_ID_X:             window.RequestClose(); break;
                                    
-                    case TOGL_KEY_ID_I:           DisplayWindowInfo(); break;
+                    case TOGL_KEY_ID_I:             DisplayWindowInfo(); break;
                                    
-                    case TOGL_KEY_ID_T:           s_is_client = !s_is_client; break;
+                    case TOGL_KEY_ID_T:             s_is_client = !s_is_client; break;
                     default: break;
                     }
                 } else {
                     switch (key_id) {
-                    case TOGL_KEY_ID_1:           window.MoveTo(0, 0, true); break;
-                    case TOGL_KEY_ID_2:           window.MoveTo(10, 100, true); break;
+                    case TOGL_KEY_ID_1:             window.MoveTo(0, 0, true); break;
+                    case TOGL_KEY_ID_2:             window.MoveTo(10, 100, true); break;
 
-                    case TOGL_KEY_ID_3:           window.Resize(400, 200, true); break;
-                    case TOGL_KEY_ID_4:           window.Resize(800, 400, true); break;
+                    case TOGL_KEY_ID_3:             window.Resize(400, 200, true); break;
+                    case TOGL_KEY_ID_4:             window.Resize(800, 400, true); break;
 
-                    case TOGL_KEY_ID_5:           window.SetArea(100, 10, 800, 400, false); break;
-                    case TOGL_KEY_ID_6:           window.SetArea(window.GetDrawArea(), false); break;
-                    case TOGL_KEY_ID_7:           window.SetArea(TOGL_GetDesktopAreaNoTaskBar(), false); break;
-                    case TOGL_KEY_ID_8:           window.SetArea({{}, TOGL_GetScreenSize()}, false); break;
+                    case TOGL_KEY_ID_5:             window.SetArea(100, 10, 800, 400, false); break;
+                    case TOGL_KEY_ID_6:             window.SetArea(window.GetDrawArea(), false); break;
+                    case TOGL_KEY_ID_7:             window.SetArea(TOGL_GetDesktopAreaNoTaskBar(), false); break;
+                    case TOGL_KEY_ID_8:             window.SetArea({{}, TOGL_GetScreenSize()}, false); break;
 
-                    case TOGL_KEY_ID_C:           window.Center(s_resolution, s_is_client); break;
+                    case TOGL_KEY_ID_C:             window.Center(s_resolution, s_is_client); break;
 
-                    case TOGL_KEY_ID_ARROW_LEFT:   window.MoveBy(-30, 0); break;
-                    case TOGL_KEY_ID_ARROW_RIGHT:  window.MoveBy(30, 0); break;
+                    case TOGL_KEY_ID_ARROW_LEFT:    window.MoveBy(-30, 0); break;
+                    case TOGL_KEY_ID_ARROW_RIGHT:   window.MoveBy(30, 0); break;
+                    case TOGL_KEY_ID_ARROW_DOWN:    window.MoveBy(0, 30); break;
+                    case TOGL_KEY_ID_ARROW_UP:      window.MoveBy(0, -30); break;
 
-                    case TOGL_KEY_ID_X:           window.RequestClose(); break;
+                    case TOGL_KEY_ID_X:             window.RequestClose(); break;
 
-                    case TOGL_KEY_ID_I:           DisplayWindowInfo(); break;
+                    case TOGL_KEY_ID_I:             DisplayWindowInfo(); break;
 
-                    case TOGL_KEY_ID_T:           s_is_client = !s_is_client; break;
+                    case TOGL_KEY_ID_T:             s_is_client = !s_is_client; break;
                     default: break;
                     }
                 }
@@ -764,27 +771,28 @@ int main(int argc, char *argv[]) {
             DrawInfoText(
                 std::string() +
                 "FPS: " + std::to_string(s_fps.Get()) + "\n"
-                "X - Exit\n"
-                "R - Redraw\n"
-                "C - Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.height) + ") (as window size)\n"
-                "V - Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.height) + ") (as draw area size)\n"
-                "F - Background -> Foreground -> Minimize -> Center -> Hide -> Show (wait until finish)\n"
-                "Arrows - Move\n"
-                "0 - Hide -> Show -> Hide -> SetSize -> Hide -> Minimize -> Hide -> Maximize -> Hide ->\n"
-                "    Windowed Full Screen -> Hide -> Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.height) + ") (wait until finish)\n"
-                "1 - Hide -> Show\n"
-                "2 - Minimize -> Center\n"
-                "W - Minimize -> MoveBy (should not restore from minimize)\n"
-                "3 - Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.height) + ")\n"
-                "4 - Maximize\n"
-                "5 - GoWindowedFullScreen\n"
-                "6 - Hide -> GoWindowedFullScreen\n"
-                "7 - SetArea(100, 50, 300, 600)\n"
+                "0 - Minimize\n"
+                "1 - Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.height) + ")\n"
+                "2 - Maximize\n"
+                "3 - GoWindowedFullScreen\n"
+                "4 - SetArea(100, 50, 300, 600)\n"
+                "5 - Hide -> Show                   (wait until finish)\n"
+                "6 - Hide -> GoWindowedFullScreen   (wait until finish)\n"
+                "7 - Minimize -> Center             (wait until finish)\n"
                 // NOTE: Disabled for now. Uncomment for internal test only. Might be implemented in future.
                 //"8 - Native Full Screen (experimental)\n"
                 //"9 - Restore from Native Full Screen (experimental)\n"
+                "A - Hide -> Show -> Hide -> SetSize -> Hide -> Minimize -> Hide -> Maximize -> Hide ->\n"
+                "    GoWindowedFullScreen -> Hide -> Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.height) + ") (wait until finish)\n"
+                "F - Background -> Foreground -> Minimize -> Center -> Hide -> Show (wait until finish)\n"
+                "W - Minimize -> MoveBy (should not restore from minimize)\n"
+                "Arrows - Move (by 30)\n"
+                "C - Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.height) + ") (as window size)\n"
+                "V - Center(" + std::to_string(s_resolution.width) + ", " + std::to_string(s_resolution.height) + ") (as draw area size)\n"
+                "R - Redraw\n"
                 "I - Display Info\n"
-                "D - on/off TOGL Debug\n"
+                "D - On/Off Debug\n"
+                "X - Exit\n"
             );
 
             s_actions.Run();
@@ -828,81 +836,135 @@ int main(int argc, char *argv[]) {
             if (!is_down) {
 
                 switch (key_id) {
+                // Minimize
+                case '0': 
+                    puts("---");
+                    fflush(stdout);
+                    TOGL_Minimize();
+                    PrintWindowStates();
+                    break;
+                
+                // Center
+                case '1':
+                    puts("---");
+                    fflush(stdout);
+                    TOGL_Center(s_resolution);
+                    PrintWindowStates();
+                    break;
 
-                case 'X':               TOGL_RequestClose(); break;
-                case TOGL_KEY_ID_R:     TOGL_RequestDraw(); break;
-                case TOGL_KEY_ID_C:     TOGL_Center(s_resolution, false); break;
-                case TOGL_KEY_ID_V:     TOGL_Center(s_resolution, true); break;
+                // Maximize
+                case '2':
+                    puts("---");
+                    fflush(stdout);
+                    TOGL_Maximize(); 
+                    PrintWindowStates();
+                    break;
 
-                case 'F':
+                // GoWindowedFullScreen
+                case '3':
+                    puts("---");
+                    fflush(stdout);
+                    TOGL_GoWindowedFullScreen(); 
+                    PrintWindowStates();
+                    break;
+
+                // SetArea
+                case '4':
+                    puts("---");
+                    TOGL_SetArea(100, 50, 300, 600);
+                    PrintWindowStates();
+                    break;
+
+                // Hide -> Show
+                case '5':
                     s_actions.Add(0, [](){
-                        // Moves behind window to foreground.
-                        SetForegroundWindow(GetNextWindow(GetForegroundWindow(), GW_HWNDNEXT));
-                        togl_print_i32(TOGL_IsForeground());
-
                         puts("---");
+                        TOGL_Hide();
+                        PrintWindowStates();
+
+                        togl_print_i32(TOGL_GetArea().x);
+                        togl_print_i32(TOGL_GetArea().y);
+                        togl_print_i32(TOGL_GetArea().width);
+                        togl_print_i32(TOGL_GetArea().height);
+
+                        togl_print_i32(TOGL_IsForeground());
                     });
 
                     s_actions.Add(1, [](){
+                        puts("---");
+                        TOGL_Show(); 
 
-                        TOGL_GoForeground();
                         togl_print_i32(TOGL_IsForeground());
 
+                        PrintWindowStates();
+                    });
+                    break;
+
+                // Hide -> GoWindowedFullScreen
+                case '6':
+                    s_actions.Add(0, [](){
                         puts("---");
+                        TOGL_Hide();
+                        PrintWindowStates();
                     });
 
                     s_actions.Add(1, [](){
+                        TOGL_GoWindowedFullScreen(); 
+                        PrintWindowStates();
+                    });
+                    break;
 
+                // Minimize -> Center
+                case '7':
+                    s_actions.Add(0, [](){
+                        puts("---");
                         TOGL_Minimize();
-                        togl_print_i32(TOGL_IsForeground());
+                        PrintWindowStates();
 
-                        puts("---");
+                        togl_print_i32(TOGL_GetArea().x);
+                        togl_print_i32(TOGL_GetArea().y);
+                        togl_print_i32(TOGL_GetArea().width);
+                        togl_print_i32(TOGL_GetArea().height);
                     });
 
                     s_actions.Add(1, [](){
+                        puts("---");
 
                         TOGL_Center(s_resolution);
-                        //GoForeground(); // redundant
-                        togl_print_i32(TOGL_IsForeground());
-
-                        puts("---");
-                    });
-
-                    s_actions.Add(1, [](){
-
-                        TOGL_Hide();
-                        togl_print_i32(TOGL_IsForeground());
-
-                        puts("---");
-                    });
-
-                    s_actions.Add(1, [](){
-
-                        TOGL_Show();
-                        //GoForeground(); // redundant
-                        togl_print_i32(TOGL_IsForeground());
-
-                        puts("Finished");
+                        PrintWindowStates();
                     });
                     break;
 
-                case TOGL_KEY_ID_ARROW_LEFT:
-                    TOGL_MoveBy(-30, 0);
-                    break;
 
-                case TOGL_KEY_ID_ARROW_RIGHT:
-                    TOGL_MoveBy(30, 0);
-                    break;
+                // NOTE: Disabled for now. Uncomment for internal test only. Might be implemented in future.
+                //case '8': {
+                //    // Warning!!! Experimental.
+                //    DEVMODEW dev_mode = {};
+                //    dev_mode.dmSize = sizeof(DEVMODEW);
+                //
+                //    dev_mode.dmDisplayFixedOutput   = DMDFO_DEFAULT; // DMDFO_CENTER, DMDFO_STRETCH, DMDFO_DEFAULT
+                //    dev_mode.dmPelsWidth            = 640; 
+                //    dev_mode.dmPelsHeight           = 480; 
+                //    // only specific resolutions will work
+                //    //dev_mode.dmPelsWidth            = 1280; 
+                //    //dev_mode.dmPelsHeight           = 720; 
+                //    dev_mode.dmFields               = DM_DISPLAYFIXEDOUTPUT | DM_PELSWIDTH | DM_PELSHEIGHT;
+                //
+                //    // ... or ...
+                //    //if (!EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &dev_mode)) puts("Can not get Display Settings.");
+                //
+                //    LONG result = ChangeDisplaySettingsW(&dev_mode, CDS_FULLSCREEN);
+                //    togl_print_i32(result);
+                //
+                //    break;
+                //}
+                //
+                //case '9':
+                //    // Warning!!! Experimental.
+                //    ChangeDisplaySettingsW(NULL, CDS_RESET);
+                //    break;
 
-                case TOGL_KEY_ID_ARROW_UP:
-                    TOGL_MoveBy(0, -30);
-                    break;
-
-                case TOGL_KEY_ID_ARROW_DOWN:
-                    TOGL_MoveBy(0, 30);
-                    break;
-
-                case TOGL_KEY_ID_0: 
+                case 'A':
                     s_actions.Add(0, [](){
                         puts("--- Show --");
                         TOGL_Hide();
@@ -982,52 +1044,59 @@ int main(int argc, char *argv[]) {
                     });
                     break;
 
-
-                case '1':
+                case 'F':
                     s_actions.Add(0, [](){
-                        puts("---");
-                        TOGL_Hide();
-                        PrintWindowStates();
-
-                        togl_print_i32(TOGL_GetArea().x);
-                        togl_print_i32(TOGL_GetArea().y);
-                        togl_print_i32(TOGL_GetArea().width);
-                        togl_print_i32(TOGL_GetArea().height);
-
+                        // Moves behind window to foreground.
+                        SetForegroundWindow(GetNextWindow(GetForegroundWindow(), GW_HWNDNEXT));
                         togl_print_i32(TOGL_IsForeground());
+
+                        puts("---");
                     });
 
                     s_actions.Add(1, [](){
-                        puts("---");
-                        TOGL_Show(); 
 
+                        TOGL_GoForeground();
                         togl_print_i32(TOGL_IsForeground());
 
-                        PrintWindowStates();
-                    });
-                    break;
-
-                case TOGL_KEY_ID_2: 
-                    s_actions.Add(0, [](){
                         puts("---");
+                    });
+
+                    s_actions.Add(1, [](){
+
                         TOGL_Minimize();
-                        PrintWindowStates();
+                        togl_print_i32(TOGL_IsForeground());
 
-                        togl_print_i32(TOGL_GetArea().x);
-                        togl_print_i32(TOGL_GetArea().y);
-                        togl_print_i32(TOGL_GetArea().width);
-                        togl_print_i32(TOGL_GetArea().height);
+                        puts("---");
                     });
 
                     s_actions.Add(1, [](){
-                        puts("---");
 
                         TOGL_Center(s_resolution);
-                        PrintWindowStates();
+                        //GoForeground(); // redundant
+                        togl_print_i32(TOGL_IsForeground());
+
+                        puts("---");
+                    });
+
+                    s_actions.Add(1, [](){
+
+                        TOGL_Hide();
+                        togl_print_i32(TOGL_IsForeground());
+
+                        puts("---");
+                    });
+
+                    s_actions.Add(1, [](){
+
+                        TOGL_Show();
+                        //GoForeground(); // redundant
+                        togl_print_i32(TOGL_IsForeground());
+
+                        puts("Finished");
                     });
                     break;
 
-                case TOGL_KEY_ID_W: 
+                case 'W':
                     s_actions.Add(0, [](){
                         puts("---");
                         TOGL_Minimize();
@@ -1045,82 +1114,40 @@ int main(int argc, char *argv[]) {
                     });
                     break;
 
-                case TOGL_KEY_ID_3:
-                    puts("---");
-                    TOGL_Center(s_resolution);
-                    PrintWindowStates();
+                case TOGL_KEY_ID_ARROW_LEFT:
+                    TOGL_MoveBy(-30, 0);
                     break;
 
-                case TOGL_KEY_ID_4:
-                    puts("---");
-                    TOGL_Maximize(); 
-                    PrintWindowStates();
+                case TOGL_KEY_ID_ARROW_RIGHT:
+                    TOGL_MoveBy(30, 0);
                     break;
 
-                case TOGL_KEY_ID_5:
-                    puts("---");
-                    TOGL_GoWindowedFullScreen(); 
-                    PrintWindowStates();
+                case TOGL_KEY_ID_ARROW_UP:
+                    TOGL_MoveBy(0, -30);
                     break;
 
-                case TOGL_KEY_ID_6:
-                    s_actions.Add(0, [](){
-                        puts("---");
-                        TOGL_Hide();
-                        PrintWindowStates();
-                    });
-
-                    s_actions.Add(1, [](){
-                        TOGL_GoWindowedFullScreen(); 
-                        PrintWindowStates();
-                    });
+                case TOGL_KEY_ID_ARROW_DOWN:
+                    TOGL_MoveBy(0, 30);
                     break;
 
-                case TOGL_KEY_ID_7:
-                    puts("---");
-                    TOGL_SetArea(100, 50, 300, 600);
-                    PrintWindowStates();
-                    break;
+                case 'C': TOGL_Center(s_resolution, false); break;
+                case 'V': TOGL_Center(s_resolution, true); break;
 
-                // NOTE: Disabled for now. Uncomment for internal test only. Might be implemented in future.
-                //case TOGL_KEY_ID_8: {
-                //    // Warning!!! Experimental.
-                //    DEVMODEW dev_mode = {};
-                //    dev_mode.dmSize = sizeof(DEVMODEW);
-                //
-                //    dev_mode.dmDisplayFixedOutput   = DMDFO_DEFAULT; // DMDFO_CENTER, DMDFO_STRETCH, DMDFO_DEFAULT
-                //    dev_mode.dmPelsWidth            = 640; 
-                //    dev_mode.dmPelsHeight           = 480; 
-                //    // only specific resolutions will work
-                //    //dev_mode.dmPelsWidth            = 1280; 
-                //    //dev_mode.dmPelsHeight           = 720; 
-                //    dev_mode.dmFields               = DM_DISPLAYFIXEDOUTPUT | DM_PELSWIDTH | DM_PELSHEIGHT;
-                //
-                //    // ... or ...
-                //    //if (!EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &dev_mode)) puts("Can not get Display Settings.");
-                //
-                //    LONG result = ChangeDisplaySettingsW(&dev_mode, CDS_FULLSCREEN);
-                //    togl_print_i32(result);
-                //
-                //    break;
-                //}
-                //
-                //case TOGL_KEY_ID_9:
-                //    // Warning!!! Experimental.
-                //    ChangeDisplaySettingsW(NULL, CDS_RESET);
-                //    break;
-
-                case TOGL_KEY_ID_I: 
+                case 'I':
                     DisplayWindowInfo(); 
                     break;
 
-                case TOGL_KEY_ID_D: 
+                case 'D':
                     if (TOGL_GetLogLevel() == TOGL_LOG_LEVEL_DEBUG) {
                         TOGL_SetLogLevel(TOGL_LOG_LEVEL_ERROR);
                     } else {
                         TOGL_SetLogLevel(TOGL_LOG_LEVEL_DEBUG);
                     }
                     break;
+
+                case 'R': TOGL_RequestDraw(); break;
+                case 'X': TOGL_RequestClose(); break;
+
                 default: break;
                 }
             }
