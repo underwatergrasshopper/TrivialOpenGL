@@ -6,7 +6,7 @@ Includes support for drawing text.
 
 ## Informations
 - Targeted Platform: Windows 7/10
-- Targeted Language: C++11
+- Targeted Language: C++17
 - Uses Libraries: WinApi, OpenGL
 - Required Dependencies: OpenGL32.lib
 
