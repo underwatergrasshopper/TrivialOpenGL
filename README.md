@@ -1097,7 +1097,13 @@ int RunTextBox() {
         glLoadIdentity();
         glOrtho(0, s_size.width, 0, s_size.height, 1, -1);
 
-        TOGL_LoadFont("Arial", FONT_SIZE, TOGL_FONT_SIZE_UNIT_ID_PIXELS, TOGL_FONT_STYLE_ID_NORMAL, TOGL_FONT_CHAR_SET_ID_ENGLISH);
+        TOGL_LoadFont(
+            "Arial", 
+            FONT_SIZE, 
+            TOGL_FONT_SIZE_UNIT_ID_PIXELS, 
+            TOGL_FONT_STYLE_ID_NORMAL, 
+            TOGL_FONT_CHAR_SET_ID_ENGLISH
+        );
 
         if (!TOGL_IsFontOk()) {
             printf("Error: %s.", TOGL_GetFontErrMsg().c_str());
