@@ -369,6 +369,14 @@ int main(int argc, char *argv[]) {
     });
 
     ////////////////////////////////////////////////////////////////////////////////
+    // borderless_window
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("borderless_window", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        return RunBorderlessWindow();
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////
     // animated_triangle
     ////////////////////////////////////////////////////////////////////////////////
 
@@ -430,14 +438,6 @@ int main(int argc, char *argv[]) {
 
     example_manager.AddExample("text_box", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
         return RunTextBox();
-    });
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // borderless_window
-    ////////////////////////////////////////////////////////////////////////////////
-
-    example_manager.AddExample("borderless_window", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
-        return RunBorderlessWindow();
     });
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -585,125 +585,6 @@ int main(int argc, char *argv[]) {
 
         return TOGL_Run(data);
 
-    });
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // font
-    ////////////////////////////////////////////////////////////////////////////////
-
-    example_manager.AddExample("font", Combine(all_options, {"unicode", "bold", "glyph_spacing_5", "line_spacing_5", "arial"}), {}, [](const std::string& name, const std::set<std::string>& options) {
-        Reset();
-
-        auto IsOption = [&options](const std::string& option) { return options.find(option) != options.end(); };
-
-        s_resolution = {800, 400};
-
-        TOGL_Data data = {};
-
-        data.window_name        = "TrivialOpenGL_Example ";
-        data.window_name        += name;
-        data.area               = {0, 0, s_resolution.width, s_resolution.height};
-        data.style              = 0;
-        data.style              |= TOGL_WINDOW_STYLE_BIT_CENTERED;
-        data.icon_resource_id   = ICON_ID;
-
-        if (!IsOption("no_debug"))                      data.log_level = TOGL_LOG_LEVEL_DEBUG;
-
-        if (IsOption("draw_area_size"))                 data.style |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE;
-        if (IsOption("draw_area_only"))                 data.style |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_ONLY;
-        if (IsOption("redraw_on_change_or_request"))    data.style |= TOGL_WINDOW_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
-        if (IsOption("no_resize"))                      data.style |= TOGL_WINDOW_STYLE_BIT_NO_RESIZE;
-        if (IsOption("no_maximize"))                    data.style |= TOGL_WINDOW_STYLE_BIT_NO_MAXIMIZE;
-
-        if (IsOption("notify_any_message"))             data.special_debug.is_notify_any_message        = true;
-        if (IsOption("notify_draw_call"))               data.special_debug.is_notify_draw_call          = true;
-        if (IsOption("notify_mouse_move"))              data.special_debug.is_notify_mouse_move         = true;
-        if (IsOption("notify_key_message"))             data.special_debug.is_notify_key_message        = true;
-        if (IsOption("notify_character_message"))       data.special_debug.is_notify_character_message  = true;
-        
-        if (IsOption("arial"))              s_font_info.name = "Arial";
-        if (IsOption("unicode"))            s_font_info.unicode_range_group = TOGL_FONT_CHAR_SET_ID_RANGE_0000_FFFF;
-        if (IsOption("bold"))               s_font_info.style = TOGL_FONT_STYLE_ID_BOLD;
-        if (IsOption("glyph_spacing_5"))    s_font_info.distance_between_glyphs = 5;
-        if (IsOption("line_spacing_5"))     s_font_info.distance_between_lines = 5;
-
-        data.do_on_create = []() {
-            s_test_image.Initialize(TOGL_GetDrawAreaSize());
-
-            LoadFont();
-
-            TOGL_ToGlobalFont().SaveAsBMP();
-        };
-
-        data.draw = []() {
-            TOGL_Font& font = TOGL_ToGlobalFont();
-            
-            s_test_image.Animate();
-            
-            TOGL_Window& window = TOGL_ToWindow();
-
-            glColor3f(1, 0.5, 0);
-            glPushMatrix();
-            glTranslatef(50, 100, 0);
-            glScaled(3, 3, 1);
-            font.RenderGlyphs(u8"Somme text. Xj\u3400\u5016\u9D9B\u0001\U00024B62");
-            glPopMatrix();
-
-            TOGL_TextDrawer     text_drawer;
-            TOGL_TextAdjuster   text_adjuster;
-            
-            //text_drawer.SetOrientation(TEXT_DRAWER_ORIENTATION_LEFT_TOP);
-
-            text_drawer.SetPos(50, 100);
-            text_drawer.SetColor(255, 0, 0, 255);
-
-            text_drawer.RenderText(font, u8"Some text. Xj\u3400\u5016\u9D9B\u0001\U00024B62\nNew Line.");
-            text_drawer.RenderText(font, u8"\nAnd another line.");
-            text_drawer.RenderText(font, u8"\n\tTab.\b");
-
-            TOGL_FineText text = TOGL_FineText(
-                TOGL_Color4U8(0, 255, 0, 255),
-                u8"Xj\n",
-                TOGL_Color4U8(255, 0, 0, 255),
-                u8"Xj\n",
-                TOGL_Color4U8(0, 0, 0, 255),
-                u8"Some text. \u3400\u5016\u9D9B\u0001\U00024B62. Many words in line. Many words in line. Many words in line. Many words in line. Many words in line. Many words in line.\n"
-                u8"Many words in line with \ttab.\n"
-                u8"Many words in line with i\ttab.\n"
-                u8"Many words in line with ii\ttab.\n"
-                u8"Many words in line with iii\ttab.\n"
-                u8"Many words in line with iiii\ttab.\n"
-                u8"New line. "
-                u8"\tTab.Long                                 line. "
-                u8"Very-long-text-to-split-apart. ");
-
-            text_adjuster.SetLineWrapWidth(s_test_image.GetSize().width - 10);
-            text = text_adjuster.AdjustText(font, text);
-
-            const TOGL_SizeU text_size = text_drawer.GetTextSize(font, text);
-
-            glColor3f(1, 1, 1);
-            DrawRectangle(0, s_test_image.GetSize().height - text_size.height, s_test_image.GetSize().width - 10, text_size.height);
-
-            text_drawer.SetPos(0 , s_test_image.GetSize().height - font.GetHeight());
-            
-            text_drawer.SetColor(255, 0, 0, 255);
-            text_drawer.RenderText(font, text);
-            
-        };
-
-        data.do_on_resize = [](uint16_t width, uint16_t height) {
-            s_test_image.Resize(width, height);
-        };
-
-        data.do_on_key = [](TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra) {
-            auto& window = TOGL_ToWindow();
-
-            if (!is_down && key_id == 'X') window.RequestClose();
-            if (!is_down && key_id == 'R') window.Center(500, 500);
-        };
-        
-        return TOGL_Run(data);
     });
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -1155,6 +1036,126 @@ int main(int argc, char *argv[]) {
 
         return TOGL_Run(data);
 
+    });
+
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // font
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("font", Combine(all_options, {"unicode", "bold", "glyph_spacing_5", "line_spacing_5", "arial"}), {}, [](const std::string& name, const std::set<std::string>& options) {
+        Reset();
+
+        auto IsOption = [&options](const std::string& option) { return options.find(option) != options.end(); };
+
+        s_resolution = {800, 400};
+
+        TOGL_Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example ";
+        data.window_name        += name;
+        data.area               = {0, 0, s_resolution.width, s_resolution.height};
+        data.style              = 0;
+        data.style              |= TOGL_WINDOW_STYLE_BIT_CENTERED;
+        data.icon_resource_id   = ICON_ID;
+
+        if (!IsOption("no_debug"))                      data.log_level = TOGL_LOG_LEVEL_DEBUG;
+
+        if (IsOption("draw_area_size"))                 data.style |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE;
+        if (IsOption("draw_area_only"))                 data.style |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_ONLY;
+        if (IsOption("redraw_on_change_or_request"))    data.style |= TOGL_WINDOW_STYLE_BIT_REDRAW_ON_CHANGE_OR_REQUEST;
+        if (IsOption("no_resize"))                      data.style |= TOGL_WINDOW_STYLE_BIT_NO_RESIZE;
+        if (IsOption("no_maximize"))                    data.style |= TOGL_WINDOW_STYLE_BIT_NO_MAXIMIZE;
+
+        if (IsOption("notify_any_message"))             data.special_debug.is_notify_any_message        = true;
+        if (IsOption("notify_draw_call"))               data.special_debug.is_notify_draw_call          = true;
+        if (IsOption("notify_mouse_move"))              data.special_debug.is_notify_mouse_move         = true;
+        if (IsOption("notify_key_message"))             data.special_debug.is_notify_key_message        = true;
+        if (IsOption("notify_character_message"))       data.special_debug.is_notify_character_message  = true;
+        
+        if (IsOption("arial"))              s_font_info.name = "Arial";
+        if (IsOption("unicode"))            s_font_info.unicode_range_group = TOGL_FONT_CHAR_SET_ID_RANGE_0000_FFFF;
+        if (IsOption("bold"))               s_font_info.style = TOGL_FONT_STYLE_ID_BOLD;
+        if (IsOption("glyph_spacing_5"))    s_font_info.distance_between_glyphs = 5;
+        if (IsOption("line_spacing_5"))     s_font_info.distance_between_lines = 5;
+
+        data.do_on_create = []() {
+            s_test_image.Initialize(TOGL_GetDrawAreaSize());
+
+            LoadFont();
+
+            TOGL_ToGlobalFont().SaveAsBMP();
+        };
+
+        data.draw = []() {
+            TOGL_Font& font = TOGL_ToGlobalFont();
+            
+            s_test_image.Animate();
+            
+            TOGL_Window& window = TOGL_ToWindow();
+
+            glColor3f(1, 0.5, 0);
+            glPushMatrix();
+            glTranslatef(50, 100, 0);
+            glScaled(3, 3, 1);
+            font.RenderGlyphs(u8"Somme text. Xj\u3400\u5016\u9D9B\u0001\U00024B62");
+            glPopMatrix();
+
+            TOGL_TextDrawer     text_drawer;
+            TOGL_TextAdjuster   text_adjuster;
+            
+            //text_drawer.SetOrientation(TEXT_DRAWER_ORIENTATION_LEFT_TOP);
+
+            text_drawer.SetPos(50, 100);
+            text_drawer.SetColor(255, 0, 0, 255);
+
+            text_drawer.RenderText(font, u8"Some text. Xj\u3400\u5016\u9D9B\u0001\U00024B62\nNew Line.");
+            text_drawer.RenderText(font, u8"\nAnd another line.");
+            text_drawer.RenderText(font, u8"\n\tTab.\b");
+
+            TOGL_FineText text = TOGL_FineText(
+                TOGL_Color4U8(0, 255, 0, 255),
+                u8"Xj\n",
+                TOGL_Color4U8(255, 0, 0, 255),
+                u8"Xj\n",
+                TOGL_Color4U8(0, 0, 0, 255),
+                u8"Some text. \u3400\u5016\u9D9B\u0001\U00024B62. Many words in line. Many words in line. Many words in line. Many words in line. Many words in line. Many words in line.\n"
+                u8"Many words in line with \ttab.\n"
+                u8"Many words in line with i\ttab.\n"
+                u8"Many words in line with ii\ttab.\n"
+                u8"Many words in line with iii\ttab.\n"
+                u8"Many words in line with iiii\ttab.\n"
+                u8"New line. "
+                u8"\tTab.Long                                 line. "
+                u8"Very-long-text-to-split-apart. ");
+
+            text_adjuster.SetLineWrapWidth(s_test_image.GetSize().width - 10);
+            text = text_adjuster.AdjustText(font, text);
+
+            const TOGL_SizeU text_size = text_drawer.GetTextSize(font, text);
+
+            glColor3f(1, 1, 1);
+            DrawRectangle(0, s_test_image.GetSize().height - text_size.height, s_test_image.GetSize().width - 10, text_size.height);
+
+            text_drawer.SetPos(0 , s_test_image.GetSize().height - font.GetHeight());
+            
+            text_drawer.SetColor(255, 0, 0, 255);
+            text_drawer.RenderText(font, text);
+            
+        };
+
+        data.do_on_resize = [](uint16_t width, uint16_t height) {
+            s_test_image.Resize(width, height);
+        };
+
+        data.do_on_key = [](TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra) {
+            auto& window = TOGL_ToWindow();
+
+            if (!is_down && key_id == 'X') window.RequestClose();
+            if (!is_down && key_id == 'R') window.Center(500, 500);
+        };
+        
+        return TOGL_Run(data);
     });
 
     ////////////////////////////////////////////////////////////////////////////////

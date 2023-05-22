@@ -104,8 +104,46 @@ Procedure:
 - From created window select key to press from displayed legend, if available.
 
 Recommended examples to select:
-- `window_state`
-- `font` (if window size is changed, then text will align)
+- `simple_triangle` - Creates window and draws triangle.
+- `borderless_window` - Creates window without borders and without title bar.
+- `animated_triangle` - Creates window and draws animated triangle.
+- `icon_from_resource`
+- `icon_from_file`
+- `simple_text`
+- `colored_text`
+- `unicode_text`
+- `formated_text` - If window size is changed, then text will align
+- `text_box` - Allows typing into box. If window size is changed, then text will align.
+- `move_and_resize`
+
+    Options (one or many):
+    - `draw_area_size`
+    - `draw_area_only` - No title bar, no borders.
+    - `redraw_on_change_or_request` - Redraw only when pressed `R`
+    - `no_resize`
+    - `no_maximize`
+    - `notify_any_message`
+    - `notify_draw_call`
+    - `notify_mouse_move`
+    - `notify_key_message`
+    - `notify_character_message`
+    - `no_debug`
+- `window_state` - Allows change window states: Maximize, Minimize, Windowed Full Screen, Normal, Hide, Show.
+
+    Options:
+    - `draw_area_size`
+    - `draw_area_only` - No title bar, no borders
+    - `redraw_on_change_or_request` - Redraw only when pressed `R`
+    - `no_resize`
+    - `no_maximize`
+    - `notify_any_message`
+    - `notify_draw_call`
+    - `notify_mouse_move`
+    - `notify_key_message`
+    - `notify_character_message`
+    - `no_debug`
+    - `full_screen_at_start`
+- `font` - If window size is changed, then text will align
 
 ---
 
