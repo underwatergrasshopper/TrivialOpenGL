@@ -769,8 +769,9 @@ int main(int argc, char *argv[]) {
                 "5 - GoWindowedFullScreen\n"
                 "6 - Hide -> GoWindowedFullScreen\n"
                 "7 - SetArea(100, 50, 300, 600)\n"
-                "8 - Native Full Screen (experimental)\n"
-                "9 - restore from Native Full Screen (experimental)\n"
+                // NOTE: Disabled for now. Uncomment for internal test only. Might be implemented in future.
+                //"8 - Native Full Screen (experimental)\n"
+                //"9 - Restore from Native Full Screen (experimental)\n"
                 "I - Display Info\n"
                 "D - on/off TOGL Debug\n"
             );
@@ -1070,32 +1071,33 @@ int main(int argc, char *argv[]) {
                     PrintWindowStates();
                     break;
 
-                case TOGL_KEY_ID_8: {
-                    // Warning!!! Experimental.
-                    DEVMODEW dev_mode = {};
-                    dev_mode.dmSize = sizeof(DEVMODEW);
-
-                    dev_mode.dmDisplayFixedOutput   = DMDFO_DEFAULT; // DMDFO_CENTER, DMDFO_STRETCH, DMDFO_DEFAULT
-                    dev_mode.dmPelsWidth            = 640; 
-                    dev_mode.dmPelsHeight           = 480; 
-                    // only specific resolutions will work
-                    //dev_mode.dmPelsWidth            = 1280; 
-                    //dev_mode.dmPelsHeight           = 720; 
-                    dev_mode.dmFields               = DM_DISPLAYFIXEDOUTPUT | DM_PELSWIDTH | DM_PELSHEIGHT;
-
-                    // ... or ...
-                    //if (!EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &dev_mode)) puts("Can not get Display Settings.");
-
-                    LONG result = ChangeDisplaySettingsW(&dev_mode, CDS_FULLSCREEN);
-                    togl_print_i32(result);
-
-                    break;
-                }
-
-                case TOGL_KEY_ID_9:
-                    // Warning!!! Experimental.
-                    ChangeDisplaySettingsW(NULL, CDS_RESET);
-                    break;
+                // NOTE: Disabled for now. Uncomment for internal test only. Might be implemented in future.
+                //case TOGL_KEY_ID_8: {
+                //    // Warning!!! Experimental.
+                //    DEVMODEW dev_mode = {};
+                //    dev_mode.dmSize = sizeof(DEVMODEW);
+                //
+                //    dev_mode.dmDisplayFixedOutput   = DMDFO_DEFAULT; // DMDFO_CENTER, DMDFO_STRETCH, DMDFO_DEFAULT
+                //    dev_mode.dmPelsWidth            = 640; 
+                //    dev_mode.dmPelsHeight           = 480; 
+                //    // only specific resolutions will work
+                //    //dev_mode.dmPelsWidth            = 1280; 
+                //    //dev_mode.dmPelsHeight           = 720; 
+                //    dev_mode.dmFields               = DM_DISPLAYFIXEDOUTPUT | DM_PELSWIDTH | DM_PELSHEIGHT;
+                //
+                //    // ... or ...
+                //    //if (!EnumDisplaySettingsW(NULL, ENUM_CURRENT_SETTINGS, &dev_mode)) puts("Can not get Display Settings.");
+                //
+                //    LONG result = ChangeDisplaySettingsW(&dev_mode, CDS_FULLSCREEN);
+                //    togl_print_i32(result);
+                //
+                //    break;
+                //}
+                //
+                //case TOGL_KEY_ID_9:
+                //    // Warning!!! Experimental.
+                //    ChangeDisplaySettingsW(NULL, CDS_RESET);
+                //    break;
 
                 case TOGL_KEY_ID_I: 
                     DisplayWindowInfo(); 
