@@ -130,7 +130,7 @@ Recommended examples to select:
     - `no_debug`
 - `window_state` - Allows change window states: Maximize, Minimize, Windowed Full Screen, Normal, Hide, Show.
 
-    Options:
+    Options (one or many):
     - `draw_area_size`
     - `draw_area_only` - No title bar, no borders
     - `redraw_on_change_or_request` - Redraw only when pressed `R`
