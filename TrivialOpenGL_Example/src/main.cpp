@@ -288,6 +288,18 @@ int main(int argc, char *argv[]) {
         data.style              |= TOGL_WINDOW_STYLE_BIT_CENTERED;
         data.style              |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_ONLY;
 
+        data.do_on_create = []() {
+            puts("X or Escape - Exit");
+            fflush(stdout);
+        };
+
+        data.do_on_key = [](TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra) {
+            // TODO: Fix TOGL_KEY_ID...
+            if ((key_id == 'X' || key_id == TOGL_KEY_IDESCAPE) && !is_down) {
+                TOGL_RequestClose();
+            }
+        };
+
         return TOGL_Run(data);
     });
 
