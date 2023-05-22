@@ -513,52 +513,52 @@ int main(int argc, char *argv[]) {
             if (!is_down) {
                 if (!s_is_client) {
                     switch (key_id) {
-                    case TOGL_KEY_ID1:            window.MoveTo(0, 0); break;
-                    case TOGL_KEY_ID2:            window.MoveTo(10, 100); break;
+                    case TOGL_KEY_ID_1:           window.MoveTo(0, 0); break;
+                    case TOGL_KEY_ID_2:           window.MoveTo(10, 100); break;
+                                    
+                    case TOGL_KEY_ID_3:           window.Resize(400, 200); break;
+                    case TOGL_KEY_ID_4:           window.Resize(800, 400); break;
+                                    
+                    case TOGL_KEY_ID_5:           window.SetArea(100, 10, 800, 400); break;
+                    case TOGL_KEY_ID_6:           window.SetArea(window.GetArea()); break;
+                    case TOGL_KEY_ID_7:           window.SetArea(TOGL_GetDesktopAreaNoTaskBar()); break;
+                    case TOGL_KEY_ID_8:           window.SetArea({{}, TOGL_GetScreenSize()}); break;
 
-                    case TOGL_KEY_ID3:            window.Resize(400, 200); break;
-                    case TOGL_KEY_ID4:            window.Resize(800, 400); break;
-
-                    case TOGL_KEY_ID5:            window.SetArea(100, 10, 800, 400); break;
-                    case TOGL_KEY_ID6:            window.SetArea(window.GetArea()); break;
-                    case TOGL_KEY_ID7:            window.SetArea(TOGL_GetDesktopAreaNoTaskBar()); break;
-                    case TOGL_KEY_ID8:            window.SetArea({{}, TOGL_GetScreenSize()}); break;
-
-                    case TOGL_KEY_IDC:            window.Center(s_resolution, s_is_client); break;
+                    case TOGL_KEY_ID_C:           window.Center(s_resolution, s_is_client); break;
 
                     case TOGL_KEY_IDARROW_LEFT:   window.MoveBy(-30, 0); break;
                     case TOGL_KEY_IDARROW_RIGHT:  window.MoveBy(30, 0); break;
 
-                    case TOGL_KEY_IDX:            window.RequestClose(); break;
-
-                    case TOGL_KEY_IDI:            DisplayWindowInfo(); break;
-
-                    case TOGL_KEY_IDT:            s_is_client = !s_is_client; break;
+                    case TOGL_KEY_ID_X:           window.RequestClose(); break;
+                                   
+                    case TOGL_KEY_ID_I:           DisplayWindowInfo(); break;
+                                   
+                    case TOGL_KEY_ID_T:           s_is_client = !s_is_client; break;
                     default: break;
                     }
                 } else {
                     switch (key_id) {
-                    case TOGL_KEY_ID1:            window.MoveTo(0, 0, true); break;
-                    case TOGL_KEY_ID2:            window.MoveTo(10, 100, true); break;
+                    case TOGL_KEY_ID_1:           window.MoveTo(0, 0, true); break;
+                    case TOGL_KEY_ID_2:           window.MoveTo(10, 100, true); break;
 
-                    case TOGL_KEY_ID3:            window.Resize(400, 200, true); break;
-                    case TOGL_KEY_ID4:            window.Resize(800, 400, true); break;
+                    case TOGL_KEY_ID_3:           window.Resize(400, 200, true); break;
+                    case TOGL_KEY_ID_4:           window.Resize(800, 400, true); break;
 
-                    case TOGL_KEY_ID5:            window.SetArea(100, 10, 800, 400, false); break;
-                    case TOGL_KEY_ID6:            window.SetArea(window.GetDrawArea(), false); break;
-                    case TOGL_KEY_ID7:            window.SetArea(TOGL_GetDesktopAreaNoTaskBar(), false); break;
-                    case TOGL_KEY_ID8:            window.SetArea({{}, TOGL_GetScreenSize()}, false); break;
+                    case TOGL_KEY_ID_5:           window.SetArea(100, 10, 800, 400, false); break;
+                    case TOGL_KEY_ID_6:           window.SetArea(window.GetDrawArea(), false); break;
+                    case TOGL_KEY_ID_7:           window.SetArea(TOGL_GetDesktopAreaNoTaskBar(), false); break;
+                    case TOGL_KEY_ID_8:           window.SetArea({{}, TOGL_GetScreenSize()}, false); break;
 
-                    case TOGL_KEY_IDC:            window.Center(s_resolution, s_is_client); break;
+                    case TOGL_KEY_ID_C:           window.Center(s_resolution, s_is_client); break;
 
                     case TOGL_KEY_IDARROW_LEFT:   window.MoveBy(-30, 0); break;
                     case TOGL_KEY_IDARROW_RIGHT:  window.MoveBy(30, 0); break;
 
-                    case TOGL_KEY_IDX:            window.RequestClose(); break;
+                    case TOGL_KEY_ID_X:           window.RequestClose(); break;
 
-                    case TOGL_KEY_IDI:            DisplayWindowInfo(); break;
+                    case TOGL_KEY_ID_I:           DisplayWindowInfo(); break;
 
-                    case TOGL_KEY_IDT:            s_is_client = !s_is_client; break;
+                    case TOGL_KEY_ID_T:           s_is_client = !s_is_client; break;
                     default: break;
                     }
                 }
@@ -818,9 +818,9 @@ int main(int argc, char *argv[]) {
                 switch (key_id) {
 
                 case 'X':               TOGL_RequestClose(); break;
-                case TOGL_KEY_IDR:    TOGL_RequestDraw(); break;
-                case TOGL_KEY_IDC:    TOGL_Center(s_resolution, false); break;
-                case TOGL_KEY_IDV:    TOGL_Center(s_resolution, true); break;
+                case TOGL_KEY_ID_R:     TOGL_RequestDraw(); break;
+                case TOGL_KEY_ID_C:     TOGL_Center(s_resolution, false); break;
+                case TOGL_KEY_ID_V:     TOGL_Center(s_resolution, true); break;
 
                 case 'F':
                     s_actions.Add(0, [](){
@@ -890,7 +890,7 @@ int main(int argc, char *argv[]) {
                     TOGL_MoveBy(0, 30);
                     break;
 
-                case TOGL_KEY_ID0: 
+                case TOGL_KEY_ID_0: 
                     s_actions.Add(0, [](){
                         puts("--- Show --");
                         TOGL_Hide();
@@ -995,7 +995,7 @@ int main(int argc, char *argv[]) {
                     });
                     break;
 
-                case TOGL_KEY_ID2: 
+                case TOGL_KEY_ID_2: 
                     s_actions.Add(0, [](){
                         puts("---");
                         TOGL_Minimize();
@@ -1015,7 +1015,7 @@ int main(int argc, char *argv[]) {
                     });
                     break;
 
-                case TOGL_KEY_IDW: 
+                case TOGL_KEY_ID_W: 
                     s_actions.Add(0, [](){
                         puts("---");
                         TOGL_Minimize();
@@ -1033,25 +1033,25 @@ int main(int argc, char *argv[]) {
                     });
                     break;
 
-                case TOGL_KEY_ID3:
+                case TOGL_KEY_ID_3:
                     puts("---");
                     TOGL_Center(s_resolution);
                     PrintWindowStates();
                     break;
 
-                case TOGL_KEY_ID4:
+                case TOGL_KEY_ID_4:
                     puts("---");
                     TOGL_Maximize(); 
                     PrintWindowStates();
                     break;
 
-                case TOGL_KEY_ID5:
+                case TOGL_KEY_ID_5:
                     puts("---");
                     TOGL_GoWindowedFullScreen(); 
                     PrintWindowStates();
                     break;
 
-                case TOGL_KEY_ID6:
+                case TOGL_KEY_ID_6:
                     s_actions.Add(0, [](){
                         puts("---");
                         TOGL_Hide();
@@ -1064,13 +1064,14 @@ int main(int argc, char *argv[]) {
                     });
                     break;
 
-                case TOGL_KEY_ID7:
+                case TOGL_KEY_ID_7:
                     puts("---");
                     TOGL_SetArea(100, 50, 300, 600);
                     PrintWindowStates();
                     break;
 
-                case TOGL_KEY_ID8: {
+                case TOGL_KEY_ID_8: {
+                    // Warning!!! Experimental.
                     DEVMODEW dev_mode = {};
                     dev_mode.dmSize = sizeof(DEVMODEW);
 
@@ -1091,15 +1092,16 @@ int main(int argc, char *argv[]) {
                     break;
                 }
 
-                case TOGL_KEY_ID9:
+                case TOGL_KEY_ID_9:
+                    // Warning!!! Experimental.
                     ChangeDisplaySettingsW(NULL, CDS_RESET);
                     break;
 
-                case TOGL_KEY_IDI: 
+                case TOGL_KEY_ID_I: 
                     DisplayWindowInfo(); 
                     break;
 
-                case TOGL_KEY_IDD: 
+                case TOGL_KEY_ID_D: 
                     if (TOGL_GetLogLevel() == TOGL_LOG_LEVEL_DEBUG) {
                         TOGL_SetLogLevel(TOGL_LOG_LEVEL_ERROR);
                     } else {

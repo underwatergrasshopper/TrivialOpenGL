@@ -17,43 +17,43 @@ enum TOGL_KeyId {
     TOGL_KEY_IDUNKNOWN              = 0,
 
     // Same id as ascii. Literals can be used instead of key id. For example: '0', '1', ..., '0', 'A', 'B', ..., 'Z'.
-    TOGL_KEY_ID0                    = '0',  // same id as ascii code for characters: 0-9
-    TOGL_KEY_ID1,
-    TOGL_KEY_ID2,
-    TOGL_KEY_ID3,
-    TOGL_KEY_ID4,
-    TOGL_KEY_ID5,
-    TOGL_KEY_ID6,
-    TOGL_KEY_ID7,
-    TOGL_KEY_ID8,
-    TOGL_KEY_ID9,
+    TOGL_KEY_ID_0                   = '0',  // same id as ascii code for characters: 0-9
+    TOGL_KEY_ID_1,
+    TOGL_KEY_ID_2,
+    TOGL_KEY_ID_3,
+    TOGL_KEY_ID_4,
+    TOGL_KEY_ID_5,
+    TOGL_KEY_ID_6,
+    TOGL_KEY_ID_7,
+    TOGL_KEY_ID_8,
+    TOGL_KEY_ID_9,
 
-    TOGL_KEY_IDA                    = 'A', // same id as ascii code for characters: A-Z
-    TOGL_KEY_IDB,
-    TOGL_KEY_IDC,
-    TOGL_KEY_IDD,
-    TOGL_KEY_IDE,
-    TOGL_KEY_IDF,
-    TOGL_KEY_IDG,
-    TOGL_KEY_IDH,
-    TOGL_KEY_IDI,
-    TOGL_KEY_IDJ,
-    TOGL_KEY_IDK,
-    TOGL_KEY_IDL,
-    TOGL_KEY_IDM,
-    TOGL_KEY_IDN,
-    TOGL_KEY_IDO,
-    TOGL_KEY_IDP,
-    TOGL_KEY_IDQ,
-    TOGL_KEY_IDR,
-    TOGL_KEY_IDS,
-    TOGL_KEY_IDT,
-    TOGL_KEY_IDU,
-    TOGL_KEY_IDV,
-    TOGL_KEY_IDW,
-    TOGL_KEY_IDX,
-    TOGL_KEY_IDY,
-    TOGL_KEY_IDZ,
+    TOGL_KEY_ID_A                   = 'A', // same id as ascii code for characters: A-Z
+    TOGL_KEY_ID_B,
+    TOGL_KEY_ID_C,
+    TOGL_KEY_ID_D,
+    TOGL_KEY_ID_E,
+    TOGL_KEY_ID_F,
+    TOGL_KEY_ID_G,
+    TOGL_KEY_ID_H,
+    TOGL_KEY_ID_I,
+    TOGL_KEY_ID_J,
+    TOGL_KEY_ID_K,
+    TOGL_KEY_ID_L,
+    TOGL_KEY_ID_M,
+    TOGL_KEY_ID_N,
+    TOGL_KEY_ID_O,
+    TOGL_KEY_ID_P,
+    TOGL_KEY_ID_Q,
+    TOGL_KEY_ID_R,
+    TOGL_KEY_ID_S,
+    TOGL_KEY_ID_T,
+    TOGL_KEY_ID_U,
+    TOGL_KEY_ID_V,
+    TOGL_KEY_ID_W,
+    TOGL_KEY_ID_X,
+    TOGL_KEY_ID_Y,
+    TOGL_KEY_ID_Z,
 
     TOGL_KEY_IDESCAPE               = 256, // out of ascii scope, no id collision with ascii code
     TOGL_KEY_IDENTER,  
@@ -112,30 +112,30 @@ enum TOGL_KeyId {
     TOGL_KEY_IDDASH,
     TOGL_KEY_IDEQUAL,
 
-    TOGL_KEY_IDF1,
-    TOGL_KEY_IDF2,
-    TOGL_KEY_IDF3,
-    TOGL_KEY_IDF4,
-    TOGL_KEY_IDF5,
-    TOGL_KEY_IDF6,
-    TOGL_KEY_IDF7,
-    TOGL_KEY_IDF8,
-    TOGL_KEY_IDF9,
-    TOGL_KEY_IDF10,
-    TOGL_KEY_IDF11,
-    TOGL_KEY_IDF12,
-    TOGL_KEY_IDF13,
-    TOGL_KEY_IDF14,
-    TOGL_KEY_IDF15,
-    TOGL_KEY_IDF16,
-    TOGL_KEY_IDF17,
-    TOGL_KEY_IDF18,
-    TOGL_KEY_IDF19,
-    TOGL_KEY_IDF20,
-    TOGL_KEY_IDF21,
-    TOGL_KEY_IDF22,
-    TOGL_KEY_IDF23,
-    TOGL_KEY_IDF24,
+    TOGL_KEY_ID_F1,
+    TOGL_KEY_ID_F2,
+    TOGL_KEY_ID_F3,
+    TOGL_KEY_ID_F4,
+    TOGL_KEY_ID_F5,
+    TOGL_KEY_ID_F6,
+    TOGL_KEY_ID_F7,
+    TOGL_KEY_ID_F8,
+    TOGL_KEY_ID_F9,
+    TOGL_KEY_ID_F10,
+    TOGL_KEY_ID_F11,
+    TOGL_KEY_ID_F12,
+    TOGL_KEY_ID_F13,
+    TOGL_KEY_ID_F14,
+    TOGL_KEY_ID_F15,
+    TOGL_KEY_ID_F16,
+    TOGL_KEY_ID_F17,
+    TOGL_KEY_ID_F18,
+    TOGL_KEY_ID_F19,
+    TOGL_KEY_ID_F20,
+    TOGL_KEY_ID_F21,
+    TOGL_KEY_ID_F22,
+    TOGL_KEY_ID_F23,
+    TOGL_KEY_ID_F24,
 
     TOGL_KEY_IDNUMLOCK,
     TOGL_KEY_IDSCROLL_LOCK,
@@ -251,66 +251,66 @@ inline std::string TOGL_KeyIdToStr(TOGL_KeyId key_id) {
     TOGL_CASE_STR(TOGL_KEY_IDNUMPAD_SUBTRACT);        
     TOGL_CASE_STR(TOGL_KEY_IDNUMPAD_DECIMAL);         
     TOGL_CASE_STR(TOGL_KEY_IDNUMPAD_DIVIDE);          
-    TOGL_CASE_STR(TOGL_KEY_IDF1);                     
-    TOGL_CASE_STR(TOGL_KEY_IDF2);                     
-    TOGL_CASE_STR(TOGL_KEY_IDF3);                     
-    TOGL_CASE_STR(TOGL_KEY_IDF4);                     
-    TOGL_CASE_STR(TOGL_KEY_IDF5);                     
-    TOGL_CASE_STR(TOGL_KEY_IDF6);                     
-    TOGL_CASE_STR(TOGL_KEY_IDF7);                     
-    TOGL_CASE_STR(TOGL_KEY_IDF8);                     
-    TOGL_CASE_STR(TOGL_KEY_IDF9);                     
-    TOGL_CASE_STR(TOGL_KEY_IDF10);                    
-    TOGL_CASE_STR(TOGL_KEY_IDF11);                    
-    TOGL_CASE_STR(TOGL_KEY_IDF12);                    
-    TOGL_CASE_STR(TOGL_KEY_IDF13);                    
-    TOGL_CASE_STR(TOGL_KEY_IDF14);                    
-    TOGL_CASE_STR(TOGL_KEY_IDF15);                    
-    TOGL_CASE_STR(TOGL_KEY_IDF16);                    
-    TOGL_CASE_STR(TOGL_KEY_IDF17);                    
-    TOGL_CASE_STR(TOGL_KEY_IDF18);                    
-    TOGL_CASE_STR(TOGL_KEY_IDF19);                    
-    TOGL_CASE_STR(TOGL_KEY_IDF20);                    
-    TOGL_CASE_STR(TOGL_KEY_IDF21);                    
-    TOGL_CASE_STR(TOGL_KEY_IDF22);                    
-    TOGL_CASE_STR(TOGL_KEY_IDF23);                    
-    TOGL_CASE_STR(TOGL_KEY_IDF24);   
-    TOGL_CASE_STR(TOGL_KEY_ID0);    
-    TOGL_CASE_STR(TOGL_KEY_ID1);    
-    TOGL_CASE_STR(TOGL_KEY_ID2);    
-    TOGL_CASE_STR(TOGL_KEY_ID3);    
-    TOGL_CASE_STR(TOGL_KEY_ID4);    
-    TOGL_CASE_STR(TOGL_KEY_ID5);    
-    TOGL_CASE_STR(TOGL_KEY_ID6);    
-    TOGL_CASE_STR(TOGL_KEY_ID7);    
-    TOGL_CASE_STR(TOGL_KEY_ID8);    
-    TOGL_CASE_STR(TOGL_KEY_ID9);    
-    TOGL_CASE_STR(TOGL_KEY_IDA);    
-    TOGL_CASE_STR(TOGL_KEY_IDB);    
-    TOGL_CASE_STR(TOGL_KEY_IDC);    
-    TOGL_CASE_STR(TOGL_KEY_IDD);    
-    TOGL_CASE_STR(TOGL_KEY_IDE);    
-    TOGL_CASE_STR(TOGL_KEY_IDF);    
-    TOGL_CASE_STR(TOGL_KEY_IDG);    
-    TOGL_CASE_STR(TOGL_KEY_IDH);    
-    TOGL_CASE_STR(TOGL_KEY_IDI);    
-    TOGL_CASE_STR(TOGL_KEY_IDJ);    
-    TOGL_CASE_STR(TOGL_KEY_IDK);    
-    TOGL_CASE_STR(TOGL_KEY_IDL);    
-    TOGL_CASE_STR(TOGL_KEY_IDM);    
-    TOGL_CASE_STR(TOGL_KEY_IDN);    
-    TOGL_CASE_STR(TOGL_KEY_IDO);    
-    TOGL_CASE_STR(TOGL_KEY_IDP);    
-    TOGL_CASE_STR(TOGL_KEY_IDQ);    
-    TOGL_CASE_STR(TOGL_KEY_IDR);    
-    TOGL_CASE_STR(TOGL_KEY_IDS);    
-    TOGL_CASE_STR(TOGL_KEY_IDT);    
-    TOGL_CASE_STR(TOGL_KEY_IDU);    
-    TOGL_CASE_STR(TOGL_KEY_IDV);    
-    TOGL_CASE_STR(TOGL_KEY_IDW);    
-    TOGL_CASE_STR(TOGL_KEY_IDX);    
-    TOGL_CASE_STR(TOGL_KEY_IDY);    
-    TOGL_CASE_STR(TOGL_KEY_IDZ);
+    TOGL_CASE_STR(TOGL_KEY_ID_F1);                     
+    TOGL_CASE_STR(TOGL_KEY_ID_F2);                     
+    TOGL_CASE_STR(TOGL_KEY_ID_F3);                     
+    TOGL_CASE_STR(TOGL_KEY_ID_F4);                     
+    TOGL_CASE_STR(TOGL_KEY_ID_F5);                     
+    TOGL_CASE_STR(TOGL_KEY_ID_F6);                     
+    TOGL_CASE_STR(TOGL_KEY_ID_F7);                     
+    TOGL_CASE_STR(TOGL_KEY_ID_F8);                     
+    TOGL_CASE_STR(TOGL_KEY_ID_F9);                     
+    TOGL_CASE_STR(TOGL_KEY_ID_F10);                    
+    TOGL_CASE_STR(TOGL_KEY_ID_F11);                    
+    TOGL_CASE_STR(TOGL_KEY_ID_F12);                    
+    TOGL_CASE_STR(TOGL_KEY_ID_F13);                    
+    TOGL_CASE_STR(TOGL_KEY_ID_F14);                    
+    TOGL_CASE_STR(TOGL_KEY_ID_F15);                    
+    TOGL_CASE_STR(TOGL_KEY_ID_F16);                    
+    TOGL_CASE_STR(TOGL_KEY_ID_F17);                    
+    TOGL_CASE_STR(TOGL_KEY_ID_F18);                    
+    TOGL_CASE_STR(TOGL_KEY_ID_F19);                    
+    TOGL_CASE_STR(TOGL_KEY_ID_F20);                    
+    TOGL_CASE_STR(TOGL_KEY_ID_F21);                    
+    TOGL_CASE_STR(TOGL_KEY_ID_F22);                    
+    TOGL_CASE_STR(TOGL_KEY_ID_F23);                    
+    TOGL_CASE_STR(TOGL_KEY_ID_F24);   
+    TOGL_CASE_STR(TOGL_KEY_ID_0);    
+    TOGL_CASE_STR(TOGL_KEY_ID_1);    
+    TOGL_CASE_STR(TOGL_KEY_ID_2);    
+    TOGL_CASE_STR(TOGL_KEY_ID_3);    
+    TOGL_CASE_STR(TOGL_KEY_ID_4);    
+    TOGL_CASE_STR(TOGL_KEY_ID_5);    
+    TOGL_CASE_STR(TOGL_KEY_ID_6);    
+    TOGL_CASE_STR(TOGL_KEY_ID_7);    
+    TOGL_CASE_STR(TOGL_KEY_ID_8);    
+    TOGL_CASE_STR(TOGL_KEY_ID_9);    
+    TOGL_CASE_STR(TOGL_KEY_ID_A);    
+    TOGL_CASE_STR(TOGL_KEY_ID_B);    
+    TOGL_CASE_STR(TOGL_KEY_ID_C);    
+    TOGL_CASE_STR(TOGL_KEY_ID_D);    
+    TOGL_CASE_STR(TOGL_KEY_ID_E);    
+    TOGL_CASE_STR(TOGL_KEY_ID_F);    
+    TOGL_CASE_STR(TOGL_KEY_ID_G);    
+    TOGL_CASE_STR(TOGL_KEY_ID_H);    
+    TOGL_CASE_STR(TOGL_KEY_ID_I);    
+    TOGL_CASE_STR(TOGL_KEY_ID_J);    
+    TOGL_CASE_STR(TOGL_KEY_ID_K);    
+    TOGL_CASE_STR(TOGL_KEY_ID_L);    
+    TOGL_CASE_STR(TOGL_KEY_ID_M);    
+    TOGL_CASE_STR(TOGL_KEY_ID_N);    
+    TOGL_CASE_STR(TOGL_KEY_ID_O);    
+    TOGL_CASE_STR(TOGL_KEY_ID_P);    
+    TOGL_CASE_STR(TOGL_KEY_ID_Q);    
+    TOGL_CASE_STR(TOGL_KEY_ID_R);    
+    TOGL_CASE_STR(TOGL_KEY_ID_S);    
+    TOGL_CASE_STR(TOGL_KEY_ID_T);    
+    TOGL_CASE_STR(TOGL_KEY_ID_U);    
+    TOGL_CASE_STR(TOGL_KEY_ID_V);    
+    TOGL_CASE_STR(TOGL_KEY_ID_W);    
+    TOGL_CASE_STR(TOGL_KEY_ID_X);    
+    TOGL_CASE_STR(TOGL_KEY_ID_Y);    
+    TOGL_CASE_STR(TOGL_KEY_ID_Z);
 
     TOGL_CASE_STR(TOGL_KEY_IDSEMICOLON);
     TOGL_CASE_STR(TOGL_KEY_IDFORWARD_SLASH);
@@ -452,66 +452,66 @@ inline TOGL_KeyId _TOGL_InnerKey::GetKeyId(WPARAM w_param) {
     case VK_SUBTRACT:       return TOGL_KEY_IDNUMPAD_SUBTRACT;        
     case VK_DECIMAL:        return TOGL_KEY_IDNUMPAD_DECIMAL;         
     case VK_DIVIDE:         return TOGL_KEY_IDNUMPAD_DIVIDE;          
-    case VK_F1:             return TOGL_KEY_IDF1;                     
-    case VK_F2:             return TOGL_KEY_IDF2;                     
-    case VK_F3:             return TOGL_KEY_IDF3;                     
-    case VK_F4:             return TOGL_KEY_IDF4;                     
-    case VK_F5:             return TOGL_KEY_IDF5;                     
-    case VK_F6:             return TOGL_KEY_IDF6;                     
-    case VK_F7:             return TOGL_KEY_IDF7;                     
-    case VK_F8:             return TOGL_KEY_IDF8;                     
-    case VK_F9:             return TOGL_KEY_IDF9;                     
-    case VK_F10:            return TOGL_KEY_IDF10;                    
-    case VK_F11:            return TOGL_KEY_IDF11;                    
-    case VK_F12:            return TOGL_KEY_IDF12;                    
-    case VK_F13:            return TOGL_KEY_IDF13;                    
-    case VK_F14:            return TOGL_KEY_IDF14;                    
-    case VK_F15:            return TOGL_KEY_IDF15;                    
-    case VK_F16:            return TOGL_KEY_IDF16;                    
-    case VK_F17:            return TOGL_KEY_IDF17;                    
-    case VK_F18:            return TOGL_KEY_IDF18;                    
-    case VK_F19:            return TOGL_KEY_IDF19;                    
-    case VK_F20:            return TOGL_KEY_IDF20;                    
-    case VK_F21:            return TOGL_KEY_IDF21;                    
-    case VK_F22:            return TOGL_KEY_IDF22;                    
-    case VK_F23:            return TOGL_KEY_IDF23;                    
-    case VK_F24:            return TOGL_KEY_IDF24;   
-    case '0':               return TOGL_KEY_ID0;    
-    case '1':               return TOGL_KEY_ID1;    
-    case '2':               return TOGL_KEY_ID2;    
-    case '3':               return TOGL_KEY_ID3;    
-    case '4':               return TOGL_KEY_ID4;    
-    case '5':               return TOGL_KEY_ID5;    
-    case '6':               return TOGL_KEY_ID6;    
-    case '7':               return TOGL_KEY_ID7;    
-    case '8':               return TOGL_KEY_ID8;    
-    case '9':               return TOGL_KEY_ID9;    
-    case 'A':               return TOGL_KEY_IDA;    
-    case 'B':               return TOGL_KEY_IDB;    
-    case 'C':               return TOGL_KEY_IDC;    
-    case 'D':               return TOGL_KEY_IDD;    
-    case 'E':               return TOGL_KEY_IDE;    
-    case 'F':               return TOGL_KEY_IDF;    
-    case 'G':               return TOGL_KEY_IDG;    
-    case 'H':               return TOGL_KEY_IDH;    
-    case 'I':               return TOGL_KEY_IDI;    
-    case 'J':               return TOGL_KEY_IDJ;    
-    case 'K':               return TOGL_KEY_IDK;    
-    case 'L':               return TOGL_KEY_IDL;    
-    case 'M':               return TOGL_KEY_IDM;    
-    case 'N':               return TOGL_KEY_IDN;    
-    case 'O':               return TOGL_KEY_IDO;    
-    case 'P':               return TOGL_KEY_IDP;    
-    case 'Q':               return TOGL_KEY_IDQ;    
-    case 'R':               return TOGL_KEY_IDR;    
-    case 'S':               return TOGL_KEY_IDS;    
-    case 'T':               return TOGL_KEY_IDT;    
-    case 'U':               return TOGL_KEY_IDU;    
-    case 'V':               return TOGL_KEY_IDV;    
-    case 'W':               return TOGL_KEY_IDW;    
-    case 'X':               return TOGL_KEY_IDX;    
-    case 'Y':               return TOGL_KEY_IDY;    
-    case 'Z':               return TOGL_KEY_IDZ;
+    case VK_F1:             return TOGL_KEY_ID_F1;                     
+    case VK_F2:             return TOGL_KEY_ID_F2;                     
+    case VK_F3:             return TOGL_KEY_ID_F3;                     
+    case VK_F4:             return TOGL_KEY_ID_F4;                     
+    case VK_F5:             return TOGL_KEY_ID_F5;                     
+    case VK_F6:             return TOGL_KEY_ID_F6;                     
+    case VK_F7:             return TOGL_KEY_ID_F7;                     
+    case VK_F8:             return TOGL_KEY_ID_F8;                     
+    case VK_F9:             return TOGL_KEY_ID_F9;                     
+    case VK_F10:            return TOGL_KEY_ID_F10;                    
+    case VK_F11:            return TOGL_KEY_ID_F11;                    
+    case VK_F12:            return TOGL_KEY_ID_F12;                    
+    case VK_F13:            return TOGL_KEY_ID_F13;                    
+    case VK_F14:            return TOGL_KEY_ID_F14;                    
+    case VK_F15:            return TOGL_KEY_ID_F15;                    
+    case VK_F16:            return TOGL_KEY_ID_F16;                    
+    case VK_F17:            return TOGL_KEY_ID_F17;                    
+    case VK_F18:            return TOGL_KEY_ID_F18;                    
+    case VK_F19:            return TOGL_KEY_ID_F19;                    
+    case VK_F20:            return TOGL_KEY_ID_F20;                    
+    case VK_F21:            return TOGL_KEY_ID_F21;                    
+    case VK_F22:            return TOGL_KEY_ID_F22;                    
+    case VK_F23:            return TOGL_KEY_ID_F23;                    
+    case VK_F24:            return TOGL_KEY_ID_F24;   
+    case '0':               return TOGL_KEY_ID_0;    
+    case '1':               return TOGL_KEY_ID_1;    
+    case '2':               return TOGL_KEY_ID_2;    
+    case '3':               return TOGL_KEY_ID_3;    
+    case '4':               return TOGL_KEY_ID_4;    
+    case '5':               return TOGL_KEY_ID_5;    
+    case '6':               return TOGL_KEY_ID_6;    
+    case '7':               return TOGL_KEY_ID_7;    
+    case '8':               return TOGL_KEY_ID_8;    
+    case '9':               return TOGL_KEY_ID_9;    
+    case 'A':               return TOGL_KEY_ID_A;    
+    case 'B':               return TOGL_KEY_ID_B;    
+    case 'C':               return TOGL_KEY_ID_C;    
+    case 'D':               return TOGL_KEY_ID_D;    
+    case 'E':               return TOGL_KEY_ID_E;    
+    case 'F':               return TOGL_KEY_ID_F;    
+    case 'G':               return TOGL_KEY_ID_G;    
+    case 'H':               return TOGL_KEY_ID_H;    
+    case 'I':               return TOGL_KEY_ID_I;    
+    case 'J':               return TOGL_KEY_ID_J;    
+    case 'K':               return TOGL_KEY_ID_K;    
+    case 'L':               return TOGL_KEY_ID_L;    
+    case 'M':               return TOGL_KEY_ID_M;    
+    case 'N':               return TOGL_KEY_ID_N;    
+    case 'O':               return TOGL_KEY_ID_O;    
+    case 'P':               return TOGL_KEY_ID_P;    
+    case 'Q':               return TOGL_KEY_ID_Q;    
+    case 'R':               return TOGL_KEY_ID_R;    
+    case 'S':               return TOGL_KEY_ID_S;    
+    case 'T':               return TOGL_KEY_ID_T;    
+    case 'U':               return TOGL_KEY_ID_U;    
+    case 'V':               return TOGL_KEY_ID_V;    
+    case 'W':               return TOGL_KEY_ID_W;    
+    case 'X':               return TOGL_KEY_ID_X;    
+    case 'Y':               return TOGL_KEY_ID_Y;    
+    case 'Z':               return TOGL_KEY_ID_Z;
 
     case VK_OEM_1:          return TOGL_KEY_IDSEMICOLON;        // ;
     case VK_OEM_2:          return TOGL_KEY_IDFORWARD_SLASH;    // /
@@ -573,66 +573,66 @@ inline int _TOGL_InnerKey::GetVirtualKeyCode(TOGL_KeyId key_id) {
     case TOGL_KEY_IDNUMPAD_SUBTRACT:        return VK_SUBTRACT;       
     case TOGL_KEY_IDNUMPAD_DECIMAL:         return VK_DECIMAL;        
     case TOGL_KEY_IDNUMPAD_DIVIDE:          return VK_DIVIDE;         
-    case TOGL_KEY_IDF1:                     return VK_F1;             
-    case TOGL_KEY_IDF2:                     return VK_F2;             
-    case TOGL_KEY_IDF3:                     return VK_F3;             
-    case TOGL_KEY_IDF4:                     return VK_F4;             
-    case TOGL_KEY_IDF5:                     return VK_F5;             
-    case TOGL_KEY_IDF6:                     return VK_F6;             
-    case TOGL_KEY_IDF7:                     return VK_F7;             
-    case TOGL_KEY_IDF8:                     return VK_F8;             
-    case TOGL_KEY_IDF9:                     return VK_F9;             
-    case TOGL_KEY_IDF10:                    return VK_F10;            
-    case TOGL_KEY_IDF11:                    return VK_F11;            
-    case TOGL_KEY_IDF12:                    return VK_F12;            
-    case TOGL_KEY_IDF13:                    return VK_F13;            
-    case TOGL_KEY_IDF14:                    return VK_F14;            
-    case TOGL_KEY_IDF15:                    return VK_F15;            
-    case TOGL_KEY_IDF16:                    return VK_F16;            
-    case TOGL_KEY_IDF17:                    return VK_F17;            
-    case TOGL_KEY_IDF18:                    return VK_F18;            
-    case TOGL_KEY_IDF19:                    return VK_F19;            
-    case TOGL_KEY_IDF20:                    return VK_F20;            
-    case TOGL_KEY_IDF21:                    return VK_F21;            
-    case TOGL_KEY_IDF22:                    return VK_F22;            
-    case TOGL_KEY_IDF23:                    return VK_F23;            
-    case TOGL_KEY_IDF24:                    return VK_F24;            
-    case TOGL_KEY_ID0:                      return '0';               
-    case TOGL_KEY_ID1:                      return '1';               
-    case TOGL_KEY_ID2:                      return '2';               
-    case TOGL_KEY_ID3:                      return '3';               
-    case TOGL_KEY_ID4:                      return '4';               
-    case TOGL_KEY_ID5:                      return '5';               
-    case TOGL_KEY_ID6:                      return '6';               
-    case TOGL_KEY_ID7:                      return '7';               
-    case TOGL_KEY_ID8:                      return '8';               
-    case TOGL_KEY_ID9:                      return '9';               
-    case TOGL_KEY_IDA:                      return 'A';               
-    case TOGL_KEY_IDB:                      return 'B';               
-    case TOGL_KEY_IDC:                      return 'C';               
-    case TOGL_KEY_IDD:                      return 'D';               
-    case TOGL_KEY_IDE:                      return 'E';               
-    case TOGL_KEY_IDF:                      return 'F';               
-    case TOGL_KEY_IDG:                      return 'G';               
-    case TOGL_KEY_IDH:                      return 'H';               
-    case TOGL_KEY_IDI:                      return 'I';               
-    case TOGL_KEY_IDJ:                      return 'J';               
-    case TOGL_KEY_IDK:                      return 'K';               
-    case TOGL_KEY_IDL:                      return 'L';               
-    case TOGL_KEY_IDM:                      return 'M';               
-    case TOGL_KEY_IDN:                      return 'N';               
-    case TOGL_KEY_IDO:                      return 'O';               
-    case TOGL_KEY_IDP:                      return 'P';               
-    case TOGL_KEY_IDQ:                      return 'Q';               
-    case TOGL_KEY_IDR:                      return 'R';               
-    case TOGL_KEY_IDS:                      return 'S';               
-    case TOGL_KEY_IDT:                      return 'T';               
-    case TOGL_KEY_IDU:                      return 'U';               
-    case TOGL_KEY_IDV:                      return 'V';               
-    case TOGL_KEY_IDW:                      return 'W';               
-    case TOGL_KEY_IDX:                      return 'X';               
-    case TOGL_KEY_IDY:                      return 'Y';               
-    case TOGL_KEY_IDZ:                      return 'Z';               
+    case TOGL_KEY_ID_F1:                    return VK_F1;             
+    case TOGL_KEY_ID_F2:                    return VK_F2;             
+    case TOGL_KEY_ID_F3:                    return VK_F3;             
+    case TOGL_KEY_ID_F4:                    return VK_F4;             
+    case TOGL_KEY_ID_F5:                    return VK_F5;             
+    case TOGL_KEY_ID_F6:                    return VK_F6;             
+    case TOGL_KEY_ID_F7:                    return VK_F7;             
+    case TOGL_KEY_ID_F8:                    return VK_F8;             
+    case TOGL_KEY_ID_F9:                    return VK_F9;             
+    case TOGL_KEY_ID_F10:                   return VK_F10;            
+    case TOGL_KEY_ID_F11:                   return VK_F11;            
+    case TOGL_KEY_ID_F12:                   return VK_F12;            
+    case TOGL_KEY_ID_F13:                   return VK_F13;            
+    case TOGL_KEY_ID_F14:                   return VK_F14;            
+    case TOGL_KEY_ID_F15:                   return VK_F15;            
+    case TOGL_KEY_ID_F16:                   return VK_F16;            
+    case TOGL_KEY_ID_F17:                   return VK_F17;            
+    case TOGL_KEY_ID_F18:                   return VK_F18;            
+    case TOGL_KEY_ID_F19:                   return VK_F19;            
+    case TOGL_KEY_ID_F20:                   return VK_F20;            
+    case TOGL_KEY_ID_F21:                   return VK_F21;            
+    case TOGL_KEY_ID_F22:                   return VK_F22;            
+    case TOGL_KEY_ID_F23:                   return VK_F23;            
+    case TOGL_KEY_ID_F24:                   return VK_F24;            
+    case TOGL_KEY_ID_0:                     return '0';               
+    case TOGL_KEY_ID_1:                     return '1';               
+    case TOGL_KEY_ID_2:                     return '2';               
+    case TOGL_KEY_ID_3:                     return '3';               
+    case TOGL_KEY_ID_4:                     return '4';               
+    case TOGL_KEY_ID_5:                     return '5';               
+    case TOGL_KEY_ID_6:                     return '6';               
+    case TOGL_KEY_ID_7:                     return '7';               
+    case TOGL_KEY_ID_8:                     return '8';               
+    case TOGL_KEY_ID_9:                     return '9';               
+    case TOGL_KEY_ID_A:                     return 'A';               
+    case TOGL_KEY_ID_B:                     return 'B';               
+    case TOGL_KEY_ID_C:                     return 'C';               
+    case TOGL_KEY_ID_D:                     return 'D';               
+    case TOGL_KEY_ID_E:                     return 'E';               
+    case TOGL_KEY_ID_F:                     return 'F';               
+    case TOGL_KEY_ID_G:                     return 'G';               
+    case TOGL_KEY_ID_H:                     return 'H';               
+    case TOGL_KEY_ID_I:                     return 'I';               
+    case TOGL_KEY_ID_J:                     return 'J';               
+    case TOGL_KEY_ID_K:                     return 'K';               
+    case TOGL_KEY_ID_L:                     return 'L';               
+    case TOGL_KEY_ID_M:                     return 'M';               
+    case TOGL_KEY_ID_N:                     return 'N';               
+    case TOGL_KEY_ID_O:                     return 'O';               
+    case TOGL_KEY_ID_P:                     return 'P';               
+    case TOGL_KEY_ID_Q:                     return 'Q';               
+    case TOGL_KEY_ID_R:                     return 'R';               
+    case TOGL_KEY_ID_S:                     return 'S';               
+    case TOGL_KEY_ID_T:                     return 'T';               
+    case TOGL_KEY_ID_U:                     return 'U';               
+    case TOGL_KEY_ID_V:                     return 'V';               
+    case TOGL_KEY_ID_W:                     return 'W';               
+    case TOGL_KEY_ID_X:                     return 'X';               
+    case TOGL_KEY_ID_Y:                     return 'Y';               
+    case TOGL_KEY_ID_Z:                     return 'Z';               
 
     case TOGL_KEY_IDSEMICOLON:              return VK_OEM_1;          
     case TOGL_KEY_IDFORWARD_SLASH:          return VK_OEM_2;          
@@ -650,7 +650,7 @@ inline int _TOGL_InnerKey::GetVirtualKeyCode(TOGL_KeyId key_id) {
     case TOGL_KEY_IDSCROLL_LOCK:            return VK_SCROLL;   
 
     case TOGL_KEY_IDUNKNOWN:
-    default:                            return 0;
+    default:                                return 0;
     }
 }
 
