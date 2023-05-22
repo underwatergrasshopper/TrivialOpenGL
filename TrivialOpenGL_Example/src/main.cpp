@@ -294,7 +294,6 @@ int main(int argc, char *argv[]) {
         };
 
         data.do_on_key = [](TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra) {
-            // TODO: Fix TOGL_KEY_ID_...
             if ((key_id == 'X' || key_id == TOGL_KEY_ID_ESCAPE) && !is_down) {
                 TOGL_RequestClose();
             }
