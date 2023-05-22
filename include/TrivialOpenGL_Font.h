@@ -242,6 +242,15 @@ private:
 };
 
 //-----------------------------------------------------------------------------
+// TOGL_OriginId
+//-----------------------------------------------------------------------------
+
+enum TOGL_OriginId {
+    TOGL_ORIGIN_ID_LEFT_BOTTOM,
+    TOGL_ORIGIN_ID_LEFT_TOP,
+};
+
+//-----------------------------------------------------------------------------
 // Global Font
 //-----------------------------------------------------------------------------
 
@@ -275,6 +284,7 @@ TOGL_FontInfo TOGL_GetFontInfo();
 bool TOGL_IsFontOk();
 std::string TOGL_GetFontErrMsg();
 
+
 //-----------------------------------------------------------------------------
 // TOGL_Font
 //-----------------------------------------------------------------------------
@@ -307,6 +317,11 @@ public:
     // Can be used only in between RenderBegin() and RenderEnd().
     // text         - Encoding format: UTF8.
     void RenderGlyphs(const std::string& text);
+
+    // Sets coordinates system origin for rendering glyphs.
+    void SetOrigin(TOGL_OriginId origin_id);
+
+    TOGL_OriginId GetOrigin() const;
 
     // Returns distance between rendered glyphs in pixels.
     uint32_t GetDistanceBetweenGlyphs() const;
@@ -355,6 +370,7 @@ private:
     const TOGL_GlyphData* FindGlyphData(uint32_t code) const;
 
     TOGL_FontData           m_data;
+    TOGL_OriginId           m_origin_id;
     bool                    m_is_loaded;
     std::string             m_err_msg;
 };
@@ -1060,17 +1076,33 @@ inline void TOGL_Font::RenderGlyph(uint32_t code) {
             glEnable(GL_TEXTURE_2D);
 
             glBegin(GL_TRIANGLE_FAN);
-            glTexCoord2d(glyph_data->x1, glyph_data->y1);
-            glVertex2i(0, 0);
 
-            glTexCoord2d(glyph_data->x2, glyph_data->y1);
-            glVertex2i(glyph_data->width, 0);
+            if (m_origin_id == TOGL_ORIGIN_ID_LEFT_BOTTOM) {
+                glTexCoord2d(glyph_data->x1, glyph_data->y1);
+                glVertex2i(0, 0);
 
-            glTexCoord2d(glyph_data->x2, glyph_data->y2);
-            glVertex2i(glyph_data->width, m_data.font_height);
+                glTexCoord2d(glyph_data->x2, glyph_data->y1);
+                glVertex2i(glyph_data->width, 0);
+
+                glTexCoord2d(glyph_data->x2, glyph_data->y2);
+                glVertex2i(glyph_data->width, m_data.font_height);
                 
-            glTexCoord2d(glyph_data->x1, glyph_data->y2);
-            glVertex2i(0, m_data.font_height);
+                glTexCoord2d(glyph_data->x1, glyph_data->y2);
+                glVertex2i(0, m_data.font_height);
+            } else {
+                glTexCoord2d(glyph_data->x1, glyph_data->y2);
+                glVertex2i(0, 0);
+                
+                glTexCoord2d(glyph_data->x2, glyph_data->y2);
+                glVertex2i(glyph_data->width, 0);
+                
+                glTexCoord2d(glyph_data->x2, glyph_data->y1);
+                glVertex2i(glyph_data->width, m_data.font_height);
+                
+                glTexCoord2d(glyph_data->x1, glyph_data->y1);
+                glVertex2i(0, m_data.font_height);
+            }
+
             glEnd();
         } else {
             // Renders replacement for missing glyph.
@@ -1101,6 +1133,14 @@ inline void TOGL_Font::RenderGlyphs(const std::string& text) {
         }
         RenderEnd();
     }
+}
+
+inline void TOGL_Font::SetOrigin(TOGL_OriginId origin_id) {
+    m_origin_id = origin_id;
+}
+
+inline TOGL_OriginId TOGL_Font::GetOrigin() const {
+    return m_origin_id;
 }
 
 inline uint32_t TOGL_Font::GetDistanceBetweenGlyphs() const {
@@ -1197,6 +1237,7 @@ inline bool TOGL_Font::SaveAsBMP(const std::string& path) const {
 
 inline void TOGL_Font::Initialize() {
     m_data          = {};
+    m_origin_id     = TOGL_ORIGIN_ID_LEFT_BOTTOM;
     m_is_loaded     = false;
     m_err_msg       = "";
 }

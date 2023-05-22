@@ -75,15 +75,6 @@ private:
 };
 
 //------------------------------------------------------------------------------
-// TOGL_TextDrawerOrientationId
-//------------------------------------------------------------------------------
-
-enum TOGL_TextDrawerOrientationId {
-    TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_BOTTOM,
-    TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_TOP,
-};
-
-//------------------------------------------------------------------------------
 // Global TextDrawer
 //------------------------------------------------------------------------------
 
@@ -107,10 +98,10 @@ TOGL_SizeU TOGL_GetTextSize(const TOGL_FineText& fine_text);
 TOGL_SizeU TOGL_AdjustAndGetTextSize(const std::string& text);
 TOGL_SizeU TOGL_AdjustAndGetTextSize(const TOGL_FineText& fine_text);
 
-// Sets text line draw orientation.
-void TOGL_SetOrientation(TOGL_TextDrawerOrientationId orientation);
+// Sets coordinates system origin for drawing text.
+void TOGL_SetOrigin(TOGL_OriginId origin_id);
 
-TOGL_TextDrawerOrientationId TOGL_GetOrientation();
+TOGL_OriginId TOGL_GetOrigin();
 
 //------------------------------------------------------------------------------
 // TOGL_TextDrawer
@@ -146,8 +137,8 @@ public:
     // ---
 
     // Sets origin of coordinate system to be in specific place in window area rectangle.
-    void SetOrientation(TOGL_TextDrawerOrientationId orientation);
-    TOGL_TextDrawerOrientationId GetOrientation() const;
+    void SetOrigin(TOGL_OriginId orientation);
+    TOGL_OriginId GetOrigin() const;
 
 private:
     static void ReplaceAll(std::string& text, const std::string& from, const std::string& to);
@@ -157,7 +148,7 @@ private:
     // text             - Encoding format: UTF8.
     TOGL_SizeU GetSolvedTextSize(TOGL_Font& font, const TOGL_FineText& text) const;
 
-    TOGL_TextDrawerOrientationId    m_orientation;
+    TOGL_OriginId                   m_origin_id;
     uint32_t                        m_orientation_factor_y;
 
     TOGL_PointI                     m_pos;
@@ -481,12 +472,12 @@ inline TOGL_SizeU TOGL_AdjustAndGetTextSize(const TOGL_FineText& fine_text) {
     return drawer.GetTextSize(font, text_adjuster.AdjustText(font, fine_text));
 }
 
-inline void TOGL_SetOrientation(TOGL_TextDrawerOrientationId orientation) {
-    TOGL_ToGlobalTextDrawer().SetOrientation(orientation);
+inline void TOGL_SetOrigin(TOGL_OriginId origin_id) {
+    TOGL_ToGlobalTextDrawer().SetOrigin(origin_id);
 }
 
-inline TOGL_TextDrawerOrientationId TOGL_GetOrientation() {
-    return TOGL_ToGlobalTextDrawer().GetOrientation();
+inline TOGL_OriginId TOGL_GetOrigin() {
+    return TOGL_ToGlobalTextDrawer().GetOrigin();
 }
 
 //------------------------------------------------------------------------------
@@ -502,7 +493,7 @@ inline TOGL_TextDrawer::~TOGL_TextDrawer() {
 }
 
 inline void TOGL_TextDrawer::Reset() {
-    SetOrientation(TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_BOTTOM);
+    SetOrigin(TOGL_ORIGIN_ID_LEFT_BOTTOM);
     SetPos(0, 0);
 
     m_color = {255, 255, 255, 255};
@@ -531,6 +522,9 @@ inline void TOGL_TextDrawer::RenderText(TOGL_Font& font, const std::string& text
 
 inline void TOGL_TextDrawer::RenderText(TOGL_Font& font, const TOGL_FineText& fine_text) {
     if (font.IsLoaded()) {
+        const TOGL_OriginId old_origin_id = font.GetOrigin();
+        font.SetOrigin(m_origin_id);
+
         glPushAttrib(GL_CURRENT_BIT);
         glColor4ubv(m_color.ToData());
 
@@ -567,6 +561,8 @@ inline void TOGL_TextDrawer::RenderText(TOGL_Font& font, const TOGL_FineText& fi
         }
 
         glPopAttrib();
+
+        font.SetOrigin(old_origin_id);
     }
 }
 
@@ -618,21 +614,21 @@ inline TOGL_SizeU TOGL_TextDrawer::GetTextSize(TOGL_Font& font, const  TOGL_Fine
     return size;
 }
 
-inline void TOGL_TextDrawer::SetOrientation(TOGL_TextDrawerOrientationId orientation) {
-    m_orientation = orientation;
+inline void TOGL_TextDrawer::SetOrigin(TOGL_OriginId origin_id) {
+    m_origin_id = origin_id;
 
-    switch (m_orientation) {
-    case TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_BOTTOM:
+    switch (m_origin_id) {
+    case TOGL_ORIGIN_ID_LEFT_BOTTOM:
         m_orientation_factor_y = -1;
         break;
-    case TOGL_TEXT_DRAWER_ORIENTATION_ID_LEFT_TOP:
+    case TOGL_ORIGIN_ID_LEFT_TOP:
         m_orientation_factor_y = 1;
         break;
     }
 }
 
-inline TOGL_TextDrawerOrientationId TOGL_TextDrawer::GetOrientation() const {
-    return m_orientation;
+inline TOGL_OriginId TOGL_TextDrawer::GetOrigin() const {
+    return m_origin_id;
 }
 
 //------------------------------------------------------------------------------

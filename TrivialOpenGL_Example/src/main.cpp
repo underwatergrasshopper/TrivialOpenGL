@@ -15,6 +15,7 @@
 #include "FormatedText.h"
 #include "TextBox.h"
 #include "BorderlessWindow.h"
+#include "TopToBottomText.h"
 
 //------------------------------------------------------------------------------
 
@@ -406,6 +407,14 @@ int main(int argc, char *argv[]) {
 
     example_manager.AddExample("simple_text", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
         return RunSimpleText();
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // top_to_bottom_text
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("top_to_bottom_text", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        return RunTopToBottomText();
     });
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -1104,7 +1113,7 @@ int main(int argc, char *argv[]) {
             TOGL_TextDrawer     text_drawer;
             TOGL_TextAdjuster   text_adjuster;
             
-            //text_drawer.SetOrientation(TEXT_DRAWER_ORIENTATION_LEFT_TOP);
+            //text_drawer.SetOrigin(TEXT_DRAWER_ORIENTATION_LEFT_TOP);
 
             text_drawer.SetPos(50, 100);
             text_drawer.SetColor(255, 0, 0, 255);
