@@ -161,7 +161,7 @@ int RunTextBox() {
             if (!s_text.empty()) s_text.resize(s_text.size() - 1);
         } else if (c == '\r') {
             s_text += '\n';
-        } else if (isprint(c)) {
+        } else if (isprint(c) || c == '\t') {
             s_text += c;
         }
     };
