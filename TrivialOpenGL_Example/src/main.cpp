@@ -14,6 +14,7 @@
 #include "UnicodeText.h"
 #include "FormatedText.h"
 #include "TextBox.h"
+#include "BorderlessWindow.h"
 
 //------------------------------------------------------------------------------
 
@@ -418,6 +419,14 @@ int main(int argc, char *argv[]) {
 
     example_manager.AddExample("text_box", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
         return RunTextBox();
+    });
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // borderless_window
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("borderless_window", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        return RunBorderlessWindow();
     });
 
     ////////////////////////////////////////////////////////////////////////////////
