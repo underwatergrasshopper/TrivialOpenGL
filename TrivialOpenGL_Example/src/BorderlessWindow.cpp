@@ -11,7 +11,7 @@
 int RunBorderlessWindow() {
     TOGL_Data data = {};
 
-    data.window_name        = "Simple Triangle";
+    data.window_name        = "Borderless Window";
     data.area               = {0, 0, 800, 400};
     // Ignores data.area.x and data.area.y coordinates 
     // and centers window in middle of work area (screen area excluding task bar).
