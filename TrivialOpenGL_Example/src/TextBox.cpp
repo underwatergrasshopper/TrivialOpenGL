@@ -66,8 +66,10 @@ namespace {
             // Removes prompt but do not change text align. 
             // This prevents text jumping from one line to another when prompt appears.
             auto& container = fine_text.ToElementContainers().back();
-            std::wstring last_text = container.GetText();
-            container.SetText(last_text.substr(0, last_text.length() - 1));
+            if (container.IsTypeId(TOGL_FINE_TEXT_ELEMENT_TYPE_ID_TEXT)) {
+                std::wstring last_text = container.GetText();
+                container.SetText(last_text.substr(0, last_text.length() - 1));
+            }
         }
 
         return fine_text;
