@@ -27,8 +27,9 @@ public:
     virtual ~TOGL_FineTextElement() {}
     
     virtual TOGL_FineTextElementTypeId GetTypeId() const = 0;
-    virtual TOGL_FineTextElement* CopyNew() const = 0;
 
+    // Might return nullptr.
+    virtual TOGL_FineTextElement* CopyNew() const = 0;
 };
 
 class TOGL_Text : public TOGL_FineTextElement {
@@ -159,7 +160,10 @@ public:
     bool IsTypeId(TOGL_FineTextElementTypeId type_id) const;
     TOGL_FineTextElementTypeId GetTypeId() const;
 
+    // Might return nullptr.
     TOGL_FineTextElement* ToElement();
+
+    // Might return nullptr.
     const TOGL_FineTextElement* ToElement() const;
 
 private:
