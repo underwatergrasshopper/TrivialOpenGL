@@ -18,9 +18,169 @@ enum TOGL_FineTextElementTypeId {
     TOGL_FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER
 };
 
+namespace TOGL_Prototype {
+class TOGL_FineTextElement {
+public:
+    virtual ~TOGL_FineTextElement() {}
+    
+    virtual TOGL_FineTextElementTypeId GetTypeId() const = 0;
+    virtual TOGL_FineTextElement* CopyNew() const = 0;
+
+};
+
+class TOGL_Text : public TOGL_FineTextElement {
+public:
+    TOGL_Text() {}
+    // text - Encoding format: ascii or utf8
+    TOGL_Text(const std::string& text) : m_text(TOGL_ToUTF16(text)) {}
+    // text - Encoding format: utf16
+    TOGL_Text(const std::wstring& text) : m_text(text) {}
+    // text - Encoding format: utf16
+    TOGL_Text(std::wstring&& text) : m_text(std::move(text)) {}
+
+    std::wstring& ToText() {
+        return m_text;
+    }
+
+    const std::wstring& ToText() const {
+        return m_text;
+    }
+
+    TOGL_FineTextElementTypeId GetTypeId() const override final {
+        return TOGL_FINE_TEXT_ELEMENT_TYPE_ID_TEXT;
+    }
+
+    TOGL_Text* CopyNew() const override final {
+        return new TOGL_Text(*this);
+    }
+private:
+    std::wstring m_text;
+};
+
+class TOGL_TextColor : public TOGL_FineTextElement {
+public:
+    TOGL_TextColor() {}
+    TOGL_TextColor(const TOGL_Color4U8& color) : m_color(color) {}
+
+    TOGL_Color4U8& ToColor() {
+        return m_color;
+    }
+
+    const TOGL_Color4U8& ToColor() const {
+        return m_color;
+    }
+
+    TOGL_FineTextElementTypeId GetTypeId() const override final {
+        return TOGL_FINE_TEXT_ELEMENT_TYPE_ID_COLOR;
+    }
+
+    TOGL_TextColor* CopyNew() const override final {
+        return new TOGL_TextColor(*this);
+    }
+private:
+    TOGL_Color4U8 m_color;
+};
+
+class TOGL_TextHorizontalSpacer : public TOGL_FineTextElement {
+public:
+    TOGL_TextHorizontalSpacer() : m_width(0) {}
+    // width - in pixels
+    TOGL_TextHorizontalSpacer(uint32_t width) : m_width(width) {}
+
+    // Returns width in pixels.
+    uint32_t& ToWidth() {
+        return m_width;
+    }
+
+    // Returns width in pixels.
+    const uint32_t& ToWidth() const {
+        return m_width;
+    }
+
+    TOGL_FineTextElementTypeId GetTypeId() const override final {
+        return TOGL_FINE_TEXT_ELEMENT_TYPE_ID_HORIZONTAL_SPACER;
+    }
+
+    TOGL_TextHorizontalSpacer* CopyNew() const override final {
+        return new TOGL_TextHorizontalSpacer(*this);
+    }
+private:
+    uint32_t m_width; // in pixels
+};
+
+class TOGL_FineTextElementContainer {
+public:
+    TOGL_FineTextElementContainer() : m_element(nullptr) {}
+    // text - Encoding format: ascii or utf8
+    explicit TOGL_FineTextElementContainer(const std::string& text)          : m_element(new TOGL_Text(text)) {}
+    // text - Encoding format: utf16
+    explicit TOGL_FineTextElementContainer(const std::wstring& text)         : m_element(new TOGL_Text(text)) {}
+    // text - Encoding format: utf16
+    explicit TOGL_FineTextElementContainer(std::wstring&& text)              : m_element(new TOGL_Text(text)) {}
+    explicit TOGL_FineTextElementContainer(const TOGL_Color4U8& color)       : m_element(new TOGL_TextColor(color)) {}
+    // horizontal_space_width - in pixels
+    explicit TOGL_FineTextElementContainer(uint32_t horizontal_space_width)  : m_element(new TOGL_TextHorizontalSpacer(horizontal_space_width)) {}
+
+    TOGL_FineTextElementContainer(const TOGL_FineTextElementContainer& other) {
+        if (other.m_element) {
+            m_element = other.m_element->CopyNew();
+        } else {
+            m_element = nullptr;
+        }
+    }
+
+    TOGL_FineTextElementContainer(TOGL_FineTextElementContainer&& other) noexcept {
+        if (m_element) delete m_element;
+
+        m_element       = other.m_element;
+        other.m_element = nullptr;
+    }
+
+
+    TOGL_FineTextElementContainer& operator=(const TOGL_FineTextElementContainer& other) {
+        if (this != &other) {
+            if (other.m_element) {
+                m_element = other.m_element->CopyNew();
+            } else {
+                m_element = nullptr;
+            }
+        }
+        return *this;
+    }
+
+    TOGL_FineTextElementContainer& operator=(TOGL_FineTextElementContainer&& other) noexcept {
+        if (m_element) delete m_element;
+
+        m_element       = other.m_element;
+        other.m_element = nullptr;
+
+        return *this;
+    }
+
+
+    virtual ~TOGL_FineTextElementContainer() {
+        if (m_element) delete m_element;
+    }
+
+    TOGL_FineTextElement* ToElement() {
+        return m_element;
+    }
+
+    const TOGL_FineTextElement* ToElement() const {
+        return m_element;
+    }
+
+private:
+    TOGL_FineTextElement* m_element;
+};
+
+} // TOGL_Prototype
+
 //------------------------------------------------------------------------------
 // TOGL_TextHorizontalSpacer
 //------------------------------------------------------------------------------
+
+
 
 class TOGL_TextHorizontalSpacer {
 public:
