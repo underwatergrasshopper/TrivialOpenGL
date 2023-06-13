@@ -835,7 +835,7 @@ inline bool TOGL_SaveTextureAsBMP(const std::string& file_name, GLuint tex_obj) 
 
 inline TOGL_AreaIU16 TOGL_GetDesktopAreaNoTaskBar() {
     RECT rc;
-    SystemParametersInfo(SPI_GETWORKAREA, 0, &rc, 0);
+    SystemParametersInfoW(SPI_GETWORKAREA, 0, &rc, 0);
     return TOGL_MakeAreaIU16(rc);
 }
 

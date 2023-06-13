@@ -1,3 +1,5 @@
+# v0.2.2
+- Minor bug fixes.
 # v0.2.1 (04-06-2023)
 - Added missing descriptions.
 # v0.2.0 (04-06-2023)
