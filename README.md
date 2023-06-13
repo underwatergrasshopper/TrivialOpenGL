@@ -1,6 +1,6 @@
 # TrivialOpenGL
 A simple C++ header-only library that gives the ability to create an window with OpenGL context to draw in.
-Includes support for drawing text.
+Includes support for drawing text. Does not support multiple monitors.
 
 ---
 
