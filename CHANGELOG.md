@@ -1,5 +1,6 @@
 # v0.2.2
 - Minor bug fixes.
+- Added alternative way of getting OpenGL version for created context.
 # v0.2.1 (04-06-2023)
 - Added missing descriptions.
 # v0.2.0 (04-06-2023)

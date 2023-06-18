@@ -1171,7 +1171,7 @@ int main(int argc, char *argv[]) {
     // opengl_version
     ////////////////////////////////////////////////////////////////////////////////
 
-    example_manager.AddExample("opengl_version", {"wrong"}, {}, [](const std::string& name, const std::set<std::string>& options) {
+    example_manager.AddExample("opengl_version", {"wrong", "request_3_3"}, {}, [](const std::string& name, const std::set<std::string>& options) {
         Reset();
 
         auto IsOption = [&options](const std::string& option) { return options.find(option) != options.end(); };
@@ -1180,11 +1180,8 @@ int main(int argc, char *argv[]) {
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
-        if (IsOption("wrong")) {
-            data.opengl_verion      = {3, 7};
-        } else {
-            data.opengl_verion      = {3, 3};
-        }
+        if (IsOption("wrong"))          data.opengl_verion = {3, 7};
+        if (IsOption("request_3_3"))    data.opengl_verion = {3, 3};
         data.log_level          = TOGL_LOG_LEVEL_DEBUG;
 
         data.do_on_create = []() {

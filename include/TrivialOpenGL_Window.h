@@ -1565,7 +1565,21 @@ inline void TOGL_Window::Create(HWND window_handle) {
     m_data.opengl_verion = {0, 0};
 
     glGetIntegerv(TOGL_GL_MAJOR_VERSION, &m_data.opengl_verion.major);
-    glGetIntegerv(TOGL_GL_MINOR_VERSION, &m_data.opengl_verion.minor);
+    GLenum gl_error_code = glGetError();
+
+    if (gl_error_code == GL_NO_ERROR) {
+        glGetIntegerv(TOGL_GL_MINOR_VERSION, &m_data.opengl_verion.minor);
+        gl_error_code = glGetError();
+    }
+
+    if (gl_error_code == GL_INVALID_ENUM) {
+        int count = sscanf_s((const char*)glGetString(GL_VERSION), "%d.%d", &m_data.opengl_verion.major, &m_data.opengl_verion.minor);
+        if (count != 2) {
+            TOGL_LogFatalError("Can not receive OpenGL version.");
+        }
+    } else if (gl_error_code != GL_NO_ERROR) {
+        TOGL_LogFatalError("Can not receive OpenGL version (OpenGL Error Code = " + std::to_string(gl_error_code) + ").");
+    }
 
     if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_INFO)) TOGL_LogInfo(std::string("OpenGl Version: ") + (const char*)glGetString(GL_VERSION));
 
