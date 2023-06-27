@@ -683,7 +683,7 @@ inline bool _TOGL_InnerKey::IsMouseButtonDown(UINT message) {
     case WM_LBUTTONDOWN:    
     case WM_RBUTTONDOWN:    
     case WM_MBUTTONDOWN:    
-    case WM_XBUTTONUP:
+    case WM_XBUTTONDOWN:
         return true;
     } // switch
 
