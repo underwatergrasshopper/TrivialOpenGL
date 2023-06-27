@@ -164,7 +164,7 @@ struct TOGL_Extra {
     // Stores information that, on which side of keyboard is used key (left or right).
     // If side of keyboard doesn't matter or when key exists only on one side, then contains KEYBOARD_SIDE_NONE. 
     // Note: Used for shift, control, alt keys. For ids: TOGL_KEY_ID_SHIFT, TOGL_KEY_ID_CONTROL, TOGL_KEY_ID_ALT.
-    TOGL_KeyboardSideId keyboard_side = TOGL_KEYBOARD_SIDE_ID_NONE;
+    TOGL_KeyboardSideId keyboard_side_id = TOGL_KEYBOARD_SIDE_ID_NONE;
 };
 
 std::string TOGL_KeyIdToStr(TOGL_KeyId key_id);
@@ -397,7 +397,7 @@ inline std::string TOGL_ExtraToStr(const TOGL_Extra& extra) {
     text += "{count=" + std::to_string(extra.count);
     text += ", x=" + std::to_string(extra.x);
     text += ", y=" + std::to_string(extra.y);
-    text += ", side=" + TOGL_KeyboardSideToStr(extra.keyboard_side);
+    text += ", side=" + TOGL_KeyboardSideToStr(extra.keyboard_side_id);
     text += "}";
 
     return text;

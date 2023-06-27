@@ -1655,7 +1655,7 @@ inline void TOGL_Window::HandleDoOnKeyboardKey(WPARAM w_param, LPARAM l_param) {
         extra.x = pos.x;
         extra.y = pos.y;
 
-        extra.keyboard_side = _TOGL_InnerKey::GetKeyboardSide(key_id, virtual_key_data);
+        extra.keyboard_side_id = _TOGL_InnerKey::GetKeyboardSide(key_id, virtual_key_data);
 
         m_data.do_on_key(key_id, is_down, extra);
     }
@@ -1672,7 +1672,7 @@ inline void TOGL_Window::HandleDoOnMouseKey(UINT message, WPARAM w_param, LPARAM
         extra.count         = 1;
         extra.x             = GET_X_LPARAM(l_param);
         extra.y             = GET_Y_LPARAM(l_param);
-        extra.keyboard_side = TOGL_KEYBOARD_SIDE_ID_NONE;
+        extra.keyboard_side_id = TOGL_KEYBOARD_SIDE_ID_NONE;
 
         m_data.do_on_key(key_id, is_down, extra);
     }
