@@ -64,7 +64,7 @@ struct TOGL_Data {
 
     // Tries create OpenGL Rendering Context which support to at least this version, with compatibility to all previous versions.
     // If opengl_version.major and opengl_version.minor is 0 then creates for any available OpenGL version. Can be checked by GetOpenGL_Version().
-    TOGL_GL_Version             opengl_verion           = {0, 0};
+    TOGL_GL_Version             opengl_version           = {0, 0};
 
     // File name of icon image file (.ico). 
     // Loaded icon will be presented on window title bar and on task bar.
@@ -1217,7 +1217,7 @@ inline TOGL_PointI TOGL_Window::GetCursorPosInDrawArea() const {
 }
 
 inline TOGL_GL_Version TOGL_Window::GetOpenGL_Version() const {
-    return m_data.opengl_verion;
+    return m_data.opengl_version;
 }
 
 //--------------------------------------------------------------------------
@@ -1511,7 +1511,7 @@ inline void TOGL_Window::Create(HWND window_handle) {
 
     // --- Creates OpenGL Rendering Context with required minimum version --- //
 
-    if (m_data.opengl_verion.major != 0 && m_data.opengl_verion.minor != 0) {
+    if (m_data.opengl_version.major != 0 && m_data.opengl_version.minor != 0) {
         HGLRC (WINAPI *togl_wglCreateContextAttribsARB)(HDC hDC, HGLRC hShareContext, const int* attribList) = (decltype(togl_wglCreateContextAttribsARB)) wglGetProcAddress("wglCreateContextAttribsARB");
         if (togl_wglCreateContextAttribsARB) {
             enum {
@@ -1533,19 +1533,19 @@ inline void TOGL_Window::Create(HWND window_handle) {
             };
             GLint attribute_list[] =
             {
-                TOGL_WGL_CONTEXT_MAJOR_VERSION_ARB, m_data.opengl_verion.major,
-                TOGL_WGL_CONTEXT_MINOR_VERSION_ARB, m_data.opengl_verion.minor,
+                TOGL_WGL_CONTEXT_MAJOR_VERSION_ARB, m_data.opengl_version.major,
+                TOGL_WGL_CONTEXT_MINOR_VERSION_ARB, m_data.opengl_version.minor,
                 TOGL_WGL_CONTEXT_FLAGS_ARB, TOGL_WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
                 0
             };
 
             HGLRC rendering_context_handle = togl_wglCreateContextAttribsARB(m_device_context_handle, 0, attribute_list);
             if (!rendering_context_handle) {
-                TOGL_LogFatalError(std::string() + "Can not create OpenGl Rendering Context for version " + std::to_string(m_data.opengl_verion.major) + "." + std::to_string(m_data.opengl_verion.minor) + ".");
+                TOGL_LogFatalError(std::string() + "Can not create OpenGl Rendering Context for version " + std::to_string(m_data.opengl_version.major) + "." + std::to_string(m_data.opengl_version.minor) + ".");
             }
 
             if (!wglMakeCurrent(m_device_context_handle, rendering_context_handle)) {
-                TOGL_LogFatalError(std::string() + "Can not set created OpenGl Rendering Context for version " + std::to_string(m_data.opengl_verion.major) + "." + std::to_string(m_data.opengl_verion.minor) + " to be current.");
+                TOGL_LogFatalError(std::string() + "Can not set created OpenGl Rendering Context for version " + std::to_string(m_data.opengl_version.major) + "." + std::to_string(m_data.opengl_version.minor) + " to be current.");
             }
 
             m_rendering_context_handle = rendering_context_handle ;
@@ -1562,18 +1562,18 @@ inline void TOGL_Window::Create(HWND window_handle) {
         TOGL_GL_MINOR_VERSION = 0x821C,
     };
 
-    m_data.opengl_verion = {0, 0};
+    m_data.opengl_version = {0, 0};
 
-    glGetIntegerv(TOGL_GL_MAJOR_VERSION, &m_data.opengl_verion.major);
+    glGetIntegerv(TOGL_GL_MAJOR_VERSION, &m_data.opengl_version.major);
     GLenum gl_error_code = glGetError();
 
     if (gl_error_code == GL_NO_ERROR) {
-        glGetIntegerv(TOGL_GL_MINOR_VERSION, &m_data.opengl_verion.minor);
+        glGetIntegerv(TOGL_GL_MINOR_VERSION, &m_data.opengl_version.minor);
         gl_error_code = glGetError();
     }
 
     if (gl_error_code == GL_INVALID_ENUM) {
-        int count = sscanf_s((const char*)glGetString(GL_VERSION), "%d.%d", &m_data.opengl_verion.major, &m_data.opengl_verion.minor);
+        int count = sscanf_s((const char*)glGetString(GL_VERSION), "%d.%d", &m_data.opengl_version.major, &m_data.opengl_version.minor);
         if (count != 2) {
             TOGL_LogFatalError("Can not receive OpenGL version.");
         }

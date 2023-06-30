@@ -1180,8 +1180,8 @@ int main(int argc, char *argv[]) {
 
         data.window_name        = "TrivialOpenGL_Example ";
         data.window_name        += name;
-        if (IsOption("wrong"))          data.opengl_verion = {3, 7};
-        if (IsOption("request_3_3"))    data.opengl_verion = {3, 3};
+        if (IsOption("wrong"))          data.opengl_version = {3, 7};
+        if (IsOption("request_3_3"))    data.opengl_version = {3, 3};
         data.log_level          = TOGL_LOG_LEVEL_DEBUG;
 
         data.do_on_create = []() {
