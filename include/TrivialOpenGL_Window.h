@@ -874,12 +874,6 @@ inline int TOGL_Window::Run(const TOGL_Data& data) {
         TOGL_LogFatalError("Cannot create window.");
     }
 
-    if (m_data.timer_time_interval > 0) {
-        const UINT_PTR result = SetTimer(m_window_handle, TOGL_DEFAULT_TIMER_ID, m_data.timer_time_interval, NULL);
-
-        if (!result) TOGL_LogFatalError(std::string() + "Can not set timer. (windows error code:" + std::to_string(GetLastError()) + ")");
-    }
-
     ShowWindow(m_window_handle, SW_SHOW);
     SetForegroundWindow(m_window_handle);
     SetFocus(m_window_handle);
@@ -893,6 +887,12 @@ inline int TOGL_Window::Run(const TOGL_Data& data) {
     if (m_data.do_on_create) m_data.do_on_create();
 
     UpdateWindow(m_window_handle);
+
+    if (m_data.timer_time_interval > 0) {
+        const UINT_PTR result = SetTimer(m_window_handle, TOGL_DEFAULT_TIMER_ID, m_data.timer_time_interval, NULL);
+
+        if (!result) TOGL_LogFatalError(std::string() + "Can not set timer. (windows error code:" + std::to_string(GetLastError()) + ")");
+    }
 
     int result = ExecuteMainLoop();
 
