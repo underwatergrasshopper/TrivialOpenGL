@@ -1587,7 +1587,7 @@ inline void TOGL_Window::Create(HWND window_handle) {
 }
 
 inline void TOGL_Window::Destroy() {
-    if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_INFO)) {
+    if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_DEBUG)) {
         TOGL_LogDebug("Window::Destroy");
     }
 
@@ -1712,7 +1712,7 @@ inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WP
 
     switch (message) {
     case WM_CREATE: 
-        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_INFO)) {
+        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_DEBUG)) {
             TOGL_LogDebug("WM_CREATE"); 
         }
 
@@ -1720,7 +1720,7 @@ inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WP
         return 0;
 
     case WM_DESTROY:
-        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_INFO)) {
+        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_DEBUG)) {
             TOGL_LogDebug("WM_DESTROY"); 
         }
 
@@ -1728,7 +1728,7 @@ inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WP
         return 0;
 
     case WM_CLOSE:
-        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_INFO)) {
+        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_DEBUG)) {
             TOGL_LogDebug("WM_CLOSE"); 
         }
 
@@ -1736,7 +1736,7 @@ inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WP
         return 0;
 
     case WM_PAINT:
-        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_INFO)) {
+        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_DEBUG)) {
             TOGL_LogDebug("WM_PAINT"); 
         }
 
@@ -1809,7 +1809,7 @@ inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WP
 #endif
 
     case WM_ENTERSIZEMOVE: {
-        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_INFO)) {
+        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_DEBUG)) {
             TOGL_LogDebug("WM_ENTERSIZEMOVE");
         }
 
@@ -1817,7 +1817,7 @@ inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WP
     }
 
     case WM_EXITSIZEMOVE: {
-        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_INFO)) {
+        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_DEBUG)) {
             TOGL_LogDebug("WM_EXITSIZEMOVE");
         }
 
@@ -1825,7 +1825,7 @@ inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WP
     }
 
     case WM_SIZING: {
-        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_INFO)) {
+        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_DEBUG)) {
             std::string dbg_msg = "WM_SIZING";
 
             auto GetEdgeName = [](WPARAM w_param) -> std::string {
@@ -1860,7 +1860,7 @@ inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WP
     }
 
     case WM_SIZE:
-        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_INFO)) {
+        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_DEBUG)) {
             std::string dbg_msg = "WM_SIZE";
 
             const uint16_t width    = LOWORD(l_param);
@@ -1917,7 +1917,7 @@ inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WP
         return 0;
 
     case WM_SHOWWINDOW: {
-        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_INFO)) {
+        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_DEBUG)) {
             std::string dbg_msg = "WM_SHOWWINDOW";
 
             dbg_msg += (w_param == TRUE) ? " SHOW" : " HIDE";
@@ -1962,7 +1962,7 @@ inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WP
         const bool is_active    = LOWORD(w_param) != WA_INACTIVE;
         const bool is_minimized = HIWORD(w_param);
 
-        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_INFO)) {
+        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_DEBUG)) {
             std::string dbg_msg = "WM_ACTIVATE";
 
             auto GetActivationStateName = [](int state) -> std::string {
@@ -2059,13 +2059,13 @@ inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WP
     // Keyboard //
     //////////////
     case WM_SETFOCUS:
-        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_INFO)) {
+        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_DEBUG)) {
             TOGL_LogDebug("WM_SETFOCUS");
         }
         return 0;
 
     case WM_KILLFOCUS:
-        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_INFO)) {
+        if (TOGL_IsLogLevelAtLeast(TOGL_LOG_LEVEL_DEBUG)) {
             TOGL_LogDebug("WM_KILLFOCUS");
         }
         return 0;
