@@ -886,13 +886,13 @@ inline int TOGL_Window::Run(const TOGL_Data& data) {
 
     if (m_data.do_on_create) m_data.do_on_create();
 
-    UpdateWindow(m_window_handle);
-
     if (m_data.timer_time_interval > 0) {
         const UINT_PTR result = SetTimer(m_window_handle, TOGL_DEFAULT_TIMER_ID, m_data.timer_time_interval, NULL);
 
         if (!result) TOGL_LogFatalError(std::string() + "Can not set timer. (windows error code:" + std::to_string(GetLastError()) + ")");
     }
+
+    UpdateWindow(m_window_handle);
 
     int result = ExecuteMainLoop();
 
