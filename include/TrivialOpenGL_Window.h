@@ -1348,10 +1348,10 @@ inline TOGL_AreaIU16 TOGL_Window::GenerateWindowArea(const TOGL_AreaIU16& area) 
 
     // --- Size --- //
 
-    const TOGL_AreaIU16 desktop_area = TOGL_GetDesktopAreaNoTaskBar();
+    const TOGL_AreaIU16 work_area = TOGL_GetWorkArea();
 
-    window_area.width   = is_default ? (desktop_area.width / 2)     : area.width;
-    window_area.height  = is_default ? (desktop_area.height / 2)    : area.height;
+    window_area.width   = is_default ? (work_area.width / 2)     : area.width;
+    window_area.height  = is_default ? (work_area.height / 2)    : area.height;
 
     // In a case of unreasonable values.
     if (window_area.width < 0)    window_area.width = 0;
@@ -1366,11 +1366,11 @@ inline TOGL_AreaIU16 TOGL_Window::GenerateWindowArea(const TOGL_AreaIU16& area) 
     // --- Position --- //
 
     if (m_data.style & TOGL_WINDOW_STYLE_BIT_CENTERED) {
-        window_area.x = (desktop_area.width - window_area.width) / 2;
-        window_area.y = (desktop_area.height - window_area.height) / 2;
+        window_area.x = (work_area.width - window_area.width) / 2 + work_area.x;
+        window_area.y = (work_area.height - window_area.height) / 2 + work_area.y;
     } else {
-        window_area.x = is_default ? ((desktop_area.width - window_area.width) / 2)     : area.x;
-        window_area.y = is_default ? ((desktop_area.height - window_area.height) / 2)   : area.y;
+        window_area.x = is_default ? ((work_area.width - window_area.width) / 2 + work_area.x)     : area.x;
+        window_area.y = is_default ? ((work_area.height - window_area.height) / 2 + work_area.y)   : area.y;
     }
 
     // No need for additional adjustment for invisible window frame. 

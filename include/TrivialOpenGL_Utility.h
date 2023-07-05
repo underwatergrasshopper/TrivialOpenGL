@@ -495,6 +495,7 @@ bool TOGL_SaveTextureAsBMP(const std::string& file_name, GLuint tex_obj);
 // Common
 //------------------------------------------------------------------------------
 
+TOGL_AreaIU16 TOGL_GetWorkArea();
 TOGL_AreaIU16 TOGL_GetDesktopAreaNoTaskBar();
 TOGL_SizeU16 TOGL_GetDesktopAreaSizeNoTaskBar();
 TOGL_SizeU16 TOGL_GetScreenSize();
@@ -832,6 +833,10 @@ inline bool TOGL_SaveTextureAsBMP(const std::string& file_name, GLuint tex_obj) 
 //------------------------------------------------------------------------------
 // Common
 //------------------------------------------------------------------------------
+
+inline TOGL_AreaIU16 TOGL_GetWorkArea() {
+    return TOGL_GetDesktopAreaNoTaskBar();
+}
 
 inline TOGL_AreaIU16 TOGL_GetDesktopAreaNoTaskBar() {
     RECT rc;

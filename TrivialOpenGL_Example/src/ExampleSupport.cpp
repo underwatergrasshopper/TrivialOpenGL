@@ -99,9 +99,11 @@ void DisplayWindowInfo() {
     togl_print_i32(screen_size.width);
     togl_print_i32(screen_size.height);
 
-    const TOGL_SizeU16 work_area_size = TOGL_GetDesktopAreaSizeNoTaskBar();
-    togl_print_i32(work_area_size.width);
-    togl_print_i32(work_area_size.height);
+    const TOGL_AreaIU16 work_area = TOGL_GetWorkArea();
+    togl_print_i32(work_area.x);
+    togl_print_i32(work_area.y);
+    togl_print_i32(work_area.width);
+    togl_print_i32(work_area.height);
     puts("");
 
     const TOGL_AreaIU16 window_area = TOGL_GetArea();
@@ -119,10 +121,10 @@ void DisplayWindowInfo() {
     puts("");
 
     puts("Window Center Check:");
-    togl_print_i32(window_area.width + (window_area.x * 2));
-    togl_print_i32(window_area.height + (window_area.y * 2));
-    togl_print_i32(work_area_size.width);
-    togl_print_i32(work_area_size.height);
+    togl_print_i32(window_area.width + ((window_area.x - work_area.x)* 2));
+    togl_print_i32(window_area.height + ((window_area.y - work_area.y) * 2));
+    togl_print_i32(work_area.width);
+    togl_print_i32(work_area.height);
 
     PrintWindowStates();
 }
