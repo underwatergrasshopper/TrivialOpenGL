@@ -992,7 +992,7 @@ inline void TOGL_Window::Center(uint16_t width, uint16_t height) {
 }
 
 inline void TOGL_Window::Center(const TOGL_SizeU16& size, bool is_draw_area_size) {
-    const TOGL_AreaIU16 desktop_area = TOGL_GetDesktopAreaNoTaskBar();
+    const TOGL_AreaIU16 work_area = TOGL_GetWorkArea();
 
     TOGL_AreaIU16 window_area = TOGL_AreaIU16({}, size);
 
@@ -1003,8 +1003,8 @@ inline void TOGL_Window::Center(const TOGL_SizeU16& size, bool is_draw_area_size
         window_area = m_window_area_corrector.RemoveInvisibleFrameFrom(window_area, m_window_handle);
     }
 
-    window_area.x = (desktop_area.width - window_area.width) / 2;
-    window_area.y = (desktop_area.height - window_area.height) / 2;
+    window_area.x = (work_area.width - window_area.width) / 2 + work_area.x;
+    window_area.y = (work_area.height - window_area.height) / 2 + work_area.y;
         
     SetArea(window_area);
 }
