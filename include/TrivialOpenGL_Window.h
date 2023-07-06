@@ -1535,7 +1535,7 @@ inline void TOGL_Window::Create(HWND window_handle) {
             {
                 TOGL_WGL_CONTEXT_MAJOR_VERSION_ARB, m_data.opengl_version.major,
                 TOGL_WGL_CONTEXT_MINOR_VERSION_ARB, m_data.opengl_version.minor,
-                TOGL_WGL_CONTEXT_FLAGS_ARB, TOGL_WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+                TOGL_WGL_CONTEXT_PROFILE_MASK_ARB, TOGL_WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
                 0
             };
 
