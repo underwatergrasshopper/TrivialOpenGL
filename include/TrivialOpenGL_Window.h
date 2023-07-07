@@ -874,6 +874,8 @@ inline int TOGL_Window::Run(const TOGL_Data& data) {
         TOGL_LogFatalError("Cannot create window.");
     }
 
+    if (m_data.do_on_create) m_data.do_on_create();
+
     ShowWindow(m_window_handle, SW_SHOW);
     SetForegroundWindow(m_window_handle);
     SetFocus(m_window_handle);
@@ -883,8 +885,6 @@ inline int TOGL_Window::Run(const TOGL_Data& data) {
 
     // Here because, actual window area can be fetched by DwmGetWindowAttribute only after SW_SHOW.
     ChangeArea(m_data.area);
-
-    if (m_data.do_on_create) m_data.do_on_create();
 
     if (m_data.timer_time_interval > 0) {
         const UINT_PTR result = SetTimer(m_window_handle, TOGL_DEFAULT_TIMER_ID, m_data.timer_time_interval, NULL);
