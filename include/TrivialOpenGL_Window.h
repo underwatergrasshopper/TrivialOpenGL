@@ -532,6 +532,8 @@ private:
     bool                    m_is_enable_change_state_at_resize;
     bool                    m_is_in_draw;
 
+    bool                    m_is_requested_close;
+
     uint64_t                m_dbg_message_id;
 
     WindowAreaCorrector     m_window_area_corrector;
@@ -901,7 +903,7 @@ inline int TOGL_Window::Run(const TOGL_Data& data) {
 }
 
 inline void TOGL_Window::RequestClose() {
-    DestroyWindow(m_window_handle);
+    m_is_requested_close = true;
 }
 
 inline void TOGL_Window::RequestDraw() {
@@ -1247,6 +1249,8 @@ inline TOGL_Window::TOGL_Window() {
     m_is_enable_change_state_at_resize  = true;
     m_is_in_draw                        = false;
 
+    m_is_requested_close                = false;
+
     m_dbg_message_id                    = 0;
 
     memset(m_char_utf16, 0, sizeof(m_char_utf16));
@@ -1311,6 +1315,11 @@ inline int TOGL_Window::ExecuteMainLoop() {
         while (GetMessageW(&msg, NULL, 0, 0)) {
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
+
+            if (m_is_requested_close) {
+                m_is_requested_close = false;
+                DestroyWindow(m_window_handle);
+            }
         }
         if (msg.message == WM_QUIT) {
             m_window_handle = NULL;
@@ -1328,6 +1337,11 @@ inline int TOGL_Window::ExecuteMainLoop() {
 
                 TranslateMessage(&msg);
                 DispatchMessageW(&msg);
+
+                if (m_is_requested_close) {
+                    m_is_requested_close = false;
+                    DestroyWindow(m_window_handle);
+                }
             } else {
                 DrawNow();
             }
