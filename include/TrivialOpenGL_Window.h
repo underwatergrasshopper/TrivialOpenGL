@@ -521,7 +521,6 @@ private:
 
     bool                    m_is_active;
     bool                    m_is_visible;
-    bool                    m_is_frame;
 
     TOGL_WindowStateId      m_state;
     TOGL_WindowStateId      m_prev_state;
@@ -1237,7 +1236,6 @@ inline TOGL_Window::TOGL_Window() {
 
     m_is_active                 = false;
     m_is_visible                = false;
-    m_is_frame                  = true;
 
     m_state                     = TOGL_WINDOW_STATE_ID_NORMAL;
     m_prev_state                = m_state;
