@@ -1480,6 +1480,68 @@ int main(int argc, char *argv[]) {
         return TOGL_Run(data);
     });
 
+    ////////////////////////////////////////////////////////////////////////////////
+    // draw_array
+    ////////////////////////////////////////////////////////////////////////////////
+
+    example_manager.AddExample("draw_array", {}, {}, [](const std::string& name, const std::set<std::string>& options) {
+        Reset();
+
+        auto IsOption = [&options](const std::string& option) { return options.find(option) != options.end(); };
+
+        s_resolution = {800, 400};
+
+        TOGL_Data data = {};
+
+        data.window_name        = "TrivialOpenGL_Example ";
+        data.window_name        += name;
+        data.area               = {0, 0, s_resolution.width, s_resolution.height};
+        data.style              = 0;
+        data.style              |= TOGL_WINDOW_STYLE_BIT_CENTERED;
+        data.icon_resource_id   = ICON_ID;
+        data.log_level          = TOGL_LOG_LEVEL_DEBUG;
+
+        data.do_on_create = []() {
+            glClearColor(0, 0, 0.5, 1);
+        };
+
+        data.draw = []() {
+            glClear(GL_COLOR_BUFFER_BIT);
+
+            const GLfloat vertices[] = {
+                0,      0.5,
+                -0.5,   -0.5,
+                0.5,    -0.5,
+            };
+
+            const GLfloat colors[] = {
+                1, 0, 0,
+                0, 1, 0,
+                0, 0, 1,
+            };
+            glEnableClientState(GL_VERTEX_ARRAY);
+            glEnableClientState(GL_COLOR_ARRAY);
+
+            glVertexPointer(2, GL_FLOAT, 0, vertices);
+            glColorPointer(3, GL_FLOAT, 0, colors);
+
+            glDrawArrays(GL_TRIANGLES, 0, 3);
+
+            glDisableClientState(GL_VERTEX_ARRAY);
+            glDisableClientState(GL_COLOR_ARRAY);
+        };
+
+        data.do_on_resize = [](uint16_t width, uint16_t height) {
+            glViewport(0, 0, width, height);
+        };
+
+        data.do_on_key = [](TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra) {
+            if (key_id == 'X' && !is_down) TOGL_RequestClose();
+        };
+
+        return TOGL_Run(data);
+        });
+
     //------------------------------------------------------------------------------
 
     return example_manager.Run(arguments);
