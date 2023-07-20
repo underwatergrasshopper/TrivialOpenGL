@@ -605,6 +605,8 @@ inline TOGL_FontData TOGL_FontDataGenerator::Generate(const TOGL_FontInfo& font_
                 }
 
                 if (IsOk()) {
+                    glPushAttrib(GL_ALL_ATTRIB_BITS);
+
                     for (const auto& range : ranges) {
                         //LogDebug(std::string() + "[" + HexToStr(range.from) + ".." + HexToStr(range.to) + "]"); // debug
 
@@ -645,6 +647,8 @@ inline TOGL_FontData TOGL_FontDataGenerator::Generate(const TOGL_FontInfo& font_
                         glDeleteLists(display_list_set.base, display_list_set.range);
                     }
                     m_display_list_sets.clear();
+
+                    glPopAttrib();
                 }
                 SelectObject(m_device_context_handle, old_font_handle);
                 DeleteObject(font_handle);
