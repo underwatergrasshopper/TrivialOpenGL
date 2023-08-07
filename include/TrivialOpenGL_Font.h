@@ -829,6 +829,9 @@ inline void TOGL_FontDataGenerator::GenerateFontTextures(uint16_t width, uint16_
         TOGL_PointI pos = {0, y};
  
         for (const DisplayListSet& display_list_set : m_display_list_sets) {
+            if (!frame_buffer.IsOk()) {
+                break;
+            }
             for (uint32_t code = display_list_set.unicode_range.from; code <= display_list_set.unicode_range.to; ++code) {
 
                 const TOGL_SizeU16 size = GetCharSize((wchar_t)code);
@@ -841,7 +844,6 @@ inline void TOGL_FontDataGenerator::GenerateFontTextures(uint16_t width, uint16_
                         tex_obj = frame_buffer.GenAndBindTex();
 
                         if (!frame_buffer.IsOk()) {
-                            SetErrMsg(frame_buffer.GetErrMsg());
                             break;
                         }
                         glClear(GL_COLOR_BUFFER_BIT);
@@ -893,6 +895,10 @@ inline void TOGL_FontDataGenerator::GenerateFontTextures(uint16_t width, uint16_
         glPopAttrib();
         glPopAttrib();
         glPopAttrib();
+    }
+
+    if (!frame_buffer.IsOk()) {
+        SetErrMsg(frame_buffer.GetErrMsg());
     }
 }
 
