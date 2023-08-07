@@ -481,7 +481,7 @@ inline TOGL_FontData::TOGL_FontData() {
 //-----------------------------------------------------------------------------
 
 inline TOGL_FontDataGenerator::TOGL_FontDataGenerator() {
-    m_device_context_handle = NULL;
+    Initialize();
 }
 
 inline TOGL_FontDataGenerator::~TOGL_FontDataGenerator() {
