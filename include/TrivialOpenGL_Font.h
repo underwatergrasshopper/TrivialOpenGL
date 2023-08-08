@@ -294,7 +294,7 @@ public:
     TOGL_Font();
     virtual ~TOGL_Font();
 
-    // Unload current font if loaded. Loads new font.
+    // Unloads current font if loaded. Loads new font.
     // If font has been loaded successfully, then IsOk() should return true. Otherwise, font failed to load, and error message can be retrieved by GetErrMsg().
     // Font size for loaded font might be different than requested font size (font_info.size, size) when size unit (font_info.size_unit, size_unit) is TOGL_FONT_SIZE_UNIT_ID_PIXELS.
     // To get loaded font size (in pixels) call GetHeight().
@@ -1081,7 +1081,7 @@ inline void TOGL_Font::RenderGlyph(uint32_t code) {
     if (m_is_loaded) {
         const TOGL_GlyphData* glyph_data = FindGlyphData(code);
 
-        if (glyph_data->tex_obj != 0) {
+        if (glyph_data != nullptr && glyph_data->tex_obj != 0) {
             glBindTexture(GL_TEXTURE_2D, glyph_data->tex_obj);
             glEnable(GL_TEXTURE_2D);
 
