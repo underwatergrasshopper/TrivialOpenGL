@@ -296,7 +296,7 @@ inline std::vector<std::wstring> TOGL_TextAdjuster::SplitSentenceToParts(const s
     while (pos < sentence.size()) {
         size_t next_part_pos = GetSentencePartPos(sentence, pos);
 
-        const std::wstring part = sentence.substr(pos, next_part_pos - pos);
+        const std::wstring part = sentence.substr(pos, next_part_pos != std::wstring::npos ? (next_part_pos - pos) : std::wstring::npos);
 
         parts.push_back(part);
         pos = next_part_pos;
