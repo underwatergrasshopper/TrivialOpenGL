@@ -495,6 +495,7 @@ inline void TOGL_TextDrawer::Reset() {
     SetPos(0, 0);
 
     m_color = {255, 255, 255, 255};
+    m_text = {};
 }
 
 inline void TOGL_TextDrawer::SetPos(int x, int y) {
