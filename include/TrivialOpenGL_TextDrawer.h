@@ -143,11 +143,6 @@ public:
 private:
     static void ReplaceAll(std::string& text, const std::string& from, const std::string& to);
 
-    void RenderSolvedText(TOGL_Font& font, const TOGL_FineText& text);
-
-    // text             - Encoding format: UTF8.
-    TOGL_SizeU GetSolvedTextSize(TOGL_Font& font, const TOGL_FineText& text) const;
-
     TOGL_OriginId                   m_origin_id;
     uint32_t                        m_orientation_factor_y;
 
