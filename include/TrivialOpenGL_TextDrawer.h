@@ -522,6 +522,8 @@ inline void TOGL_TextDrawer::RenderText(TOGL_Font& font, const TOGL_FineText& fi
         glPushAttrib(GL_CURRENT_BIT);
         glColor4ubv(m_color.ToData());
 
+        m_pos = m_base;
+
         for (const TOGL_FineTextElementContainer& element_container : fine_text.ToElementContainers()) {
 
             switch (element_container.GetTypeId()) {
