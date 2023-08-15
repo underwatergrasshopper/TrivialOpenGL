@@ -20,6 +20,17 @@ namespace {
     bool            s_is_show_prompt;
     std::string     s_prompt            = "|";
 
+    void Resize(uint16_t width, uint16_t height) {
+        glViewport(0, 0, width, height);
+
+        // When window size changes, text size stays same.
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, width, 0, height, 1, -1);
+
+        s_size = {width, height};
+    }
+
     void DrawRectangle(int x, int y, int width, int height) {
         glBegin(GL_TRIANGLE_FAN);
 
@@ -91,6 +102,9 @@ int RunTextBox() {
     data.timer_time_interval = 500;
 
     data.do_on_create = []() {
+        TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
+        Resize(size.width, size.height);
+
         glClearColor(0.2f, 0.2f, 0.5f, 1.0f);
 
         // Sets draw area for drawing text. 
@@ -122,14 +136,7 @@ int RunTextBox() {
     };
 
     data.do_on_resize = [](uint16_t width, uint16_t height) {
-        glViewport(0, 0, width, height);
-
-        // When window size changes, text size stays same.
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(0, width, 0, height, 1, -1);
-
-        s_size = {width, height};
+        Resize(width, height);
     };
 
     data.draw = []() {

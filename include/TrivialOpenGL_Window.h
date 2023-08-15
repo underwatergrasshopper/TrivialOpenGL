@@ -529,6 +529,8 @@ private:
 
     bool                    m_is_apply_fake_width;
     bool                    m_is_enable_do_on_resize;
+    bool                    m_is_enable_do_on_hide_show;
+    bool                    m_is_enable_do_on_foreground;
     bool                    m_is_enable_change_state_at_resize;
     bool                    m_is_in_draw;
 
@@ -875,7 +877,10 @@ inline int TOGL_Window::Run(const TOGL_Data& data) {
         TOGL_LogFatalError("Cannot create window.");
     }
 
-    if (m_data.do_on_create) m_data.do_on_create();
+    Push(m_is_enable_change_state_at_resize, false);
+    Push(m_is_enable_do_on_foreground, false);
+    Push(m_is_enable_do_on_hide_show, false);
+    Push(m_is_enable_do_on_resize, false);
 
     ShowWindow(m_window_handle, SW_SHOW);
     SetForegroundWindow(m_window_handle);
@@ -886,6 +891,13 @@ inline int TOGL_Window::Run(const TOGL_Data& data) {
 
     // Here because, actual window area can be fetched by DwmGetWindowAttribute only after SW_SHOW.
     ChangeArea(m_data.area);
+
+    Pop(m_is_enable_change_state_at_resize);
+    Pop(m_is_enable_do_on_foreground);
+    Pop(m_is_enable_do_on_hide_show);
+    Pop(m_is_enable_do_on_resize);
+
+    if (m_data.do_on_create) m_data.do_on_create();
 
     if (m_data.timer_time_interval > 0) {
         const UINT_PTR result = SetTimer(m_window_handle, TOGL_DEFAULT_TIMER_ID, m_data.timer_time_interval, NULL);
@@ -1246,6 +1258,8 @@ inline TOGL_Window::TOGL_Window() {
 
     m_is_apply_fake_width               = false;
     m_is_enable_do_on_resize            = true;
+    m_is_enable_do_on_hide_show         = true;
+    m_is_enable_do_on_foreground        = true;
     m_is_enable_change_state_at_resize  = true;
     m_is_in_draw                        = false;
 
@@ -1948,6 +1962,14 @@ inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WP
                 dbg_msg += std::string() + " " + GetStatusName(l_param);
             }
 
+            if (!m_is_enable_do_on_hide_show) {
+                if (w_param == TRUE) {
+                    dbg_msg += " without:do_on_show";
+                } else {
+                    dbg_msg += " without:do_on_hide";
+                }
+            }
+
             TOGL_LogDebug(dbg_msg);
         }
 
@@ -1957,9 +1979,9 @@ inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WP
             m_is_visible = is_visible;
 
             if (m_is_visible && m_data.do_on_show) {
-                m_data.do_on_show();
+                if (m_is_enable_do_on_hide_show) m_data.do_on_show();
             } else if (!m_is_visible && m_data.do_on_hide) {
-                m_data.do_on_hide();
+                if (m_is_enable_do_on_hide_show) m_data.do_on_hide();
             }
         }
 
@@ -1993,6 +2015,10 @@ inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WP
                 dbg_msg += m_is_active ? " active->inactive" : " inactive->active";
             }
 
+            if (!m_is_enable_do_on_foreground) {
+                dbg_msg += " without:do_on_foreground";
+            }
+
             TOGL_LogDebug(dbg_msg);
         }
 
@@ -2000,9 +2026,9 @@ inline LRESULT TOGL_Window::InnerWindowProc(HWND window_handle, UINT message, WP
             m_is_active = is_active;
 
             if (is_active) {
-                if (m_data.do_on_foreground) m_data.do_on_foreground(true);
+                if (m_data.do_on_foreground && m_is_enable_do_on_foreground) m_data.do_on_foreground(true);
             } else {
-                if (m_data.do_on_foreground) m_data.do_on_foreground(false);
+                if (m_data.do_on_foreground && m_is_enable_do_on_foreground) m_data.do_on_foreground(false);
             }
         }
 

@@ -14,6 +14,17 @@ enum : uint16_t {
 
 static TOGL_SizeU16 s_size = {800, 400};
 
+static void Resize(uint16_t width, uint16_t height) {
+    glViewport(0, 0, width, height);
+
+    // When window size changes, text size stays same.
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, width, 0, height, 1, -1);
+
+    s_size = {width, height};
+}
+
 int RunColoredText() {
     TOGL_Data data = {};
 
@@ -27,6 +38,9 @@ int RunColoredText() {
     data.style              |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE;
 
     data.do_on_create = []() {
+        TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
+        Resize(size.width, size.height);
+
         glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
 
         // Sets draw area for drawing text. 

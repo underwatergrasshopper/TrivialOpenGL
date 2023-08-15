@@ -334,6 +334,9 @@ int main(int argc, char *argv[]) {
         data.log_level          = TOGL_LOG_LEVEL_DEBUG;
 
         data.do_on_create = []() {
+            auto size = TOGL_GetDrawAreaSize();
+            glViewport(0, 0, size.width, size.height);
+
             glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
         };
 
@@ -497,6 +500,9 @@ int main(int argc, char *argv[]) {
         data.do_on_create = []() {
             s_test_image.Initialize(TOGL_GetDrawAreaSize());
 
+            TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
+            s_test_image.Resize(size.width, size.height);
+
             LoadFont();
         };
 
@@ -637,6 +643,10 @@ int main(int argc, char *argv[]) {
             data.do_on_create = []() {
                 s_test_image.Initialize(TOGL_GetDrawAreaSize());
 
+                TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
+                s_test_image.Resize(size.width, size.height);
+                SetInfoTextMaxWidth(size.width);
+
                 TOGL_GoWindowedFullScreen();
 
                 LoadFont();
@@ -644,6 +654,10 @@ int main(int argc, char *argv[]) {
         } else {
             data.do_on_create = []() {
                 s_test_image.Initialize(TOGL_GetDrawAreaSize());
+
+                TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
+                s_test_image.Resize(size.width, size.height);
+                SetInfoTextMaxWidth(size.width);
 
                 LoadFont();
             };
@@ -1091,6 +1105,9 @@ int main(int argc, char *argv[]) {
         data.do_on_create = []() {
             s_test_image.Initialize(TOGL_GetDrawAreaSize());
 
+            TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
+            s_test_image.Resize(size.width, size.height);
+
             LoadFont();
 
             TOGL_ToGlobalFont().SaveAsBMP();
@@ -1188,6 +1205,9 @@ int main(int argc, char *argv[]) {
             auto version = TOGL_GetOpenGL_Version();
             printf("%d.%d\n", version.major, version.minor);
 
+            TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
+            glViewport(0, 0, size.width, size.height);
+
             glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
         };
 
@@ -1255,6 +1275,9 @@ int main(int argc, char *argv[]) {
 
         data.do_on_create = []() {
             s_test_image.Initialize(TOGL_GetDrawAreaSize());
+
+            TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
+            s_test_image.Resize(size.width, size.height);
 
             LoadFont();
         };
@@ -1396,6 +1419,8 @@ int main(int argc, char *argv[]) {
         
         data.do_on_create = []() {
             s_test_image.Initialize(TOGL_GetDrawAreaSize());
+            TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
+            s_test_image.Resize(size.width, size.height);
         };
 
         data.draw = []() {
@@ -1441,6 +1466,9 @@ int main(int argc, char *argv[]) {
         
         data.do_on_create = []() {
             s_test_font.Create(s_resolution.width, s_resolution.height);
+
+            TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
+            glViewport(0, 0, size.width, size.height);
 
             const uint8_t image[] = {
                 // first row
@@ -1502,6 +1530,9 @@ int main(int argc, char *argv[]) {
         data.log_level          = TOGL_LOG_LEVEL_DEBUG;
 
         data.do_on_create = []() {
+            TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
+            glViewport(0, 0, size.width, size.height);
+
             glClearColor(0, 0, 0.5, 1);
         };
 

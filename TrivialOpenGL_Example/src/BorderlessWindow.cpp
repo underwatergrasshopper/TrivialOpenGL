@@ -20,6 +20,9 @@ int RunBorderlessWindow() {
     data.style              |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_ONLY;
 
     data.do_on_create = []() {
+        auto size = TOGL_GetDrawAreaSize();
+        glViewport(0, 0, size.width, size.height);
+
         glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
 
         puts("X or Escape - Exit");
