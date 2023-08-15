@@ -198,6 +198,11 @@ int main() {
     data.style              |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE;
 
     data.do_on_create = []() {
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+
+        auto size = TOGL_GetDrawAreaSize();
+        glViewport(0, 0, size.width, size.height);
+
         glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
 
         puts("X - Exit");
@@ -205,6 +210,8 @@ int main() {
     };
 
     data.do_on_destroy = []() {
+        glPopAttrib();
+
         puts("Bye. Bye.");
         fflush(stdout);
     };
@@ -266,6 +273,11 @@ int main() {
     data.style              |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_ONLY;
 
     data.do_on_create = []() {
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+
+        auto size = TOGL_GetDrawAreaSize();
+        glViewport(0, 0, size.width, size.height);
+
         glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
 
         puts("X or Escape - Exit");
@@ -273,6 +285,8 @@ int main() {
     };
 
     data.do_on_destroy = []() {
+        glPopAttrib();
+
         puts("Bye. Bye.");
         fflush(stdout);
     };
@@ -368,6 +382,11 @@ int main() {
     data.style              |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE;
 
     data.do_on_create = []() {
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+
+        auto size = TOGL_GetDrawAreaSize();
+        glViewport(0, 0, size.width, size.height);
+
         glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
 
         ResetTime();
@@ -377,6 +396,8 @@ int main() {
     };
 
     data.do_on_destroy = []() {
+        glPopAttrib();
+
         puts("Bye. Bye.");
         fflush(stdout);
     };
@@ -547,6 +568,17 @@ enum : uint16_t {
 
 static TOGL_SizeU16 s_size = {800, 400};
 
+static void Resize(uint16_t width, uint16_t height) {
+    glViewport(0, 0, width, height);
+
+    // When window size changes, text size stays same.
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, width, 0, height, 1, -1);
+
+    s_size = {width, height};
+}
+
 int main() {
     TOGL_Data data = {};
 
@@ -560,6 +592,11 @@ int main() {
     data.style              |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE;
 
     data.do_on_create = []() {
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+
+        TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
+        Resize(size.width, size.height);
+
         glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
 
         // Sets draw area for drawing text. 
@@ -568,13 +605,7 @@ int main() {
         glLoadIdentity();
         glOrtho(0, s_size.width, 0, s_size.height, 1, -1);
 
-        TOGL_LoadFont(
-            "Courier New", 
-            FONT_SIZE, 
-            TOGL_FONT_SIZE_UNIT_ID_PIXELS, 
-            TOGL_FONT_STYLE_ID_NORMAL, 
-            TOGL_FONT_CHAR_SET_ID_ENGLISH
-        );
+        TOGL_LoadFont("Courier New", FONT_SIZE, TOGL_FONT_SIZE_UNIT_ID_PIXELS, TOGL_FONT_STYLE_ID_NORMAL, TOGL_FONT_CHAR_SET_ID_ENGLISH);
 
         if (!TOGL_IsFontOk()) {
             printf("Error: %s.", TOGL_GetFontErrMsg().c_str());
@@ -588,19 +619,14 @@ int main() {
     data.do_on_destroy = []() {
         TOGL_UnloadFont();
 
+        glPopAttrib();
+
         puts("Bye. Bye.");
         fflush(stdout);
     };
 
     data.do_on_resize = [](uint16_t width, uint16_t height) {
-        glViewport(0, 0, width, height);
-
-        // When window size changes, text size stays same.
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(0, width, 0, height, 1, -1);
-
-        s_size = {width, height};
+        Resize(width, height);
     };
 
     data.draw = []() {
@@ -609,11 +635,7 @@ int main() {
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
 
-        TOGL_RenderText(
-            {0, s_size.height - FONT_SIZE}, 
-            {255, 255, 255, 255}, 
-            "This is simple text.\nX - Exit."
-        );
+        TOGL_RenderText({0, s_size.height - FONT_SIZE}, {255, 255, 255, 255}, "This is simple text.\nX - Exit.");
     };
 
     data.do_on_key = [](TOGL_KeyId key_id, bool is_down, const TOGL_Extra& extra) {
@@ -645,6 +667,17 @@ enum : uint16_t {
 
 static TOGL_SizeU16 s_size = {800, 400};
 
+static void Resize(uint16_t width, uint16_t height) {
+    glViewport(0, 0, width, height);
+
+    // When window size changes, text size stays same.
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, width, 0, height, 1, -1);
+
+    s_size = {width, height};
+};
+
 int RunTopToBottomText() {
     TOGL_Data data = {};
 
@@ -658,6 +691,11 @@ int RunTopToBottomText() {
     data.style              |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE;
 
     data.do_on_create = []() {
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+
+        auto size = TOGL_GetDrawAreaSize();
+        Resize(size.width, size.height);
+
         glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
 
         // Sets draw area for drawing text. 
@@ -683,19 +721,14 @@ int RunTopToBottomText() {
     data.do_on_destroy = []() {
         TOGL_UnloadFont();
 
+        glPopAttrib();
+
         puts("Bye. Bye.");
         fflush(stdout);
     };
 
     data.do_on_resize = [](uint16_t width, uint16_t height) {
-        glViewport(0, 0, width, height);
-
-        // When window size changes, text size stays same.
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(0, width, 0, height, 1, -1);
-
-        s_size = {width, height};
+        Resize(width, height);
     };
 
     data.draw = []() {
@@ -732,6 +765,17 @@ enum : uint16_t {
 
 static TOGL_SizeU16 s_size = {800, 400};
 
+static void Resize(uint16_t width, uint16_t height) {
+    glViewport(0, 0, width, height);
+
+    // When window size changes, text size stays same.
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, width, 0, height, 1, -1);
+
+    s_size = {width, height};
+}
+
 int main() {
     TOGL_Data data = {};
 
@@ -745,6 +789,11 @@ int main() {
     data.style              |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE;
 
     data.do_on_create = []() {
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+
+        TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
+        Resize(size.width, size.height);
+
         glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
 
         // Sets draw area for drawing text. 
@@ -753,13 +802,7 @@ int main() {
         glLoadIdentity();
         glOrtho(0, s_size.width, 0, s_size.height, 1, -1);
 
-        TOGL_LoadFont(
-            "Courier New", 
-            FONT_SIZE, 
-            TOGL_FONT_SIZE_UNIT_ID_PIXELS, 
-            TOGL_FONT_STYLE_ID_NORMAL, 
-            TOGL_FONT_CHAR_SET_ID_ENGLISH
-        );
+        TOGL_LoadFont("Courier New", FONT_SIZE, TOGL_FONT_SIZE_UNIT_ID_PIXELS, TOGL_FONT_STYLE_ID_NORMAL, TOGL_FONT_CHAR_SET_ID_ENGLISH);
 
         if (!TOGL_IsFontOk()) {
             printf("Error: %s.", TOGL_GetFontErrMsg().c_str());
@@ -772,6 +815,8 @@ int main() {
 
     data.do_on_destroy = []() {
         TOGL_UnloadFont();
+
+        glPopAttrib();
 
         puts("Bye. Bye.");
         fflush(stdout);
@@ -835,6 +880,17 @@ enum : uint16_t {
 static TOGL_SizeU16 s_size  = {800, 400};
 static std::string  s_text  = ""; 
 
+static void Resize(uint16_t width, uint16_t height) {
+    glViewport(0, 0, width, height);
+
+    // When window size changes, text size stays same.
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, width, 0, height, 1, -1);
+
+    s_size = {width, height};
+}
+
 int main() {
     TOGL_Data data = {};
 
@@ -848,6 +904,11 @@ int main() {
     data.style              |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE;
 
     data.do_on_create = []() {
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+
+        TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
+        Resize(size.width, size.height);
+
         glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
 
         // Sets draw area for drawing text. 
@@ -910,19 +971,14 @@ int main() {
     data.do_on_destroy = []() {
         TOGL_UnloadFont();
 
+        glPopAttrib();
+
         puts("Bye. Bye.");
         fflush(stdout);
     };
 
     data.do_on_resize = [](uint16_t width, uint16_t height) {
-        glViewport(0, 0, width, height);
-
-        // When window size changes, text size stays same.
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(0, width, 0, height, 1, -1);
-
-        s_size = {width, height};
+        Resize(width, height);
     };
 
     data.draw = []() {
@@ -977,6 +1033,17 @@ enum : uint16_t {
 static TOGL_SizeU16     s_size = {600, 600};
 static TOGL_FineText    s_text;
 
+static void Resize(uint16_t width, uint16_t height) {
+    glViewport(0, 0, width, height);
+
+    // When window size changes, text size stays same.
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    glOrtho(0, width, 0, height, 1, -1);
+
+    s_size = {width, height};
+}
+
 static void DrawRectangle(int x, int y, int width, int height) {
     glBegin(GL_TRIANGLE_FAN);
 
@@ -1005,6 +1072,11 @@ int main() {
     data.style              |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE;
 
     data.do_on_create = []() {
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+
+        TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
+        Resize(size.width, size.height);
+
         glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
 
         // Sets draw area for drawing text. 
@@ -1050,19 +1122,14 @@ int main() {
     data.do_on_destroy = []() {
         TOGL_UnloadFont();
 
+        glPopAttrib();
+
         puts("Bye. Bye.");
         fflush(stdout);
     };
 
     data.do_on_resize = [](uint16_t width, uint16_t height) {
-        glViewport(0, 0, width, height);
-
-        // When window size changes, text size stays same.
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(0, width, 0, height, 1, -1);
-
-        s_size = {width, height};
+        Resize(width, height);
     };
 
     data.draw = []() {
@@ -1120,6 +1187,17 @@ namespace {
     bool            s_is_show_prompt;
     std::string     s_prompt            = "|";
 
+    void Resize(uint16_t width, uint16_t height) {
+        glViewport(0, 0, width, height);
+
+        // When window size changes, text size stays same.
+        glMatrixMode(GL_PROJECTION);
+        glLoadIdentity();
+        glOrtho(0, width, 0, height, 1, -1);
+
+        s_size = {width, height};
+    }
+
     void DrawRectangle(int x, int y, int width, int height) {
         glBegin(GL_TRIANGLE_FAN);
 
@@ -1174,7 +1252,7 @@ namespace {
     }
 }
 
-int RunTextBox() {
+int main() {
     TOGL_Data data = {};
 
     data.window_name        = "Formated Text";
@@ -1189,6 +1267,11 @@ int RunTextBox() {
     data.timer_time_interval = 500;
 
     data.do_on_create = []() {
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+
+        TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
+        Resize(size.width, size.height);
+
         glClearColor(0.2f, 0.2f, 0.5f, 1.0f);
 
         // Sets draw area for drawing text. 
@@ -1197,13 +1280,7 @@ int RunTextBox() {
         glLoadIdentity();
         glOrtho(0, s_size.width, 0, s_size.height, 1, -1);
 
-        TOGL_LoadFont(
-            "Arial", 
-            FONT_SIZE, 
-            TOGL_FONT_SIZE_UNIT_ID_PIXELS, 
-            TOGL_FONT_STYLE_ID_NORMAL, 
-            TOGL_FONT_CHAR_SET_ID_ENGLISH
-        );
+        TOGL_LoadFont("Arial", FONT_SIZE, TOGL_FONT_SIZE_UNIT_ID_PIXELS, TOGL_FONT_STYLE_ID_NORMAL, TOGL_FONT_CHAR_SET_ID_ENGLISH);
 
         if (!TOGL_IsFontOk()) {
             printf("Error: %s.", TOGL_GetFontErrMsg().c_str());
@@ -1221,19 +1298,14 @@ int RunTextBox() {
     data.do_on_destroy = []() {
         TOGL_UnloadFont();
 
+        glPopAttrib();
+
         puts("Bye. Bye.");
         fflush(stdout);
     };
 
     data.do_on_resize = [](uint16_t width, uint16_t height) {
-        glViewport(0, 0, width, height);
-
-        // When window size changes, text size stays same.
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(0, width, 0, height, 1, -1);
-
-        s_size = {width, height};
+        Resize(width, height);
     };
 
     data.draw = []() {
@@ -1267,7 +1339,7 @@ int RunTextBox() {
             if (!s_text.empty()) s_text.resize(s_text.size() - 1);
         } else if (c == '\r') {
             s_text += '\n';
-        } else if (isprint(c)) {
+        } else if (isprint(c) || c == '\t') {
             s_text += c;
         }
     };
