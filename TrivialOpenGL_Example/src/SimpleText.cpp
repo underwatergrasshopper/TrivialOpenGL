@@ -38,6 +38,8 @@ int RunSimpleText() {
     data.style              |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE;
 
     data.do_on_create = []() {
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+
         TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
         Resize(size.width, size.height);
 
@@ -62,6 +64,8 @@ int RunSimpleText() {
 
     data.do_on_destroy = []() {
         TOGL_UnloadFont();
+
+        glPopAttrib();
 
         puts("Bye. Bye.");
         fflush(stdout);

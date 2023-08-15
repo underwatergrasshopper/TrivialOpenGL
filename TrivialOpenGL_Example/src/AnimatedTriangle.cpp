@@ -59,6 +59,8 @@ int RunAnimatedTriangle() {
     data.style              |= TOGL_WINDOW_STYLE_BIT_DRAW_AREA_SIZE;
 
     data.do_on_create = []() {
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+
         auto size = TOGL_GetDrawAreaSize();
         glViewport(0, 0, size.width, size.height);
 
@@ -71,6 +73,8 @@ int RunAnimatedTriangle() {
     };
 
     data.do_on_destroy = []() {
+        glPopAttrib();
+
         puts("Bye. Bye.");
         fflush(stdout);
     };

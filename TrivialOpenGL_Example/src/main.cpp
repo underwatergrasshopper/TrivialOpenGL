@@ -334,10 +334,16 @@ int main(int argc, char *argv[]) {
         data.log_level          = TOGL_LOG_LEVEL_DEBUG;
 
         data.do_on_create = []() {
+            glPushAttrib(GL_ALL_ATTRIB_BITS);
+
             auto size = TOGL_GetDrawAreaSize();
             glViewport(0, 0, size.width, size.height);
 
             glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
+        };
+
+        data.do_on_destroy = []() {
+            glPopAttrib();
         };
 
         data.do_on_resize = [](uint16_t width, uint16_t height) {
@@ -498,12 +504,18 @@ int main(int argc, char *argv[]) {
         if (IsOption("notify_character_message"))       data.special_debug.is_notify_character_message  = true;
 
         data.do_on_create = []() {
+            glPushAttrib(GL_ALL_ATTRIB_BITS);
+
             s_test_image.Initialize(TOGL_GetDrawAreaSize());
 
             TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
             s_test_image.Resize(size.width, size.height);
 
             LoadFont();
+        };
+
+        data.do_on_destroy = []() {
+            glPopAttrib();
         };
 
         data.draw = []() {
@@ -641,6 +653,8 @@ int main(int argc, char *argv[]) {
 
         if (IsOption("full_screen_at_start")) {
             data.do_on_create = []() {
+                glPushAttrib(GL_ALL_ATTRIB_BITS);
+
                 s_test_image.Initialize(TOGL_GetDrawAreaSize());
 
                 TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
@@ -653,6 +667,8 @@ int main(int argc, char *argv[]) {
             };
         } else {
             data.do_on_create = []() {
+                glPushAttrib(GL_ALL_ATTRIB_BITS);
+
                 s_test_image.Initialize(TOGL_GetDrawAreaSize());
 
                 TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
@@ -662,6 +678,10 @@ int main(int argc, char *argv[]) {
                 LoadFont();
             };
         }
+
+        data.do_on_destroy = []() {
+            glPopAttrib();
+        };
 
         data.do_on_time = [](uint32_t time_interval) {
 
@@ -1103,6 +1123,8 @@ int main(int argc, char *argv[]) {
         if (IsOption("line_spacing_5"))     s_font_info.distance_between_lines = 5;
 
         data.do_on_create = []() {
+            glPushAttrib(GL_ALL_ATTRIB_BITS);
+
             s_test_image.Initialize(TOGL_GetDrawAreaSize());
 
             TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
@@ -1111,6 +1133,10 @@ int main(int argc, char *argv[]) {
             LoadFont();
 
             TOGL_ToGlobalFont().SaveAsBMP();
+        };
+
+        data.do_on_destroy = []() {
+            glPopAttrib();
         };
 
         data.draw = []() {
@@ -1202,6 +1228,8 @@ int main(int argc, char *argv[]) {
         data.log_level          = TOGL_LOG_LEVEL_DEBUG;
 
         data.do_on_create = []() {
+            glPushAttrib(GL_ALL_ATTRIB_BITS);
+
             auto version = TOGL_GetOpenGL_Version();
             printf("%d.%d\n", version.major, version.minor);
 
@@ -1211,8 +1239,13 @@ int main(int argc, char *argv[]) {
             glClearColor(0.0f, 0.0f, 0.2f, 1.0f);
         };
 
+        data.do_on_destroy = []() {
+            glPopAttrib();
+        };
+
         data.do_on_resize = [](uint16_t width, uint16_t height) {
             glViewport(0, 0, width, height);
+
         };
 
         data.draw = []() {
@@ -1274,12 +1307,18 @@ int main(int argc, char *argv[]) {
         if (IsOption("notify_character_message"))       data.special_debug.is_notify_character_message  = true;
 
         data.do_on_create = []() {
+            glPushAttrib(GL_ALL_ATTRIB_BITS);
+
             s_test_image.Initialize(TOGL_GetDrawAreaSize());
 
             TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
             s_test_image.Resize(size.width, size.height);
 
             LoadFont();
+        };
+
+        data.do_on_destroy = []() {
+            glPopAttrib();
         };
 
         data.draw = []() {
@@ -1418,9 +1457,15 @@ int main(int argc, char *argv[]) {
         if (IsOption("1s"))     data.timer_time_interval = 1000;
         
         data.do_on_create = []() {
+            glPushAttrib(GL_ALL_ATTRIB_BITS);
+
             s_test_image.Initialize(TOGL_GetDrawAreaSize());
             TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
             s_test_image.Resize(size.width, size.height);
+        };
+
+        data.do_on_destroy = []() {
+            glPopAttrib();
         };
 
         data.draw = []() {
@@ -1465,6 +1510,8 @@ int main(int argc, char *argv[]) {
         data.log_level          = TOGL_LOG_LEVEL_DEBUG;
         
         data.do_on_create = []() {
+            glPushAttrib(GL_ALL_ATTRIB_BITS);
+
             s_test_font.Create(s_resolution.width, s_resolution.height);
 
             TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
@@ -1491,6 +1538,8 @@ int main(int argc, char *argv[]) {
 
         data.do_on_destroy = []() {
             s_test_font.Destroy();
+
+            glPopAttrib();
         };
 
         data.draw = []() {
@@ -1530,10 +1579,16 @@ int main(int argc, char *argv[]) {
         data.log_level          = TOGL_LOG_LEVEL_DEBUG;
 
         data.do_on_create = []() {
+            glPushAttrib(GL_ALL_ATTRIB_BITS);
+
             TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
             glViewport(0, 0, size.width, size.height);
 
             glClearColor(0, 0, 0.5, 1);
+        };
+
+        data.do_on_destroy = []() {
+            glPopAttrib();
         };
 
         data.draw = []() {

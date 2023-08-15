@@ -102,6 +102,8 @@ int RunTextBox() {
     data.timer_time_interval = 500;
 
     data.do_on_create = []() {
+        glPushAttrib(GL_ALL_ATTRIB_BITS);
+
         TOGL_SizeU16 size = TOGL_GetDrawAreaSize();
         Resize(size.width, size.height);
 
@@ -130,6 +132,8 @@ int RunTextBox() {
 
     data.do_on_destroy = []() {
         TOGL_UnloadFont();
+
+        glPopAttrib();
 
         puts("Bye. Bye.");
         fflush(stdout);
