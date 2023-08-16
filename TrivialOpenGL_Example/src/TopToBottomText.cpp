@@ -17,10 +17,11 @@ static TOGL_SizeU16 s_size = {800, 400};
 static void Resize(uint16_t width, uint16_t height) {
     glViewport(0, 0, width, height);
 
-    // When window size changes, text size stays same.
+    // Sets draw area for drawing text. 
+    // Origin of coordinates system is at left-bottom corner of draw area.
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    glOrtho(0, width, 0, height, 1, -1);
+    glOrtho(0, s_size.width, s_size.height, 0, -1, 1);
 
     s_size = {width, height};
 };
@@ -44,12 +45,6 @@ int RunTopToBottomText() {
         Resize(size.width, size.height);
 
         glClearColor(0.0f, 0.0f, 0.5f, 1.0f);
-
-        // Sets draw area for drawing text. 
-        // Origin of coordinates system is at left-bottom corner of draw area.
-        glMatrixMode(GL_PROJECTION);
-        glLoadIdentity();
-        glOrtho(0, s_size.width, s_size.height, 0, -1, 1);
 
         TOGL_LoadFont("Courier New", FONT_SIZE, TOGL_FONT_SIZE_UNIT_ID_PIXELS, TOGL_FONT_STYLE_ID_NORMAL, TOGL_FONT_CHAR_SET_ID_ENGLISH);
 
