@@ -1,3 +1,6 @@
+# v0.2.3 (05-02-2024)
+* Updated date in LICENSE.
+* Fixed bug where temporal OpenGL Rendering Context was not destroyed.
 # v0.2.2 (16-08-2023)
 * Added `glPushAttrib` and `glPopAttrib` to examples.
 * Changed callback call order to make `do_on_create` first callback called which is more useful.

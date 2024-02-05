@@ -1529,10 +1529,10 @@ inline void TOGL_Window::Create(HWND window_handle) {
     // --- Creates OpenGL Rendering Context --- //
 
     m_rendering_context_handle = wglCreateContext(m_device_context_handle);
-    if (!m_rendering_context_handle) TOGL_LogFatalError(std::string() + "Can not create OpenGl Rendering Context. (windows error code:" + std::to_string(GetLastError()) + ")");
+    if (!m_rendering_context_handle) TOGL_LogFatalError(std::string() + "Can not create temporal OpenGl Rendering Context. (windows error code:" + std::to_string(GetLastError()) + ")");
 
     if (!wglMakeCurrent(m_device_context_handle, m_rendering_context_handle)) {
-        TOGL_LogFatalError("Can not set created OpenGl Rendering Context to be current.");
+        TOGL_LogFatalError("Can not set created temporary OpenGl Rendering Context to be current.");
     }
 
     // --- Creates OpenGL Rendering Context with required minimum version --- //
@@ -1572,6 +1572,10 @@ inline void TOGL_Window::Create(HWND window_handle) {
 
             if (!wglMakeCurrent(m_device_context_handle, rendering_context_handle)) {
                 TOGL_LogFatalError(std::string() + "Can not set created OpenGl Rendering Context for version " + std::to_string(m_data.opengl_version.major) + "." + std::to_string(m_data.opengl_version.minor) + " to be current.");
+            }
+
+            if (!wglDeleteContext(m_rendering_context_handle)) {
+                TOGL_LogFatalError(std::string() + "Can not delete temporal OpenGl Rendering Context.");
             }
 
             m_rendering_context_handle = rendering_context_handle ;
@@ -1619,8 +1623,12 @@ inline void TOGL_Window::Destroy() {
 
     if (m_data.do_on_destroy) m_data.do_on_destroy();
 
-    wglMakeCurrent(NULL, NULL); 
-    wglDeleteContext(m_rendering_context_handle);
+    if (!wglMakeCurrent(NULL, NULL)) {
+        TOGL_LogFatalError(std::string() + "Can not remove current OpenGL Rendering Context from being current. (windows error code:" + std::to_string(GetLastError()) + ")");
+    }
+    if (!wglDeleteContext(m_rendering_context_handle)) {
+        TOGL_LogFatalError(std::string() + "Can not delete OpenGL Rendering Context. (windows error code:" + std::to_string(GetLastError()) + ")");
+    }
     m_rendering_context_handle = NULL;
 
     ReleaseDC(m_window_handle, m_device_context_handle);
